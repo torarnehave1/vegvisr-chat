@@ -76,3 +76,14 @@ export interface MemberProfile {
   profileimage?: string
   displayName: string
 }
+
+export interface ChatBot {
+  id: string
+  name: string
+  username: string
+  avatar_url?: string
+  system_prompt?: string
+  graph_id?: string
+  tools?: string
+  model?: string
+}

@@ -1,4 +1,4 @@
-import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile } from '../types/chat'
+import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot } from '../types/chat'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
 
@@ -210,13 +210,26 @@ export async function fetchMemberProfiles(
       }),
   )
 
-  // Bot members
-  for (const m of members) {
-    if (m.user_id.startsWith('bot:') && !profiles.has(m.user_id)) {
-      profiles.set(m.user_id, {
-        user_id: m.user_id,
-        displayName: `BOT`,
-      })
+  // Bot members — fetch bot details for names/avatars
+  const botMembers = members.filter(m => m.user_id.startsWith('bot:'))
+  if (botMembers.length > 0) {
+    try {
+      const bots = await fetchGroupBots(groupId, auth)
+      for (const m of botMembers) {
+        const botId = m.user_id.replace('bot:', '')
+        const bot = bots.find(b => b.id === botId)
+        profiles.set(m.user_id, {
+          user_id: m.user_id,
+          profileimage: bot?.avatar_url,
+          displayName: bot ? `${bot.name}` : 'BOT',
+        })
+      }
+    } catch {
+      for (const m of botMembers) {
+        if (!profiles.has(m.user_id)) {
+          profiles.set(m.user_id, { user_id: m.user_id, displayName: 'BOT' })
+        }
+      }
     }
   }
 
@@ -231,6 +244,15 @@ export async function fetchMemberProfiles(
   }
 
   return profiles
+}
+
+// ── Bots ───────────────────────────────────────────────────────
+
+export async function fetchGroupBots(groupId: string, auth: AuthParams): Promise<ChatBot[]> {
+  const res = await fetch(`${BASE}/groups/${groupId}/bots?${authQuery(auth)}`)
+  const data = await res.json()
+  if (!res.ok || !data.success) return [] // graceful — no bots or no permission
+  return data.bots || []
 }
 
 // ── Invites ─────────────────────────────────────────────────────

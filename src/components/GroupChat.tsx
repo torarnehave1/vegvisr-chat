@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles } from '../services/chat-service'
+import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots } from '../services/chat-service'
 import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
 import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
@@ -8,7 +8,8 @@ import { usePolling } from '../hooks/usePolling'
 import { MessageBubble } from './MessageBubble'
 import { VoiceRecorder } from './VoiceRecorder'
 import type { VoiceRecording } from '../hooks/useVoiceRecorder'
-import type { AuthParams, Message, MemberProfile } from '../types/chat'
+import { BotMentionDropdown } from './BotMentionDropdown'
+import type { AuthParams, Message, MemberProfile, ChatBot } from '../types/chat'
 
 interface Props {
   groupId: string
@@ -42,10 +43,14 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
   const [aiProvider, setAiProvider] = useState<AiProvider>('grok')
   const [aiHistory, setAiHistory] = useState<AiMessage[]>([])
   const [profiles, setProfiles] = useState<Map<string, MemberProfile>>(new Map())
+  const [bots, setBots] = useState<ChatBot[]>([])
+  const [mentionFilter, setMentionFilter] = useState<string | null>(null) // null = dropdown hidden
+  const [activeBotBanner, setActiveBotBanner] = useState<ChatBot | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const sortedMessages = Array.from(messages.values()).sort((a, b) => a.created_at - b.created_at)
   const lastTimestamp = sortedMessages.length > 0 ? sortedMessages[sortedMessages.length - 1].created_at : 0
@@ -83,6 +88,11 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
     fetchMemberProfiles(groupId, auth)
       .then(setProfiles)
       .catch(console.error)
+  }, [groupId, auth])
+
+  // Fetch bots in group
+  useEffect(() => {
+    fetchGroupBots(groupId, auth).then(setBots).catch(() => setBots([]))
   }, [groupId, auth])
 
   // Poll for new messages
@@ -264,6 +274,52 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
     }
   }
 
+  // Detect @mention while typing
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value
+    setInput(val)
+
+    // Find if cursor is inside an @mention
+    const cursorPos = e.target.selectionStart ?? val.length
+    const textBeforeCursor = val.slice(0, cursorPos)
+    const mentionMatch = textBeforeCursor.match(/@([a-z0-9_-]*)$/i)
+
+    if (mentionMatch && bots.length > 0) {
+      setMentionFilter(mentionMatch[1])
+    } else {
+      setMentionFilter(null)
+    }
+
+    // Update bot banner based on full input
+    const allMentions = val.match(/@([a-z0-9_-]+)/gi) || []
+    const mentionedBot = allMentions.length > 0
+      ? bots.find(b => allMentions.some(m => m.slice(1).toLowerCase() === b.username.toLowerCase()))
+      : null
+    setActiveBotBanner(mentionedBot || null)
+  }
+
+  const handleBotSelect = (bot: ChatBot) => {
+    const textarea = inputRef.current
+    if (!textarea) return
+
+    const cursorPos = textarea.selectionStart ?? input.length
+    const textBeforeCursor = input.slice(0, cursorPos)
+    const textAfterCursor = input.slice(cursorPos)
+
+    // Replace the partial @mention with the full @username
+    const replaced = textBeforeCursor.replace(/@[a-z0-9_-]*$/i, `@${bot.username} `)
+    setInput(replaced + textAfterCursor)
+    setMentionFilter(null)
+    setActiveBotBanner(bot)
+
+    // Refocus textarea
+    requestAnimationFrame(() => {
+      textarea.focus()
+      const newPos = replaced.length
+      textarea.setSelectionRange(newPos, newPos)
+    })
+  }
+
   const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -381,8 +437,40 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
         <div ref={bottomRef} />
       </div>
 
+      {/* Bot description banner */}
+      {activeBotBanner && (
+        <div className="flex-shrink-0 border-t border-violet-400/20 bg-violet-500/10 px-4 py-2 flex items-center gap-3">
+          {activeBotBanner.avatar_url ? (
+            <img src={activeBotBanner.avatar_url} alt={activeBotBanner.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-violet-500/30 text-violet-300 flex items-center justify-center text-xs font-medium flex-shrink-0">B</div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-violet-200">{activeBotBanner.name}</span>
+              <span className="text-[10px] text-violet-300 bg-violet-500/20 px-1.5 py-px rounded">@{activeBotBanner.username}</span>
+            </div>
+            {activeBotBanner.system_prompt && (
+              <p className="text-xs text-white/40 truncate mt-0.5">{activeBotBanner.system_prompt}</p>
+            )}
+          </div>
+          <button
+            onClick={() => setActiveBotBanner(null)}
+            className="text-white/30 hover:text-white/60 text-sm flex-shrink-0"
+          >&#x2715;</button>
+        </div>
+      )}
+
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-white/10 bg-slate-900/80 px-3 py-2">
+      <div className="flex-shrink-0 border-t border-white/10 bg-slate-900/80 px-3 py-2 relative">
+        {/* @mention dropdown */}
+        {mentionFilter !== null && bots.length > 0 && (
+          <BotMentionDropdown
+            bots={bots}
+            filter={mentionFilter}
+            onSelect={handleBotSelect}
+          />
+        )}
         <div className="flex gap-2 items-end max-w-3xl mx-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -400,15 +488,20 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
           />
           <VoiceRecorder onSend={handleVoiceSend} />
           <textarea
+            ref={inputRef}
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
+                setMentionFilter(null)
                 handleSend()
               }
+              if (e.key === 'Escape') {
+                setMentionFilter(null)
+              }
             }}
-            placeholder="Type a message..."
+            placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
             rows={1}
             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
           />
