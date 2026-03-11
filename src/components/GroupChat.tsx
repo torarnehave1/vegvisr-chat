@@ -320,11 +320,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
     })
   }
 
-  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = '' // Reset input
-
+  const handleMediaFile = async (file: File) => {
     const { uploadMedia } = await import('../services/chat-service')
     try {
       setSending(true)
@@ -349,8 +345,58 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
     }
   }
 
+  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    handleMediaFile(file)
+  }
+
+  // Paste image from clipboard
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) handleMediaFile(file)
+        return
+      }
+    }
+  }
+
+  // Drag & drop
+  const [dragOver, setDragOver] = useState(false)
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (e.dataTransfer.types.includes('Files')) {
+      setDragOver(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+      handleMediaFile(file)
+    }
+  }
+
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-slate-900/80 flex-shrink-0">
         <button onClick={onBack} className="md:hidden text-white/60 hover:text-white text-lg">
@@ -491,6 +537,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
+            onPaste={handlePaste}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
@@ -514,6 +561,13 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
           </button>
         </div>
       </div>
+
+      {/* Drag overlay */}
+      {dragOver && (
+        <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex items-center justify-center z-50 pointer-events-none">
+          <span className="text-sky-200 text-lg font-medium bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
+        </div>
+      )}
     </div>
   )
 }
