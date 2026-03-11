@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { AuthParams } from '../types/chat'
+import { clearProfileCache } from '../services/chat-service'
 
 const PROFILE_API = 'https://smsgway.vegvisr.org/api/auth/profile'
 const UPLOAD_API = 'https://api.vegvisr.org/upload'
@@ -14,13 +15,19 @@ interface Profile {
   phone?: string
   user_id?: string
   profile_image_url?: string
-  display_name?: string
+}
+
+function readLocalDisplayName(): string {
+  try {
+    const stored = JSON.parse(localStorage.getItem('user') || '{}')
+    return stored.display_name || ''
+  } catch { return '' }
 }
 
 export function ProfileSettings({ auth, onBack }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [displayName, setDisplayName] = useState('')
+  const [displayName, setDisplayName] = useState(readLocalDisplayName())
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'ok' | 'err' } | null>(null)
@@ -33,44 +40,28 @@ export function ProfileSettings({ auth, onBack }: Props) {
       .then(data => {
         if (data.success) {
           setProfile(data)
-          setDisplayName(data.display_name || data.email?.split('@')[0] || '')
+          // If no local display name, derive from email
+          if (!displayName) {
+            setDisplayName(data.email?.split('@')[0] || '')
+          }
         }
       })
       .catch(() => setMessage({ text: 'Failed to load profile', type: 'err' }))
       .finally(() => setLoading(false))
-  }, [auth.user_id])
+  }, [auth.user_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateProfile = async (fields: Record<string, string>) => {
-    const res = await fetch(PROFILE_API, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: auth.user_id,
-        phone: auth.phone,
-        ...fields,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok || !data.success) throw new Error(data.error || 'Update failed')
-    return data
-  }
-
-  const handleSaveName = async () => {
+  // Display name is local-only (API doesn't support it — same as Flutter app)
+  const handleSaveName = () => {
     if (!displayName.trim()) return
     setSaving(true)
     setMessage(null)
     try {
-      await updateProfile({ display_name: displayName.trim() })
-      setProfile(prev => prev ? { ...prev, display_name: displayName.trim() } : prev)
-      // Update localStorage so the name persists
-      try {
-        const stored = JSON.parse(localStorage.getItem('user') || '{}')
-        stored.display_name = displayName.trim()
-        localStorage.setItem('user', JSON.stringify(stored))
-      } catch { /* ignore */ }
-      setMessage({ text: 'Display name updated', type: 'ok' })
-    } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Failed to save', type: 'err' })
+      const stored = JSON.parse(localStorage.getItem('user') || '{}')
+      stored.display_name = displayName.trim()
+      localStorage.setItem('user', JSON.stringify(stored))
+      setMessage({ text: 'Display name saved', type: 'ok' })
+    } catch {
+      setMessage({ text: 'Failed to save', type: 'err' })
     } finally {
       setSaving(false)
     }
@@ -80,6 +71,12 @@ export function ProfileSettings({ auth, onBack }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ text: 'Image must be under 5MB', type: 'err' })
+      return
+    }
 
     setUploading(true)
     setMessage(null)
@@ -91,8 +88,19 @@ export function ProfileSettings({ auth, onBack }: Props) {
       const uploadData = await uploadRes.json()
       if (!uploadRes.ok || !uploadData.url) throw new Error('Image upload failed')
 
-      // 2. Update profile with new URL
-      await updateProfile({ profile_image_url: uploadData.url })
+      // 2. Update profile image via PUT
+      const updateRes = await fetch(PROFILE_API, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: auth.user_id,
+          phone: auth.phone,
+          profile_image_url: uploadData.url,
+        }),
+      })
+      const updateData = await updateRes.json()
+      if (!updateRes.ok || !updateData.success) throw new Error(updateData.error || 'Profile update failed')
+
       setProfile(prev => prev ? { ...prev, profile_image_url: uploadData.url } : prev)
       // Update localStorage
       try {
@@ -100,6 +108,8 @@ export function ProfileSettings({ auth, onBack }: Props) {
         stored.profileimage = uploadData.url
         localStorage.setItem('user', JSON.stringify(stored))
       } catch { /* ignore */ }
+      // Invalidate profile cache so chat messages show new avatar
+      clearProfileCache(auth.user_id)
       setMessage({ text: 'Profile image updated', type: 'ok' })
     } catch (err) {
       setMessage({ text: err instanceof Error ? err.message : 'Failed to upload', type: 'err' })
@@ -164,7 +174,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
               <p className="mt-2 text-xs text-white/40">Tap the camera to change your photo</p>
             </div>
 
-            {/* Display Name */}
+            {/* Display Name (local only — same as Flutter) */}
             <div>
               <label className="block text-xs text-white/50 mb-1.5 uppercase tracking-wider">Display Name</label>
               <div className="flex gap-2">
@@ -172,6 +182,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   type="text"
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSaveName() }}
                   placeholder="Your display name"
                   className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-sky-400/50"
                 />
@@ -184,6 +195,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   {saving ? '...' : 'Save'}
                 </button>
               </div>
+              <p className="mt-1 text-[11px] text-white/30">Saved locally on this device</p>
             </div>
 
             {/* Account Info */}

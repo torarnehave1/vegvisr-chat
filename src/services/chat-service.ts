@@ -174,6 +174,15 @@ const PROFILE_BASE = 'https://smsgway.vegvisr.org/api/auth/profile'
 // Cache profiles in memory to avoid repeated fetches
 const profileCache = new Map<string, MemberProfile>()
 
+/** Clear a specific user from the profile cache (e.g. after profile image update) */
+export function clearProfileCache(userId?: string) {
+  if (userId) {
+    profileCache.delete(userId)
+  } else {
+    profileCache.clear()
+  }
+}
+
 export async function fetchMemberProfiles(
   groupId: string,
   auth: AuthParams,

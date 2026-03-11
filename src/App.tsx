@@ -42,6 +42,7 @@ function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [phone, setPhone] = useState<string | null>(readChatPhone());
   const [view, setView] = useState<View>({ screen: 'groups' });
+  const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -248,7 +249,7 @@ function App() {
               <LanguageSelector value={language} onChange={setLanguage} />
               {authStatus === 'authed' && (
                 <button
-                  onClick={() => setView({ screen: 'settings' })}
+                  onClick={() => { setPrevView(view); setView({ screen: 'settings' }); }}
                   className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
                   title="Settings"
                 >
@@ -344,7 +345,7 @@ function App() {
                       view.screen === 'settings' ? (
                         <ProfileSettings
                           auth={auth}
-                          onBack={() => setView({ screen: 'groups' })}
+                          onBack={() => setView(prevView)}
                         />
                       ) : view.screen === 'chat' ? (
                         <GroupChat
