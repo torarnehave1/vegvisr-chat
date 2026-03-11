@@ -20,14 +20,14 @@ export async function uploadAudio(
 }
 
 export async function transcribeAudio(
-  audioUrl: string,
+  objectKey: string,
   language?: string,
 ): Promise<{ text: string; language: string }> {
   const res = await fetch(`${VOICE_BASE}/transcribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      audioUrl,
+      objectKey,
       model: 'whisper-1',
       language: language || null,
     }),
@@ -35,4 +35,14 @@ export async function transcribeAudio(
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Transcription failed')
   return { text: data.text, language: data.language }
+}
+
+/** Extract objectKey from a voice.vegvisr.org audio URL */
+export function extractObjectKey(audioUrl: string): string | null {
+  try {
+    const url = new URL(audioUrl)
+    return url.searchParams.get('key')
+  } catch {
+    return null
+  }
 }

@@ -1,17 +1,38 @@
+import { useState } from 'react'
 import type { Message } from '../types/chat'
 
 interface Props {
   message: Message
   isOwn: boolean
   onDelete?: (id: number) => void
+  onTranscribe?: (message: Message) => Promise<void>
 }
 
 function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-export function MessageBubble({ message, isOwn, onDelete }: Props) {
-  const msgType = message.type || 'text'
+function formatDuration(ms: number): string {
+  const totalSec = Math.round(ms / 1000)
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  if (m > 0) return `${m}:${s.toString().padStart(2, '0')}`
+  return `${s}s`
+}
+
+export function MessageBubble({ message, isOwn, onDelete, onTranscribe }: Props) {
+  const msgType = message.message_type || 'text'
+  const [transcribing, setTranscribing] = useState(false)
+
+  const handleTranscribe = async () => {
+    if (!onTranscribe || transcribing) return
+    setTranscribing(true)
+    try {
+      await onTranscribe(message)
+    } finally {
+      setTranscribing(false)
+    }
+  }
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-1.5 group`}>
@@ -36,14 +57,50 @@ export function MessageBubble({ message, isOwn, onDelete }: Props) {
         {/* Voice */}
         {msgType === 'voice' && (
           <div>
-            <audio src={message.audio_url} controls className="max-w-full h-8" />
-            {message.audio_duration_ms && (
-              <span className="text-[11px] opacity-60 ml-1">
-                {Math.round(message.audio_duration_ms / 1000)}s
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              <audio src={message.audio_url} controls className="max-w-full h-8" />
+              {message.audio_duration_ms != null && (
+                <span className="text-[11px] opacity-60 whitespace-nowrap">
+                  {formatDuration(message.audio_duration_ms)}
+                </span>
+              )}
+            </div>
+
+            {/* Transcript display */}
             {message.transcript_text && (
-              <p className="text-xs opacity-70 mt-1 italic">{message.transcript_text}</p>
+              <p className="text-xs opacity-70 mt-1.5 italic leading-relaxed">
+                {message.transcript_text}
+              </p>
+            )}
+
+            {/* Transcription status / action */}
+            {!message.transcript_text && (
+              <div className="mt-1.5">
+                {message.transcription_status === 'pending' || message.transcription_status === 'transcribing' ? (
+                  <span className="text-[11px] opacity-50 italic">Transcribing...</span>
+                ) : message.transcription_status === 'failed' ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-rose-300/70">Transcription failed</span>
+                    {onTranscribe && (
+                      <button
+                        onClick={handleTranscribe}
+                        disabled={transcribing}
+                        className="text-[11px] text-sky-300/80 hover:text-sky-200 underline"
+                      >
+                        Retry
+                      </button>
+                    )}
+                  </div>
+                ) : onTranscribe ? (
+                  <button
+                    onClick={handleTranscribe}
+                    disabled={transcribing}
+                    className="text-[11px] text-sky-300/70 hover:text-sky-200 underline transition-colors"
+                  >
+                    {transcribing ? 'Transcribing...' : 'Transcribe'}
+                  </button>
+                ) : null}
+              </div>
             )}
           </div>
         )}

@@ -34,7 +34,7 @@ export interface Message {
   phone?: string
   email?: string
   body?: string
-  type?: MessageType
+  message_type?: MessageType
   created_at: number
   updated_at?: number
   // Voice

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { fetchMessages, sendMessage, deleteMessage } from '../services/chat-service'
-import { uploadAudio, transcribeAudio } from '../services/voice-service'
+import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
+import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
 import type { AiProvider, AiMessage } from '../services/ai-service'
 import { usePolling } from '../hooks/usePolling'
@@ -177,28 +178,30 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
       setSending(true)
       const ext = recording.mimeType.includes('mp4') ? 'm4a' : 'webm'
       const fileName = `voice_${Date.now()}.${ext}`
-      const { audioUrl } = await uploadAudio(recording.blob, fileName, groupId)
+      const { audioUrl, objectKey } = await uploadAudio(recording.blob, fileName, groupId)
 
-      // Transcribe in background, send message immediately
+      // Transcribe before sending (like the Flutter app does)
       let transcriptText: string | undefined
       let transcriptLang: string | undefined
+      let transcriptionStatus = 'pending'
       try {
-        const tr = await transcribeAudio(audioUrl)
+        const tr = await transcribeAudio(objectKey)
         transcriptText = tr.text
         transcriptLang = tr.language
+        transcriptionStatus = transcriptText ? 'complete' : 'none'
       } catch {
-        // Transcription is optional — send without it
+        transcriptionStatus = 'none'
       }
 
       const msg = await sendMessage(
         groupId,
         {
-          type: 'voice',
+          message_type: 'voice',
           audio_url: audioUrl,
           audio_duration_ms: recording.durationMs,
           transcript_text: transcriptText,
           transcript_lang: transcriptLang,
-          transcription_status: transcriptText ? 'complete' : 'none',
+          transcription_status: transcriptionStatus,
         },
         auth,
       )
@@ -208,6 +211,33 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
       console.error('Voice send failed:', err)
     } finally {
       setSending(false)
+    }
+  }
+
+  // Manual transcribe for existing voice messages
+  const handleTranscribe = async (message: Message) => {
+    if (!message.audio_url) return
+    const objectKey = extractObjectKey(message.audio_url)
+    if (!objectKey) return
+
+    try {
+      const tr = await transcribeAudio(objectKey)
+      // Update the message on the server via PATCH
+      const updated = await updateMessage(
+        groupId,
+        message.id,
+        {
+          transcript_text: tr.text,
+          transcript_lang: tr.language,
+          transcription_status: 'complete',
+        },
+        auth,
+      )
+      mergeMessages([updated])
+    } catch (err) {
+      console.error('Transcribe failed:', err)
+      // Update status to failed locally so UI shows retry
+      mergeMessages([{ ...message, transcription_status: 'failed' }])
     }
   }
 
@@ -224,7 +254,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
       const msg = await sendMessage(
         groupId,
         {
-          type: isVideo ? 'video' : 'image',
+          message_type: isVideo ? 'video' : 'image',
           media_url,
           media_content_type: content_type,
           media_size: file.size,
@@ -318,6 +348,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
                   message={msg}
                   isOwn={msg.user_id === currentUserId}
                   onDelete={msg.user_id === currentUserId ? handleDelete : undefined}
+                  onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                 />
               </div>
             )

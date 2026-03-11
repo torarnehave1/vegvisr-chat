@@ -90,7 +90,7 @@ export async function sendMessage(
   groupId: string,
   payload: {
     body?: string
-    type?: string
+    message_type?: string
     audio_url?: string
     audio_duration_ms?: number
     transcript_text?: string
