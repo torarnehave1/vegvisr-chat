@@ -86,7 +86,8 @@ export function ProfileSettings({ auth, onBack }: Props) {
       form.append('file', file)
       const uploadRes = await fetch(UPLOAD_API, { method: 'POST', body: form })
       const uploadData = await uploadRes.json()
-      if (!uploadRes.ok || !uploadData.url) throw new Error('Image upload failed')
+      const imageUrl = uploadData.urls?.[0] || uploadData.url
+      if (!uploadRes.ok || !imageUrl) throw new Error('Image upload failed')
 
       // 2. Update profile image via PUT
       const updateRes = await fetch(PROFILE_API, {
@@ -95,17 +96,17 @@ export function ProfileSettings({ auth, onBack }: Props) {
         body: JSON.stringify({
           user_id: auth.user_id,
           phone: auth.phone,
-          profile_image_url: uploadData.url,
+          profile_image_url: imageUrl,
         }),
       })
       const updateData = await updateRes.json()
       if (!updateRes.ok || !updateData.success) throw new Error(updateData.error || 'Profile update failed')
 
-      setProfile(prev => prev ? { ...prev, profile_image_url: uploadData.url } : prev)
+      setProfile(prev => prev ? { ...prev, profile_image_url: imageUrl } : prev)
       // Update localStorage
       try {
         const stored = JSON.parse(localStorage.getItem('user') || '{}')
-        stored.profileimage = uploadData.url
+        stored.profileimage = imageUrl
         localStorage.setItem('user', JSON.stringify(stored))
       } catch { /* ignore */ }
       // Invalidate profile cache so chat messages show new avatar
