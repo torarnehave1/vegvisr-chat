@@ -255,6 +255,18 @@ function App() {
             </div>
           </header>
 
+          <div className="mt-6 flex flex-col items-center text-center">
+            <div className="flex items-center gap-3">
+              <img src={appLogo} alt="Hallo Vegvisr" className="h-10 w-auto" />
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-wide bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
+                HALLO VEGVISR
+              </h1>
+            </div>
+            <p className="mt-2 text-sm text-white/50 tracking-wide">
+              Open words. Clear intentions. Communication without walls.
+            </p>
+          </div>
+
           <EcosystemNav className="mt-4" />
 
           {authStatus === 'anonymous' && loginOpen && (
