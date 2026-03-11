@@ -16,6 +16,7 @@ interface Props {
   groupName: string
   auth: AuthParams
   currentUserId: string
+  profileVersion?: number
   onBack: () => void
   onInfo: () => void
 }
@@ -31,7 +32,7 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onInfo }: Props) {
+export function GroupChat({ groupId, groupName, auth, currentUserId, profileVersion, onBack, onInfo }: Props) {
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -83,12 +84,12 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
       .finally(() => setLoading(false))
   }, [groupId, auth, mergeMessages])
 
-  // Fetch member profiles
+  // Fetch member profiles (re-fetch when profileVersion changes, e.g. after settings save)
   useEffect(() => {
     fetchMemberProfiles(groupId, auth)
       .then(setProfiles)
       .catch(console.error)
-  }, [groupId, auth])
+  }, [groupId, auth, profileVersion])
 
   // Fetch bots in group
   useEffect(() => {

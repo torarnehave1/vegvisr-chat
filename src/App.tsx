@@ -43,6 +43,7 @@ function App() {
   const [phone, setPhone] = useState<string | null>(readChatPhone());
   const [view, setView] = useState<View>({ screen: 'groups' });
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
+  const [profileVersion, setProfileVersion] = useState(0);
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -345,7 +346,7 @@ function App() {
                       view.screen === 'settings' ? (
                         <ProfileSettings
                           auth={auth}
-                          onBack={() => setView(prevView)}
+                          onBack={() => { setProfileVersion(v => v + 1); setView(prevView); }}
                         />
                       ) : view.screen === 'chat' ? (
                         <GroupChat
@@ -353,6 +354,7 @@ function App() {
                           groupName={view.group.name}
                           auth={auth}
                           currentUserId={authUser.userId}
+                          profileVersion={profileVersion}
                           onBack={() => setView({ screen: 'groups' })}
                           onInfo={() => setView({ screen: 'info', group: view.group })}
                         />
