@@ -68,3 +68,11 @@ export interface AuthParams {
   phone: string
   email?: string
 }
+
+export interface MemberProfile {
+  user_id: string
+  email?: string
+  phone?: string
+  profileimage?: string
+  displayName: string
+}

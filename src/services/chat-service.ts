@@ -1,4 +1,4 @@
-import type { Group, Message, MessagesResponse, Member, AuthParams } from '../types/chat'
+import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile } from '../types/chat'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
 
@@ -165,6 +165,72 @@ export async function uploadMedia(
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to upload media')
   return { media_url: data.mediaUrl, object_key: data.objectKey, content_type: data.contentType }
+}
+
+// ── Member Profiles ────────────────────────────────────────────
+
+const PROFILE_BASE = 'https://smsgway.vegvisr.org/api/auth/profile'
+
+// Cache profiles in memory to avoid repeated fetches
+const profileCache = new Map<string, MemberProfile>()
+
+export async function fetchMemberProfiles(
+  groupId: string,
+  auth: AuthParams,
+): Promise<Map<string, MemberProfile>> {
+  const members = await fetchMembers(groupId, auth)
+  const profiles = new Map<string, MemberProfile>()
+
+  // Fetch profiles for human members via SMS gateway
+  await Promise.allSettled(
+    members
+      .filter(m => !m.user_id.startsWith('bot:'))
+      .map(async (m) => {
+        if (profileCache.has(m.user_id)) {
+          profiles.set(m.user_id, profileCache.get(m.user_id)!)
+          return
+        }
+        try {
+          const res = await fetch(`${PROFILE_BASE}?user_id=${encodeURIComponent(m.user_id)}`)
+          if (res.ok) {
+            const data = await res.json()
+            if (data.success) {
+              const profile: MemberProfile = {
+                user_id: m.user_id,
+                email: data.email,
+                phone: data.phone,
+                profileimage: data.profile_image_url || undefined,
+                displayName: data.email?.split('@')[0] || m.user_id.slice(0, 8),
+              }
+              profiles.set(m.user_id, profile)
+              profileCache.set(m.user_id, profile)
+            }
+          }
+        } catch { /* ignore */ }
+      }),
+  )
+
+  // Bot members
+  for (const m of members) {
+    if (m.user_id.startsWith('bot:') && !profiles.has(m.user_id)) {
+      profiles.set(m.user_id, {
+        user_id: m.user_id,
+        displayName: `BOT`,
+      })
+    }
+  }
+
+  // Fallback for members without profiles
+  for (const m of members) {
+    if (!profiles.has(m.user_id)) {
+      profiles.set(m.user_id, {
+        user_id: m.user_id,
+        displayName: m.user_id.slice(0, 8),
+      })
+    }
+  }
+
+  return profiles
 }
 
 // ── Invites ─────────────────────────────────────────────────────

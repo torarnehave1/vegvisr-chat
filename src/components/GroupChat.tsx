@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage } from '../services/chat-service'
+import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles } from '../services/chat-service'
 import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
 import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
@@ -8,7 +8,7 @@ import { usePolling } from '../hooks/usePolling'
 import { MessageBubble } from './MessageBubble'
 import { VoiceRecorder } from './VoiceRecorder'
 import type { VoiceRecording } from '../hooks/useVoiceRecorder'
-import type { AuthParams, Message } from '../types/chat'
+import type { AuthParams, Message, MemberProfile } from '../types/chat'
 
 interface Props {
   groupId: string
@@ -41,6 +41,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
   const [aiMode, setAiMode] = useState(false)
   const [aiProvider, setAiProvider] = useState<AiProvider>('grok')
   const [aiHistory, setAiHistory] = useState<AiMessage[]>([])
+  const [profiles, setProfiles] = useState<Map<string, MemberProfile>>(new Map())
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -76,6 +77,13 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [groupId, auth, mergeMessages])
+
+  // Fetch member profiles
+  useEffect(() => {
+    fetchMemberProfiles(groupId, auth)
+      .then(setProfiles)
+      .catch(console.error)
+  }, [groupId, auth])
 
   // Poll for new messages
   usePolling(groupId, auth, lastTimestamp, mergeMessages)
@@ -362,6 +370,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
                 <MessageBubble
                   message={msg}
                   isOwn={msg.user_id === currentUserId}
+                  profile={profiles.get(msg.user_id)}
                   onDelete={msg.user_id === currentUserId ? handleDelete : undefined}
                   onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                 />

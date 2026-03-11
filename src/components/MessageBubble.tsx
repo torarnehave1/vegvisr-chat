@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import type { Message } from '../types/chat'
+import type { Message, MemberProfile } from '../types/chat'
 
 interface Props {
   message: Message
   isOwn: boolean
+  profile?: MemberProfile
   onDelete?: (id: number) => void
   onTranscribe?: (message: Message) => Promise<void>
 }
@@ -20,9 +21,12 @@ function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-export function MessageBubble({ message, isOwn, onDelete, onTranscribe }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
+  const isBot = message.user_id?.startsWith('bot:')
+  const displayName = profile?.displayName || message.email || message.phone || message.user_id?.slice(0, 8) || '?'
+  const avatarUrl = profile?.profileimage
 
   const handleTranscribe = async () => {
     if (!onTranscribe || transcribing) return
@@ -36,6 +40,20 @@ export function MessageBubble({ message, isOwn, onDelete, onTranscribe }: Props)
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-1.5 group`}>
+      {/* Avatar for other users */}
+      {!isOwn && (
+        <div className="flex-shrink-0 mr-2 mt-1">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover" />
+          ) : (
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
+              isBot ? 'bg-violet-500/30 text-violet-300' : 'bg-white/10 text-white/60'
+            }`}>
+              {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
           isOwn
@@ -44,8 +62,9 @@ export function MessageBubble({ message, isOwn, onDelete, onTranscribe }: Props)
         }`}
       >
         {!isOwn && (
-          <div className="text-[11px] text-white/50 mb-0.5">
-            {message.email || message.phone || message.user_id}
+          <div className="text-[11px] text-white/50 mb-0.5 flex items-center gap-1.5">
+            <span>{displayName}</span>
+            {isBot && <span className="text-[9px] bg-violet-500/30 text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
           </div>
         )}
 
