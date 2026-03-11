@@ -5,9 +5,39 @@ import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
 import { getStoredLanguage, setStoredLanguage } from './lib/storage';
 import { useTranslation } from './lib/useTranslation';
+import { ChatLayout } from './components/ChatLayout';
+import { GroupList } from './components/GroupList';
+import { GroupChat } from './components/GroupChat';
+import { GroupInfo } from './components/GroupInfo';
+import { PhoneSetup } from './components/PhoneSetup';
+import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
 const DASHBOARD_BASE = 'https://dashboard.vegvisr.org';
+
+type View =
+  | { screen: 'groups' }
+  | { screen: 'chat'; group: Group }
+  | { screen: 'info'; group: Group }
+
+function readChatPhone(): string | null {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    const u = JSON.parse(raw);
+    return u.phone || null;
+  } catch { return null; }
+}
+
+function saveChatPhone(phone: string) {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return;
+    const u = JSON.parse(raw);
+    u.phone = phone;
+    localStorage.setItem('user', JSON.stringify(u));
+  } catch { /* ignore */ }
+}
 
 function App() {
   const [language, setLanguageState] = useState(getStoredLanguage());
@@ -18,6 +48,8 @@ function App() {
   const [loginStatus, setLoginStatus] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [phone, setPhone] = useState<string | null>(readChatPhone());
+  const [view, setView] = useState<View>({ screen: 'groups' });
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -276,24 +308,53 @@ function App() {
             </div>
           )}
 
-          <main className="mt-16">
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-8">
-              <h1 className="text-3xl font-semibold text-white">{t('app.title')}</h1>
-              <p className="mt-3 text-sm text-white/70">
-                Starter shell. Replace this section with your app content.
-              </p>
-              <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/50 px-6 py-5 text-sm text-white/70">
-                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">
-                  Starter Notes
-                </div>
-                <ul className="mt-3 list-disc space-y-2 pl-5">
-                  <li>Auth + magic link flow is wired.</li>
-                  <li>Language selector and ecosystem nav are ready.</li>
-                  <li>Replace logo + icon assets for your app.</li>
-                </ul>
-              </div>
-            </section>
-          </main>
+          {authStatus === 'authed' && authUser && phone && (
+            <main className="mt-4 flex-1 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden" style={{ minHeight: 'calc(100vh - 200px)' }}>
+              {(() => {
+                const auth: AuthParams = {
+                  user_id: authUser.userId,
+                  phone: phone,
+                  email: authUser.email,
+                };
+                return (
+                  <ChatLayout
+                    showMain={view.screen !== 'groups'}
+                    sidebar={
+                      <GroupList
+                        auth={auth}
+                        selectedGroupId={view.screen === 'chat' || view.screen === 'info' ? view.group.id : undefined}
+                        onSelectGroup={(g) => setView({ screen: 'chat', group: g })}
+                      />
+                    }
+                    main={
+                      view.screen === 'chat' ? (
+                        <GroupChat
+                          groupId={view.group.id}
+                          groupName={view.group.name}
+                          auth={auth}
+                          currentUserId={authUser.userId}
+                          onBack={() => setView({ screen: 'groups' })}
+                          onInfo={() => setView({ screen: 'info', group: view.group })}
+                        />
+                      ) : view.screen === 'info' ? (
+                        <GroupInfo
+                          group={view.group}
+                          auth={auth}
+                          onBack={() => setView({ screen: 'chat', group: view.group })}
+                        />
+                      ) : null
+                    }
+                  />
+                );
+              })()}
+            </main>
+          )}
+
+          {authStatus === 'authed' && authUser && !phone && (
+            <main className="mt-4 flex-1" style={{ minHeight: 'calc(100vh - 200px)' }}>
+              <PhoneSetup onSave={(p) => { saveChatPhone(p); setPhone(p); }} />
+            </main>
+          )}
         </div>
       </div>
     </LanguageContext.Provider>
