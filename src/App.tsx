@@ -233,9 +233,9 @@ function App() {
 
   return (
     <LanguageContext.Provider value={contextValue}>
-      <div className="min-h-screen bg-slate-950 text-white">
+      <div className="h-screen bg-slate-950 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(139,92,246,0.25),_transparent_55%)]" />
-        <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-12">
+        <div className="relative mx-auto flex h-full max-w-5xl flex-col px-6 py-4">
           <header className="flex flex-wrap items-center justify-between gap-4">
             <img
               src={appLogo}
@@ -255,7 +255,7 @@ function App() {
             </div>
           </header>
 
-          <div className="mt-6 flex flex-col items-center text-center">
+          <div className="mt-2 flex flex-col items-center text-center">
             <div className="flex items-center gap-3">
               <img src={appLogo} alt="Hallo Vegvisr" className="h-10 w-auto" />
               <h1 className="text-3xl sm:text-4xl font-bold tracking-wide bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
@@ -312,7 +312,7 @@ function App() {
           )}
 
           {authStatus === 'authed' && authUser && phone && (
-            <main className="mt-4 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
               {(() => {
                 const auth: AuthParams = {
                   user_id: authUser.userId,
