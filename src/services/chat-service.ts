@@ -164,7 +164,7 @@ export async function uploadMedia(
   )
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to upload media')
-  return { media_url: data.media_url, object_key: data.object_key, content_type: data.content_type }
+  return { media_url: data.mediaUrl, object_key: data.objectKey, content_type: data.contentType }
 }
 
 // ── Invites ─────────────────────────────────────────────────────
