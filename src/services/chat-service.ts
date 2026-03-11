@@ -204,20 +204,12 @@ export async function fetchMemberProfiles(
           if (res.ok) {
             const data = await res.json()
             if (data.success) {
-              // Check localStorage for a local display name (current user only)
-              let localName: string | undefined
-              try {
-                const stored = JSON.parse(localStorage.getItem('user') || '{}')
-                if (stored.display_name && stored.user_id === m.user_id) {
-                  localName = stored.display_name
-                }
-              } catch { /* ignore */ }
               const profile: MemberProfile = {
                 user_id: m.user_id,
                 email: data.email,
                 phone: data.phone,
                 profileimage: data.profile_image_url || undefined,
-                displayName: localName || data.email?.split('@')[0] || m.user_id.slice(0, 8),
+                displayName: data.display_name || data.email?.split('@')[0] || m.user_id.slice(0, 8),
               }
               profiles.set(m.user_id, profile)
               profileCache.set(m.user_id, profile)

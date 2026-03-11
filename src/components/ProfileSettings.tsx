@@ -40,9 +40,9 @@ export function ProfileSettings({ auth, onBack }: Props) {
       .then(data => {
         if (data.success) {
           setProfile(data)
-          // If no local display name, derive from email
+          // Use server display_name, then local, then derive from email
           if (!displayName) {
-            setDisplayName(data.email?.split('@')[0] || '')
+            setDisplayName(data.display_name || data.email?.split('@')[0] || '')
           }
         }
       })
@@ -50,20 +50,34 @@ export function ProfileSettings({ auth, onBack }: Props) {
       .finally(() => setLoading(false))
   }, [auth.user_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Display name is local-only (API doesn't support it — same as Flutter app)
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (!displayName.trim()) return
     setSaving(true)
     setMessage(null)
     try {
+      // Save to server
+      const res = await fetch(PROFILE_API, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: auth.user_id,
+          phone: auth.phone,
+          display_name: displayName.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to save')
+
+      // Also save locally for fast access
       const stored = JSON.parse(localStorage.getItem('user') || '{}')
       stored.display_name = displayName.trim()
       localStorage.setItem('user', JSON.stringify(stored))
+
       // Invalidate profile cache so chat picks up the new name
       clearProfileCache(auth.user_id)
       setMessage({ text: 'Display name saved', type: 'ok' })
-    } catch {
-      setMessage({ text: 'Failed to save', type: 'err' })
+    } catch (err) {
+      setMessage({ text: err instanceof Error ? err.message : 'Failed to save', type: 'err' })
     } finally {
       setSaving(false)
     }
@@ -198,7 +212,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   {saving ? '...' : 'Save'}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-white/30">Saved locally on this device</p>
+              <p className="mt-1 text-[11px] text-white/30">Visible to other group members</p>
             </div>
 
             {/* Account Info */}
