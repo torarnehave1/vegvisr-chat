@@ -59,6 +59,8 @@ export function ProfileSettings({ auth, onBack }: Props) {
       const stored = JSON.parse(localStorage.getItem('user') || '{}')
       stored.display_name = displayName.trim()
       localStorage.setItem('user', JSON.stringify(stored))
+      // Invalidate profile cache so chat picks up the new name
+      clearProfileCache(auth.user_id)
       setMessage({ text: 'Display name saved', type: 'ok' })
     } catch {
       setMessage({ text: 'Failed to save', type: 'err' })
