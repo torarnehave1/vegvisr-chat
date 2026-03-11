@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AuthBar, EcosystemNav, LanguageSelector } from 'vegvisr-ui-kit';
-import appLogo from './assets/app-logo.png';
+const appLogo = 'https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png';
 import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
 import { getStoredLanguage, setStoredLanguage } from './lib/storage';
