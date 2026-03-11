@@ -42,6 +42,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
   const [aiProvider, setAiProvider] = useState<AiProvider>('grok')
   const [aiHistory, setAiHistory] = useState<AiMessage[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -79,12 +80,26 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
   // Poll for new messages
   usePolling(groupId, auth, lastTimestamp, mergeMessages)
 
-  // Auto-scroll to bottom
+  // Scroll to bottom helper
+  const scrollToBottom = useCallback(() => {
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ block: 'end' })
+    })
+  }, [])
+
+  // Auto-scroll to bottom on new messages (if already at bottom)
   useEffect(() => {
-    if (atBottomRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (atBottomRef.current) {
+      scrollToBottom()
     }
-  }, [sortedMessages.length])
+  }, [sortedMessages.length, scrollToBottom])
+
+  // Scroll to bottom after initial load completes
+  useEffect(() => {
+    if (!loading && sortedMessages.length > 0) {
+      scrollToBottom()
+    }
+  }, [loading, scrollToBottom]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track if at bottom
   const handleScroll = () => {
@@ -354,6 +369,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, onBack, onI
             )
           })
         )}
+        <div ref={bottomRef} />
       </div>
 
       {/* Input */}

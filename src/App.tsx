@@ -9,7 +9,6 @@ import { ChatLayout } from './components/ChatLayout';
 import { GroupList } from './components/GroupList';
 import { GroupChat } from './components/GroupChat';
 import { GroupInfo } from './components/GroupInfo';
-import { PhoneSetup } from './components/PhoneSetup';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
@@ -29,15 +28,6 @@ function readChatPhone(): string | null {
   } catch { return null; }
 }
 
-function saveChatPhone(phone: string) {
-  try {
-    const raw = localStorage.getItem('user');
-    if (!raw) return;
-    const u = JSON.parse(raw);
-    u.phone = phone;
-    localStorage.setItem('user', JSON.stringify(u));
-  } catch { /* ignore */ }
-}
 
 function App() {
   const [language, setLanguageState] = useState(getStoredLanguage());
@@ -99,6 +89,7 @@ function App() {
       setAuthCookie(user.emailVerificationToken);
     }
     sessionStorage.setItem('email_session_verified', '1');
+    setPhone(payload.phone);
     setAuthUser({
       userId: payload.user_id || payload.oauth_id || '',
       email: payload.email,
@@ -309,7 +300,7 @@ function App() {
           )}
 
           {authStatus === 'authed' && authUser && phone && (
-            <main className="mt-4 flex-1 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden" style={{ minHeight: 'calc(100vh - 200px)' }}>
+            <main className="mt-4 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
               {(() => {
                 const auth: AuthParams = {
                   user_id: authUser.userId,
@@ -351,9 +342,10 @@ function App() {
           )}
 
           {authStatus === 'authed' && authUser && !phone && (
-            <main className="mt-4 flex-1" style={{ minHeight: 'calc(100vh - 200px)' }}>
-              <PhoneSetup onSave={(p) => { saveChatPhone(p); setPhone(p); }} />
-            </main>
+            <div className="mt-10 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-6 py-4 text-sm text-amber-100">
+              Your account does not have a phone number linked. Please contact support or update your profile at{' '}
+              <a href="https://dashboard.vegvisr.org" className="underline text-sky-300 hover:text-sky-200">dashboard.vegvisr.org</a>.
+            </div>
           )}
         </div>
       </div>
