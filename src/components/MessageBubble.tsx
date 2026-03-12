@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import type { Message, MemberProfile } from '../types/chat'
+import type { Message, MemberProfile, AuthParams } from '../types/chat'
 import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 import { YouTubeCard } from './YouTubeCard'
+import { PollCardWithFetch } from './PollCard'
 
 interface Props {
   message: Message
@@ -9,6 +10,8 @@ interface Props {
   profile?: MemberProfile
   onDelete?: (id: number) => void
   onTranscribe?: (message: Message) => Promise<void>
+  auth?: AuthParams
+  currentUserId?: string
 }
 
 function formatTime(ts: number): string {
@@ -95,7 +98,7 @@ function parseTextWithLinks(text: string): TextPart[] {
   return parts
 }
 
-export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
@@ -245,6 +248,14 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe 
             {message.body && <p className="text-sm mt-1">{message.body}</p>}
           </div>
         )}
+
+        {/* Poll */}
+        {msgType === 'poll' && message.body && auth && currentUserId && (() => {
+          const match = message.body.match(/^poll::([^:]+)::(.+)$/)
+          if (!match) return <p className="text-sm">{message.body}</p>
+          const pollId = match[1]
+          return <PollCardWithFetch pollId={pollId} auth={auth} currentUserId={currentUserId} />
+        })()}
 
         <div className="flex items-center justify-end gap-1.5 mt-0.5">
           <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>

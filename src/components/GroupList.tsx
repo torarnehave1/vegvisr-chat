@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchGroups, createGroup, archiveGroup, restoreGroup } from '../services/chat-service'
+import { fetchGroups, createGroup, archiveGroup, restoreGroup, fetchUnansweredPollCount } from '../services/chat-service'
 import type { AuthParams, Group } from '../types/chat'
 
 interface Props {
@@ -32,6 +32,7 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
   const [showCreate, setShowCreate] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [archiving, setArchiving] = useState<string | null>(null)
+  const [unansweredPolls, setUnansweredPolls] = useState<Record<string, number>>({})
 
   const isSuperAdmin = userRole === 'Superadmin'
 
@@ -47,6 +48,26 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
     const interval = setInterval(loadGroups, 30000)
     return () => clearInterval(interval)
   }, [loadGroups])
+
+  // Fetch unanswered poll counts for active groups
+  useEffect(() => {
+    const activeGroups = groups.filter(g => !(g.archived_at && g.archived_at > 0))
+    if (activeGroups.length === 0) return
+    Promise.allSettled(
+      activeGroups.map(async g => {
+        const count = await fetchUnansweredPollCount(g.id, auth)
+        return { id: g.id, count }
+      })
+    ).then(results => {
+      const counts: Record<string, number> = {}
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value.count > 0) {
+          counts[r.value.id] = r.value.count
+        }
+      }
+      setUnansweredPolls(counts)
+    })
+  }, [groups, auth])
 
   const handleCreate = async () => {
     if (!newName.trim() || creating) return
@@ -197,6 +218,13 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
                     {formatDate(g.updated_at)}
                   </span>
                 </div>
+                {unansweredPolls[g.id] > 0 && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] text-amber-300/80 bg-amber-500/15 px-1.5 py-px rounded-full">
+                      {unansweredPolls[g.id]} unanswered poll{unansweredPolls[g.id] > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
               </div>
               {/* Superadmin: archive/restore button */}
               {isSuperAdmin && (

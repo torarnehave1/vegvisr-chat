@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots } from '../services/chat-service'
+import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll } from '../services/chat-service'
 import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
 import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
@@ -9,6 +9,8 @@ import { MessageBubble } from './MessageBubble'
 import { VoiceRecorder } from './VoiceRecorder'
 import type { VoiceRecording } from '../hooks/useVoiceRecorder'
 import { BotMentionDropdown } from './BotMentionDropdown'
+import { EmojiPicker } from './EmojiPicker'
+import { PollCreator } from './PollCreator'
 import type { AuthParams, Message, MemberProfile, ChatBot } from '../types/chat'
 
 interface Props {
@@ -48,6 +50,8 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
   const [mentionFilter, setMentionFilter] = useState<string | null>(null) // null = dropdown hidden
   const [activeBotBanner, setActiveBotBanner] = useState<ChatBot | null>(null)
   const [pendingMedia, setPendingMedia] = useState<{ file: File; previewUrl: string } | null>(null)
+  const [showPollCreator, setShowPollCreator] = useState(false)
+  const [creatingPoll, setCreatingPoll] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -147,6 +151,19 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
         })
         .catch(console.error)
         .finally(() => setLoadingOlder(false))
+    }
+  }
+
+  const handleCreatePoll = async (question: string, options: string[]) => {
+    if (creatingPoll) return
+    setCreatingPoll(true)
+    try {
+      await createPoll(groupId, question, options, auth)
+      setShowPollCreator(false)
+    } catch (err) {
+      console.error('Create poll failed:', err)
+    } finally {
+      setCreatingPoll(false)
     }
   }
 
@@ -525,6 +542,8 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
                   profile={profiles.get(msg.user_id)}
                   onDelete={msg.user_id === currentUserId ? handleDelete : undefined}
                   onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
+                  auth={auth}
+                  currentUserId={currentUserId}
                 />
               </div>
             )
@@ -599,6 +618,15 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             onSelect={handleBotSelect}
           />
         )}
+        {showPollCreator && (
+          <div className="max-w-3xl mx-auto mb-2">
+            <PollCreator
+              onSubmit={handleCreatePoll}
+              onCancel={() => setShowPollCreator(false)}
+              disabled={creatingPoll}
+            />
+          </div>
+        )}
         <div className="flex gap-2 items-end max-w-3xl mx-auto">
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -606,6 +634,13 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             title="Attach image or video"
           >
             &#x1F4CE;
+          </button>
+          <button
+            onClick={() => setShowPollCreator(!showPollCreator)}
+            className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-white/10' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+            title="Create a poll"
+          >
+            &#x1F4CA;
           </button>
           <input
             ref={fileInputRef}
@@ -615,6 +650,10 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             className="hidden"
           />
           <VoiceRecorder onSend={handleVoiceSend} />
+          <EmojiPicker onSelect={(emoji) => {
+            setInput(prev => prev + emoji)
+            inputRef.current?.focus()
+          }} />
           <textarea
             ref={inputRef}
             value={input}

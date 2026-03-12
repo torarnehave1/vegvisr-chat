@@ -27,7 +27,7 @@ export interface Member {
   joined_at: number
 }
 
-export type MessageType = 'text' | 'voice' | 'image' | 'video'
+export type MessageType = 'text' | 'voice' | 'image' | 'video' | 'poll'
 
 export interface Message {
   id: number
@@ -77,6 +77,20 @@ export interface MemberProfile {
   phone?: string
   profileimage?: string
   displayName: string
+}
+
+export interface Poll {
+  id: string
+  message_id: number
+  group_id: string
+  question: string
+  options: string[]
+  created_by: string
+  created_at: number
+  closed_at?: number | null
+  votes: Record<number, number>  // option_index -> count
+  total_votes: number
+  my_vote: number | null
 }
 
 export interface ChatBot {

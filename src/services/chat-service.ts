@@ -1,4 +1,4 @@
-import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot } from '../types/chat'
+import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot, Poll } from '../types/chat'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
 
@@ -317,4 +317,64 @@ export async function joinInvite(code: string, auth: AuthParams): Promise<Group>
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to join group')
   return data.group
+}
+
+// ── Polls ───────────────────────────────────────────────────────
+
+export async function createPoll(
+  groupId: string,
+  question: string,
+  options: string[],
+  auth: AuthParams,
+): Promise<Poll> {
+  const res = await fetch(`${BASE}/groups/${groupId}/polls`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...authBody(auth), question, options }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create poll')
+  return data.poll
+}
+
+export async function votePoll(
+  pollId: string,
+  optionIndex: number,
+  auth: AuthParams,
+): Promise<{ my_vote: number; votes: Record<number, number>; total_votes: number }> {
+  const res = await fetch(`${BASE}/polls/${pollId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...authBody(auth), option_index: optionIndex }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to vote')
+  return { my_vote: data.my_vote, votes: data.votes, total_votes: data.total_votes }
+}
+
+export async function fetchPoll(pollId: string, auth: AuthParams): Promise<Poll> {
+  const res = await fetch(`${BASE}/polls/${pollId}?${authQuery(auth)}`)
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to fetch poll')
+  return data.poll
+}
+
+export async function fetchUnansweredPollCount(
+  groupId: string,
+  auth: AuthParams,
+): Promise<number> {
+  const res = await fetch(`${BASE}/groups/${groupId}/polls/unanswered?${authQuery(auth)}`)
+  const data = await res.json()
+  if (!res.ok || !data.success) return 0
+  return data.unanswered_count || 0
+}
+
+export async function closePoll(pollId: string, auth: AuthParams): Promise<void> {
+  const res = await fetch(`${BASE}/polls/${pollId}/close`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(authBody(auth)),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to close poll')
 }
