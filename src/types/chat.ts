@@ -13,6 +13,8 @@ export interface Group {
   email?: string
   image_url?: string
   graph_id?: string
+  archived_at?: number | null
+  archived_by?: string | null
   created_at: number
   updated_at: number
 }

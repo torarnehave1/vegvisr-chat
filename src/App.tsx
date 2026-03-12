@@ -338,6 +338,7 @@ function App() {
                     sidebar={
                       <GroupList
                         auth={auth}
+                        userRole={authUser.role}
                         selectedGroupId={view.screen === 'chat' || view.screen === 'info' ? view.group.id : undefined}
                         onSelectGroup={(g) => { markGroupRead(g.id); setView({ screen: 'chat', group: g }) }}
                       />

@@ -24,11 +24,32 @@ function authBody(auth: AuthParams): Record<string, string> {
 
 // ── Groups ──────────────────────────────────────────────────────
 
-export async function fetchGroups(auth: AuthParams): Promise<Group[]> {
-  const res = await fetch(`${BASE}/groups?${authQuery(auth)}`)
+export async function fetchGroups(auth: AuthParams, opts?: { includeArchived?: boolean }): Promise<Group[]> {
+  const extra = opts?.includeArchived ? '&include_archived=1' : ''
+  const res = await fetch(`${BASE}/groups?${authQuery(auth)}${extra}`)
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to fetch groups')
   return data.groups || []
+}
+
+export async function archiveGroup(groupId: string, auth: AuthParams): Promise<void> {
+  const res = await fetch(`${BASE}/groups/${groupId}/archive`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(authBody(auth)),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to archive group')
+}
+
+export async function restoreGroup(groupId: string, auth: AuthParams): Promise<void> {
+  const res = await fetch(`${BASE}/groups/${groupId}/restore`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(authBody(auth)),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to restore group')
 }
 
 export async function createGroup(name: string, auth: AuthParams): Promise<Group> {

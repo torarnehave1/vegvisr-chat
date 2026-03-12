@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchGroups, createGroup } from '../services/chat-service'
+import { fetchGroups, createGroup, archiveGroup, restoreGroup } from '../services/chat-service'
 import type { AuthParams, Group } from '../types/chat'
 
 interface Props {
   auth: AuthParams
+  userRole?: string | null
   onSelectGroup: (group: Group) => void
   selectedGroupId?: string
 }
@@ -23,23 +24,26 @@ export function markGroupRead(groupId: string) {
   } catch { /* ignore */ }
 }
 
-export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
+export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Props) {
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
+  const [archiving, setArchiving] = useState<string | null>(null)
+
+  const isSuperAdmin = userRole === 'Superadmin'
 
   const loadGroups = useCallback(() => {
-    fetchGroups(auth)
+    fetchGroups(auth, { includeArchived: showArchived && isSuperAdmin })
       .then(g => setGroups(g.sort((a, b) => b.updated_at - a.updated_at)))
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [auth])
+  }, [auth, showArchived, isSuperAdmin])
 
   useEffect(() => {
     loadGroups()
-    // Re-fetch groups every 30s to update badges
     const interval = setInterval(loadGroups, 30000)
     return () => clearInterval(interval)
   }, [loadGroups])
@@ -60,6 +64,36 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
     }
   }
 
+  const handleArchive = async (e: React.MouseEvent, groupId: string) => {
+    e.stopPropagation()
+    if (archiving) return
+    setArchiving(groupId)
+    try {
+      await archiveGroup(groupId, auth)
+      setGroups(prev => prev.filter(g => g.id !== groupId))
+    } catch (err) {
+      console.error('Archive failed:', err)
+    } finally {
+      setArchiving(null)
+    }
+  }
+
+  const handleRestore = async (e: React.MouseEvent, groupId: string) => {
+    e.stopPropagation()
+    if (archiving) return
+    setArchiving(groupId)
+    try {
+      await restoreGroup(groupId, auth)
+      setGroups(prev => prev.map(g =>
+        g.id === groupId ? { ...g, archived_at: null, archived_by: null } : g
+      ))
+    } catch (err) {
+      console.error('Restore failed:', err)
+    } finally {
+      setArchiving(null)
+    }
+  }
+
   function formatDate(ts: number): string {
     const d = new Date(ts)
     const now = new Date()
@@ -75,12 +109,28 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
         <h2 className="text-white font-semibold text-lg">Chats</h2>
         <button
+          type="button"
           onClick={() => setShowCreate(!showCreate)}
           className="text-sky-400 hover:text-sky-300 text-sm font-medium"
         >
           + New
         </button>
       </div>
+
+      {/* Superadmin: show archived toggle */}
+      {isSuperAdmin && (
+        <div className="px-4 py-1.5 border-b border-white/10 flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-white/50 hover:text-white/70 transition-colors">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={e => setShowArchived(e.target.checked)}
+              className="rounded border-white/20 bg-white/5 text-sky-500 focus:ring-sky-500/30"
+            />
+            Show archived groups
+          </label>
+        </div>
+      )}
 
       {/* Create group */}
       {showCreate && (
@@ -94,6 +144,7 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
             autoFocus
           />
           <button
+            type="button"
             onClick={handleCreate}
             disabled={!newName.trim() || creating}
             className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm disabled:opacity-40"
@@ -114,14 +165,16 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
           </div>
         ) : (
           groups.map(g => {
-            const hasUnread = g.updated_at > getLastRead(g.id) && selectedGroupId !== g.id
+            const isArchived = !!(g.archived_at && g.archived_at > 0)
+            const hasUnread = !isArchived && g.updated_at > getLastRead(g.id) && selectedGroupId !== g.id
             return (
             <button
+              type="button"
               key={g.id}
               onClick={() => { markGroupRead(g.id); onSelectGroup(g) }}
               className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
                 selectedGroupId === g.id ? 'bg-white/10' : ''
-              }`}
+              } ${isArchived ? 'opacity-50' : ''}`}
             >
               {/* Avatar */}
               <div className="relative w-10 h-10 rounded-full bg-sky-600/30 flex items-center justify-center flex-shrink-0 text-sky-300 font-semibold text-sm">
@@ -136,12 +189,39 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-white font-medium'}`}>{g.name}</span>
+                  <span className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-white font-medium'}`}>
+                    {g.name}
+                    {isArchived && <span className="ml-1.5 text-[10px] text-amber-400/70 font-normal">(archived)</span>}
+                  </span>
                   <span className={`text-[11px] flex-shrink-0 ml-2 ${hasUnread ? 'text-sky-400' : 'text-white/30'}`}>
                     {formatDate(g.updated_at)}
                   </span>
                 </div>
               </div>
+              {/* Superadmin: archive/restore button */}
+              {isSuperAdmin && (
+                isArchived ? (
+                  <button
+                    type="button"
+                    onClick={e => handleRestore(e, g.id)}
+                    disabled={archiving === g.id}
+                    className="text-[10px] px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-colors flex-shrink-0"
+                    title="Restore group"
+                  >
+                    {archiving === g.id ? '...' : 'Restore'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={e => handleArchive(e, g.id)}
+                    disabled={archiving === g.id}
+                    className="text-[10px] px-2 py-1 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    title="Archive group"
+                  >
+                    {archiving === g.id ? '...' : 'Archive'}
+                  </button>
+                )
+              )}
             </button>
             )
           }))
