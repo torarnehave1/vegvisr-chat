@@ -646,7 +646,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
 
       {/* Drag overlay */}
       {dragOver && (
-        <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex items-center justify-center z-50 pointer-events-none">
+        <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex flex-col items-center justify-center z-50 pointer-events-none">
           <span className="text-sky-200 text-lg font-medium bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
           <span className="text-sky-200/50 text-xs mt-2 bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
