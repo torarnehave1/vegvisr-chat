@@ -3,6 +3,13 @@ import type { Message, MemberProfile, AuthParams } from '../types/chat'
 import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 import { YouTubeCard } from './YouTubeCard'
 import { PollCardWithFetch } from './PollCard'
+import type { MessageReactions, ReactionType } from '../services/chat-service'
+
+const REACTION_EMOJI: Record<string, string> = {
+  thumbs_up: '\uD83D\uDC4D',
+  heart: '\u2764\uFE0F',
+  smile: '\uD83D\uDE0A',
+}
 
 interface Props {
   message: Message
@@ -12,6 +19,8 @@ interface Props {
   onTranscribe?: (message: Message) => Promise<void>
   auth?: AuthParams
   currentUserId?: string
+  reactions?: MessageReactions
+  onReact?: (messageId: number, reaction: ReactionType) => void
 }
 
 function formatTime(ts: number): string {
@@ -98,7 +107,7 @@ function parseTextWithLinks(text: string): TextPart[] {
   return parts
 }
 
-export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
@@ -257,7 +266,47 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           return <PollCardWithFetch pollId={pollId} auth={auth} currentUserId={currentUserId} />
         })()}
 
+        {/* Existing reactions display */}
+        {reactions && Object.keys(reactions.counts).length > 0 && (
+          <div className="flex gap-1 mt-1 flex-wrap">
+            {Object.entries(reactions.counts).map(([r, count]) => {
+              const isMine = reactions.mine.includes(r)
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => onReact?.(message.id, r as ReactionType)}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                    isMine
+                      ? 'bg-sky-500/20 border border-sky-400/30'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <span>{REACTION_EMOJI[r]}</span>
+                  <span className="text-[10px] text-white/60">{count}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         <div className="flex items-center justify-end gap-1.5 mt-0.5">
+          {/* Reaction picker — visible on hover */}
+          {onReact && (
+            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {(['thumbs_up', 'heart', 'smile'] as ReactionType[]).map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => onReact(message.id, r)}
+                  className="text-sm hover:scale-125 transition-transform px-0.5"
+                  title={r.replace('_', ' ')}
+                >
+                  {REACTION_EMOJI[r]}
+                </button>
+              ))}
+            </div>
+          )}
           <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>
           {isOwn && onDelete && (
             <button

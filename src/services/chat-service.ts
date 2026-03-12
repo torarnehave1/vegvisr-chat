@@ -378,3 +378,40 @@ export async function closePoll(pollId: string, auth: AuthParams): Promise<void>
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to close poll')
 }
+
+// ── Reactions ───────────────────────────────────────────────────
+
+export type ReactionType = 'thumbs_up' | 'heart' | 'smile'
+
+export interface MessageReactions {
+  counts: Record<string, number>
+  mine: string[]
+}
+
+export async function toggleReaction(
+  messageId: number,
+  reaction: ReactionType,
+  auth: AuthParams,
+): Promise<{ reactions: Record<string, number>; my_reactions: string[]; added: boolean }> {
+  const res = await fetch(`${BASE}/messages/${messageId}/reactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...authBody(auth), reaction }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to toggle reaction')
+  return { reactions: data.reactions, my_reactions: data.my_reactions, added: data.added }
+}
+
+export async function fetchReactions(
+  groupId: string,
+  messageIds: number[],
+  auth: AuthParams,
+): Promise<Record<number, MessageReactions>> {
+  if (messageIds.length === 0) return {}
+  const ids = messageIds.join(',')
+  const res = await fetch(`${BASE}/groups/${groupId}/reactions?${authQuery(auth)}&message_ids=${ids}`)
+  const data = await res.json()
+  if (!res.ok || !data.success) return {}
+  return data.reactions || {}
+}

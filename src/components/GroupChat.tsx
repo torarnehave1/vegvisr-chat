@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll } from '../services/chat-service'
+import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll, toggleReaction, fetchReactions } from '../services/chat-service'
+import type { MessageReactions, ReactionType } from '../services/chat-service'
 import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
 import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
@@ -52,6 +53,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
   const [pendingMedia, setPendingMedia] = useState<{ file: File; previewUrl: string } | null>(null)
   const [showPollCreator, setShowPollCreator] = useState(false)
   const [creatingPoll, setCreatingPoll] = useState(false)
+  const [allReactions, setAllReactions] = useState<Record<number, MessageReactions>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -103,6 +105,27 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
 
   // Poll for new messages
   usePolling(groupId, auth, lastTimestamp, mergeMessages)
+
+  // Fetch reactions for visible messages
+  useEffect(() => {
+    const ids = sortedMessages.map(m => m.id)
+    if (ids.length === 0) return
+    fetchReactions(groupId, ids, auth)
+      .then(setAllReactions)
+      .catch(console.error)
+  }, [groupId, auth, sortedMessages.length])
+
+  const handleReact = async (messageId: number, reaction: ReactionType) => {
+    try {
+      const result = await toggleReaction(messageId, reaction, auth)
+      setAllReactions(prev => ({
+        ...prev,
+        [messageId]: { counts: result.reactions, mine: result.my_reactions },
+      }))
+    } catch (err) {
+      console.error('Reaction failed:', err)
+    }
+  }
 
   // Scroll to bottom helper
   const scrollToBottom = useCallback(() => {
@@ -544,6 +567,8 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
                   onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                   auth={auth}
                   currentUserId={currentUserId}
+                  reactions={allReactions[msg.id]}
+                  onReact={handleReact}
                 />
               </div>
             )
