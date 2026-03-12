@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { fetchMembers, createInvite, updateGroup, uploadMedia } from '../services/chat-service'
 import type { AuthParams, Member, Group } from '../types/chat'
 
@@ -19,7 +19,26 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [saving, setSaving] = useState(false)
   const [imageUrl, setImageUrl] = useState(group.image_url || '')
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const avatarRef = useRef<HTMLDivElement>(null)
+
+  const isOwner = group.created_by === auth.user_id
+
+  const uploadGroupImage = useCallback(async (file: File) => {
+    if (uploadingImage || !file.type.startsWith('image/')) return
+    setUploadingImage(true)
+    try {
+      const { media_url } = await uploadMedia(group.id, file, auth)
+      const updated = await updateGroup(group.id, { image_url: media_url }, auth)
+      setImageUrl(media_url)
+      onGroupUpdated?.(updated)
+    } catch (err) {
+      console.error('Upload group image failed:', err)
+    } finally {
+      setUploadingImage(false)
+    }
+  }, [group.id, auth, uploadingImage, onGroupUpdated])
 
   useEffect(() => {
     fetchMembers(group.id, auth)
@@ -56,22 +75,73 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
   const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || uploadingImage) return
-    if (!file.type.startsWith('image/')) return
+    if (!file) return
+    await uploadGroupImage(file)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+  }
 
-    setUploadingImage(true)
-    try {
-      const { media_url } = await uploadMedia(group.id, file, auth)
-      const updated = await updateGroup(group.id, { image_url: media_url }, auth)
-      setImageUrl(media_url)
-      onGroupUpdated?.(updated)
-    } catch (err) {
-      console.error('Upload group image failed:', err)
-    } finally {
-      setUploadingImage(false)
-      if (imageInputRef.current) imageInputRef.current.value = ''
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragOver(false)
+    if (!isOwner || uploadingImage) return
+
+    // Direct file drop (from Finder/desktop/Photos app)
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      await uploadGroupImage(file)
+      return
+    }
+
+    // Dropped image URL from browser (e.g. drag from web page)
+    const html = e.dataTransfer.getData('text/html')
+    if (html) {
+      const match = html.match(/<img[^>]+src=["']([^"']+)["']/)
+      if (match?.[1]) {
+        try {
+          const resp = await fetch(match[1])
+          const blob = await resp.blob()
+          const ext = blob.type.split('/')[1] || 'png'
+          const imgFile = new File([blob], `group-image.${ext}`, { type: blob.type })
+          await uploadGroupImage(imgFile)
+        } catch (err) {
+          console.error('Failed to fetch dropped image URL:', err)
+        }
+        return
+      }
     }
   }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isOwner) setDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragOver(false)
+  }
+
+  // Paste handler — listen on the whole component when owner
+  useEffect(() => {
+    if (!isOwner) return
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) await uploadGroupImage(file)
+          return
+        }
+      }
+    }
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [isOwner, uploadGroupImage])
 
   const handleRemoveImage = async () => {
     if (uploadingImage) return
@@ -101,8 +171,16 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {/* Group avatar */}
         <div className="flex flex-col items-center">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-sky-600/30 flex items-center justify-center text-sky-300 text-2xl font-semibold overflow-hidden">
+          <div
+            ref={avatarRef}
+            className="relative"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <div className={`w-20 h-20 rounded-full bg-sky-600/30 flex items-center justify-center text-sky-300 text-2xl font-semibold overflow-hidden transition-all ${
+              dragOver ? 'ring-2 ring-sky-400 ring-offset-2 ring-offset-slate-900 scale-110' : ''
+            }`}>
               {imageUrl ? (
                 <img src={imageUrl} alt={group.name} className="w-full h-full object-cover" />
               ) : (
@@ -113,8 +191,13 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                   <span className="text-white text-xs">...</span>
                 </div>
               )}
+              {dragOver && !uploadingImage && (
+                <div className="absolute inset-0 bg-sky-500/30 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">Drop</span>
+                </div>
+              )}
             </div>
-            {group.created_by === auth.user_id && (
+            {isOwner && (
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
@@ -134,7 +217,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             className="hidden"
             title="Choose group photo"
           />
-          {imageUrl && group.created_by === auth.user_id && (
+          {imageUrl && isOwner && (
             <button
               type="button"
               onClick={handleRemoveImage}
@@ -166,7 +249,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           ) : (
             <div className="flex items-center gap-2 mt-1">
               <span className="text-white text-lg">{name}</span>
-              {group.created_by === auth.user_id && (
+              {isOwner && (
                 <button onClick={() => setEditing(true)} className="text-white/30 hover:text-white text-sm">
                   &#x270E;
                 </button>
