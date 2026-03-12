@@ -217,15 +217,20 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             className="hidden"
             title="Choose group photo"
           />
-          {imageUrl && isOwner && (
-            <button
-              type="button"
-              onClick={handleRemoveImage}
-              disabled={uploadingImage}
-              className="text-[11px] text-rose-400/70 hover:text-rose-400 mt-2 transition-colors"
-            >
-              Remove photo
-            </button>
+          {isOwner && (
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-white/30 mt-1.5">Drop or paste an image</span>
+              {imageUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  disabled={uploadingImage}
+                  className="text-[11px] text-rose-400/70 hover:text-rose-400 mt-1 transition-colors"
+                >
+                  Remove photo
+                </button>
+              )}
+            </div>
           )}
         </div>
 
