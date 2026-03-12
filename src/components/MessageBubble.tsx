@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Message, MemberProfile } from '../types/chat'
 import { KnowledgeGraphCard } from './KnowledgeGraphCard'
+import { YouTubeCard } from './YouTubeCard'
 
 interface Props {
   message: Message
@@ -20,6 +21,22 @@ function formatDuration(ms: number): string {
   const s = totalSec % 60
   if (m > 0) return `${m}:${s.toString().padStart(2, '0')}`
   return `${s}s`
+}
+
+// Extract YouTube video ID from various URL formats
+function extractYouTubeId(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtube-nocookie.com')) {
+      if (u.pathname === '/watch') return u.searchParams.get('v')
+      const embedMatch = u.pathname.match(/\/(?:embed|v|shorts)\/([^/?]+)/)
+      if (embedMatch) return embedMatch[1]
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 // Extract graphId from vegvisr knowledge graph URLs
@@ -45,9 +62,10 @@ function extractGraphId(url: string): string | null {
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph'
+  type: 'text' | 'link' | 'graph' | 'youtube'
   value: string
   graphId?: string
+  youtubeId?: string
 }
 
 function parseTextWithLinks(text: string): TextPart[] {
@@ -61,8 +79,11 @@ function parseTextWithLinks(text: string): TextPart[] {
     }
     const url = match[0]
     const graphId = extractGraphId(url)
+    const youtubeId = extractYouTubeId(url)
     if (graphId) {
       parts.push({ type: 'graph', value: url, graphId })
+    } else if (youtubeId) {
+      parts.push({ type: 'youtube', value: url, youtubeId })
     } else {
       parts.push({ type: 'link', value: url })
     }
@@ -124,18 +145,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe 
         {/* Text */}
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const hasGraphCards = parts.some(p => p.type === 'graph')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
                 {parts.map((part, i) => {
                   if (part.type === 'text') return <span key={i}>{part.value}</span>
-                  if (part.type === 'link') return (
-                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all hover:text-sky-200">
-                      {part.value}
-                    </a>
-                  )
-                  // graph links rendered inline as text link; card below
                   return (
                     <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all hover:text-sky-200">
                       {part.value}
@@ -143,12 +158,13 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe 
                   )
                 })}
               </p>
-              {hasGraphCards && parts
-                .filter(p => p.type === 'graph' && p.graphId)
-                .map((p, i) => (
-                  <KnowledgeGraphCard key={i} graphId={p.graphId!} url={p.value} />
-                ))
-              }
+              {richCards.map((p, i) =>
+                p.type === 'graph' && p.graphId ? (
+                  <KnowledgeGraphCard key={`g-${i}`} graphId={p.graphId} url={p.value} />
+                ) : p.type === 'youtube' && p.youtubeId ? (
+                  <YouTubeCard key={`yt-${i}`} videoId={p.youtubeId} url={p.value} />
+                ) : null
+              )}
             </div>
           )
         })()}
