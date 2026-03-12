@@ -6,7 +6,7 @@ import { readStoredUser, type AuthUser } from './lib/auth';
 import { getStoredLanguage, setStoredLanguage } from './lib/storage';
 import { useTranslation } from './lib/useTranslation';
 import { ChatLayout } from './components/ChatLayout';
-import { GroupList } from './components/GroupList';
+import { GroupList, markGroupRead } from './components/GroupList';
 import { GroupChat } from './components/GroupChat';
 import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
@@ -339,7 +339,7 @@ function App() {
                       <GroupList
                         auth={auth}
                         selectedGroupId={view.screen === 'chat' || view.screen === 'info' ? view.group.id : undefined}
-                        onSelectGroup={(g) => setView({ screen: 'chat', group: g })}
+                        onSelectGroup={(g) => { markGroupRead(g.id); setView({ screen: 'chat', group: g }) }}
                       />
                     }
                     main={

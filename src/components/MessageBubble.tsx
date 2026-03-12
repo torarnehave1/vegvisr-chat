@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Message, MemberProfile } from '../types/chat'
+import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 
 interface Props {
   message: Message
@@ -19,6 +20,58 @@ function formatDuration(ms: number): string {
   const s = totalSec % 60
   if (m > 0) return `${m}:${s.toString().padStart(2, '0')}`
   return `${s}s`
+}
+
+// Extract graphId from vegvisr knowledge graph URLs
+function extractGraphId(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (!u.hostname.endsWith('vegvisr.org')) return null
+    // /gnew-viewer?graphId=xxx
+    if (u.pathname.startsWith('/gnew-viewer')) {
+      const gid = u.searchParams.get('graphId')
+      if (gid) return gid
+      // /gnew-viewer/graphs/seo-slug — slug IS the graphId
+      const slugMatch = u.pathname.match(/\/gnew-viewer\/graphs\/([^/]+)/)
+      if (slugMatch) return slugMatch[1]
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// URL regex for splitting text into parts
+const URL_RE = /https?:\/\/[^\s<>"]+/g
+
+interface TextPart {
+  type: 'text' | 'link' | 'graph'
+  value: string
+  graphId?: string
+}
+
+function parseTextWithLinks(text: string): TextPart[] {
+  const parts: TextPart[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  URL_RE.lastIndex = 0
+  while ((match = URL_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', value: text.slice(lastIndex, match.index) })
+    }
+    const url = match[0]
+    const graphId = extractGraphId(url)
+    if (graphId) {
+      parts.push({ type: 'graph', value: url, graphId })
+    } else {
+      parts.push({ type: 'link', value: url })
+    }
+    lastIndex = match.index + url.length
+  }
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', value: text.slice(lastIndex) })
+  }
+  return parts
 }
 
 export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe }: Props) {
@@ -69,9 +122,36 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe 
         )}
 
         {/* Text */}
-        {msgType === 'text' && (
-          <p className="text-sm whitespace-pre-wrap break-words">{message.body}</p>
-        )}
+        {msgType === 'text' && message.body && (() => {
+          const parts = parseTextWithLinks(message.body)
+          const hasGraphCards = parts.some(p => p.type === 'graph')
+          return (
+            <div>
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {parts.map((part, i) => {
+                  if (part.type === 'text') return <span key={i}>{part.value}</span>
+                  if (part.type === 'link') return (
+                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all hover:text-sky-200">
+                      {part.value}
+                    </a>
+                  )
+                  // graph links rendered inline as text link; card below
+                  return (
+                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all hover:text-sky-200">
+                      {part.value}
+                    </a>
+                  )
+                })}
+              </p>
+              {hasGraphCards && parts
+                .filter(p => p.type === 'graph' && p.graphId)
+                .map((p, i) => (
+                  <KnowledgeGraphCard key={i} graphId={p.graphId!} url={p.value} />
+                ))
+              }
+            </div>
+          )
+        })()}
 
         {/* Voice */}
         {msgType === 'voice' && (

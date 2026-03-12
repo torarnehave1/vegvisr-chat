@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { fetchGroups, createGroup } from '../services/chat-service'
 import type { AuthParams, Group } from '../types/chat'
 
@@ -8,6 +8,21 @@ interface Props {
   selectedGroupId?: string
 }
 
+function getLastRead(groupId: string): number {
+  try {
+    const stored = JSON.parse(localStorage.getItem('chat_last_read') || '{}')
+    return stored[groupId] || 0
+  } catch { return 0 }
+}
+
+export function markGroupRead(groupId: string) {
+  try {
+    const stored = JSON.parse(localStorage.getItem('chat_last_read') || '{}')
+    stored[groupId] = Date.now()
+    localStorage.setItem('chat_last_read', JSON.stringify(stored))
+  } catch { /* ignore */ }
+}
+
 export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
@@ -15,12 +30,19 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
   const [newName, setNewName] = useState('')
   const [showCreate, setShowCreate] = useState(false)
 
-  useEffect(() => {
+  const loadGroups = useCallback(() => {
     fetchGroups(auth)
       .then(g => setGroups(g.sort((a, b) => b.updated_at - a.updated_at)))
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [auth])
+
+  useEffect(() => {
+    loadGroups()
+    // Re-fetch groups every 30s to update badges
+    const interval = setInterval(loadGroups, 30000)
+    return () => clearInterval(interval)
+  }, [loadGroups])
 
   const handleCreate = async () => {
     if (!newName.trim() || creating) return
@@ -91,33 +113,39 @@ export function GroupList({ auth, onSelectGroup, selectedGroupId }: Props) {
             <p className="text-sm mt-1">Create one to start chatting!</p>
           </div>
         ) : (
-          groups.map(g => (
+          groups.map(g => {
+            const hasUnread = g.updated_at > getLastRead(g.id) && selectedGroupId !== g.id
+            return (
             <button
               key={g.id}
-              onClick={() => onSelectGroup(g)}
+              onClick={() => { markGroupRead(g.id); onSelectGroup(g) }}
               className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
                 selectedGroupId === g.id ? 'bg-white/10' : ''
               }`}
             >
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-sky-600/30 flex items-center justify-center flex-shrink-0 text-sky-300 font-semibold text-sm">
+              <div className="relative w-10 h-10 rounded-full bg-sky-600/30 flex items-center justify-center flex-shrink-0 text-sky-300 font-semibold text-sm">
                 {g.image_url ? (
                   <img src={g.image_url} alt="" className="w-full h-full rounded-full object-cover" />
                 ) : (
                   g.name.charAt(0).toUpperCase()
                 )}
+                {hasUnread && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-sky-500 rounded-full border-2 border-slate-900" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-medium text-sm truncate">{g.name}</span>
-                  <span className="text-white/30 text-[11px] flex-shrink-0 ml-2">
+                  <span className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-white font-medium'}`}>{g.name}</span>
+                  <span className={`text-[11px] flex-shrink-0 ml-2 ${hasUnread ? 'text-sky-400' : 'text-white/30'}`}>
                     {formatDate(g.updated_at)}
                   </span>
                 </div>
               </div>
             </button>
-          ))
-        )}
+            )
+          }))
+        }
       </div>
     </div>
   )

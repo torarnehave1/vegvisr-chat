@@ -47,6 +47,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
   const [bots, setBots] = useState<ChatBot[]>([])
   const [mentionFilter, setMentionFilter] = useState<string | null>(null) // null = dropdown hidden
   const [activeBotBanner, setActiveBotBanner] = useState<ChatBot | null>(null)
+  const [pendingMedia, setPendingMedia] = useState<{ file: File; previewUrl: string } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -346,11 +347,29 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
     }
   }
 
+  const stageMedia = (file: File) => {
+    const previewUrl = URL.createObjectURL(file)
+    setPendingMedia({ file, previewUrl })
+  }
+
+  const confirmMedia = () => {
+    if (!pendingMedia) return
+    handleMediaFile(pendingMedia.file)
+    URL.revokeObjectURL(pendingMedia.previewUrl)
+    setPendingMedia(null)
+  }
+
+  const cancelMedia = () => {
+    if (!pendingMedia) return
+    URL.revokeObjectURL(pendingMedia.previewUrl)
+    setPendingMedia(null)
+  }
+
   const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    handleMediaFile(file)
+    stageMedia(file)
   }
 
   // Paste image from clipboard
@@ -361,7 +380,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
       if (item.type.startsWith('image/')) {
         e.preventDefault()
         const file = item.getAsFile()
-        if (file) handleMediaFile(file)
+        if (file) stageMedia(file)
         return
       }
     }
@@ -387,7 +406,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
     setDragOver(false)
     const file = e.dataTransfer.files[0]
     if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
-      handleMediaFile(file)
+      stageMedia(file)
     }
   }
 
@@ -505,6 +524,38 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             onClick={() => setActiveBotBanner(null)}
             className="text-white/30 hover:text-white/60 text-sm flex-shrink-0"
           >&#x2715;</button>
+        </div>
+      )}
+
+      {/* Media preview before sending */}
+      {pendingMedia && (
+        <div className="flex-shrink-0 border-t border-white/10 bg-slate-900/80 px-3 py-2">
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            {pendingMedia.file.type.startsWith('video/') ? (
+              <video src={pendingMedia.previewUrl} className="h-20 rounded-lg object-cover" />
+            ) : (
+              <img src={pendingMedia.previewUrl} alt="Preview" className="h-20 rounded-lg object-cover" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white/70 truncate">{pendingMedia.file.name}</p>
+              <p className="text-[11px] text-white/40">{(pendingMedia.file.size / 1024).toFixed(0)} KB</p>
+            </div>
+            <button
+              onClick={confirmMedia}
+              disabled={sending}
+              className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+            >
+              {sending ? '...' : 'Send'}
+            </button>
+            <button
+              onClick={cancelMedia}
+              disabled={sending}
+              className="px-3 py-2 text-white/50 hover:text-rose-400 rounded-xl text-sm transition-colors"
+              title="Cancel"
+            >
+              &#x2715;
+            </button>
+          </div>
         </div>
       )}
 
