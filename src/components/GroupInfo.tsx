@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
-import { fetchMembers, createInvite, updateGroup } from '../services/chat-service'
+import { useState, useEffect, useRef } from 'react'
+import { fetchMembers, createInvite, updateGroup, uploadMedia } from '../services/chat-service'
 import type { AuthParams, Member, Group } from '../types/chat'
 
 interface Props {
   group: Group
   auth: AuthParams
   onBack: () => void
+  onGroupUpdated?: (group: Group) => void
 }
 
-export function GroupInfo({ group, auth, onBack }: Props) {
+export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
@@ -16,6 +17,9 @@ export function GroupInfo({ group, auth, onBack }: Props) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(group.name)
   const [saving, setSaving] = useState(false)
+  const [imageUrl, setImageUrl] = useState(group.image_url || '')
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchMembers(group.id, auth)
@@ -40,12 +44,46 @@ export function GroupInfo({ group, auth, onBack }: Props) {
     if (!name.trim() || saving) return
     setSaving(true)
     try {
-      await updateGroup(group.id, { name: name.trim() }, auth)
+      const updated = await updateGroup(group.id, { name: name.trim() }, auth)
       setEditing(false)
+      onGroupUpdated?.(updated)
     } catch (err) {
       console.error('Update group failed:', err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || uploadingImage) return
+    if (!file.type.startsWith('image/')) return
+
+    setUploadingImage(true)
+    try {
+      const { media_url } = await uploadMedia(group.id, file, auth)
+      const updated = await updateGroup(group.id, { image_url: media_url }, auth)
+      setImageUrl(media_url)
+      onGroupUpdated?.(updated)
+    } catch (err) {
+      console.error('Upload group image failed:', err)
+    } finally {
+      setUploadingImage(false)
+      if (imageInputRef.current) imageInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveImage = async () => {
+    if (uploadingImage) return
+    setUploadingImage(true)
+    try {
+      const updated = await updateGroup(group.id, { image_url: '' }, auth)
+      setImageUrl('')
+      onGroupUpdated?.(updated)
+    } catch (err) {
+      console.error('Remove group image failed:', err)
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -61,6 +99,53 @@ export function GroupInfo({ group, auth, onBack }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+        {/* Group avatar */}
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full bg-sky-600/30 flex items-center justify-center text-sky-300 text-2xl font-semibold overflow-hidden">
+              {imageUrl ? (
+                <img src={imageUrl} alt={group.name} className="w-full h-full object-cover" />
+              ) : (
+                group.name.charAt(0).toUpperCase()
+              )}
+              {uploadingImage && (
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">...</span>
+                </div>
+              )}
+            </div>
+            {group.created_by === auth.user_id && (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploadingImage}
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
+                title="Change group photo"
+              >
+                &#x1F4F7;
+              </button>
+            )}
+          </div>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImagePick}
+            className="hidden"
+            title="Choose group photo"
+          />
+          {imageUrl && group.created_by === auth.user_id && (
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              disabled={uploadingImage}
+              className="text-[11px] text-rose-400/70 hover:text-rose-400 mt-2 transition-colors"
+            >
+              Remove photo
+            </button>
+          )}
+        </div>
+
         {/* Group name */}
         <div>
           <label className="text-white/40 text-xs uppercase tracking-wider">Name</label>

@@ -364,6 +364,7 @@ function App() {
                           group={view.group}
                           auth={auth}
                           onBack={() => setView({ screen: 'chat', group: view.group })}
+                          onGroupUpdated={(updated) => setView({ screen: 'info', group: updated })}
                         />
                       ) : null
                     }
