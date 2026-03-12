@@ -172,7 +172,7 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
               type="button"
               key={g.id}
               onClick={() => { markGroupRead(g.id); onSelectGroup(g) }}
-              className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
+              className={`group w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
                 selectedGroupId === g.id ? 'bg-white/10' : ''
               } ${isArchived ? 'opacity-50' : ''}`}
             >
