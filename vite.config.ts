@@ -9,12 +9,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Hallo Vegvisr',
+        id: 'vegvisr-chat',
+        name: 'Vegvisr Chat',
         short_name: 'Vegvisr Chat',
         description: 'Open words. Clear intentions. Communication without walls.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
+        scope: '/',
         start_url: '/',
         icons: [
           {
