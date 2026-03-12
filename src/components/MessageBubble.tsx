@@ -21,6 +21,9 @@ interface Props {
   currentUserId?: string
   reactions?: MessageReactions
   onReact?: (messageId: number, reaction: ReactionType) => void
+  onReply?: (message: Message) => void
+  replyToMessage?: Message | null
+  replyToProfile?: MemberProfile
 }
 
 function formatTime(ts: number): string {
@@ -107,7 +110,7 @@ function parseTextWithLinks(text: string): TextPart[] {
   return parts
 }
 
-export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
@@ -125,7 +128,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
   }
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-1.5 group`}>
+    <div id={`msg-${message.id}`} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-1.5 group transition-all`}>
       {/* Avatar for other users */}
       {!isOwn && (
         <div className="flex-shrink-0 mr-2 mt-1">
@@ -151,6 +154,34 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           <div className="text-[11px] text-white/50 mb-0.5 flex items-center gap-1.5">
             <span>{displayName}</span>
             {isBot && <span className="text-[9px] bg-violet-500/30 text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
+          </div>
+        )}
+
+        {/* Reply-to preview */}
+        {replyToMessage && (
+          <div
+            className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-2 cursor-pointer ${
+              isOwn ? 'bg-sky-700/40 border-sky-300/50' : 'bg-white/5 border-sky-400/50'
+            }`}
+            onClick={() => {
+              const el = document.getElementById(`msg-${replyToMessage.id}`)
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                el.classList.add('ring-2', 'ring-sky-400/50', 'rounded-2xl')
+                setTimeout(() => el.classList.remove('ring-2', 'ring-sky-400/50', 'rounded-2xl'), 2000)
+              }
+            }}
+          >
+            <div className="text-[10px] text-sky-300/80 font-medium">
+              {replyToProfile?.displayName || replyToMessage.user_id?.slice(0, 8)}
+            </div>
+            <div className="text-[11px] text-white/50 truncate max-w-[200px]">
+              {replyToMessage.message_type === 'voice' ? 'Voice message' :
+               replyToMessage.message_type === 'image' ? 'Photo' :
+               replyToMessage.message_type === 'video' ? 'Video' :
+               replyToMessage.message_type === 'poll' ? 'Poll' :
+               replyToMessage.body?.slice(0, 60) || '...'}
+            </div>
           </div>
         )}
 
@@ -291,7 +322,17 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         )}
 
         <div className="flex items-center justify-end gap-1.5 mt-0.5">
-          {/* Reaction picker — visible on hover */}
+          {/* Reply + Reaction picker — visible on hover */}
+          {onReply && (
+            <button
+              type="button"
+              onClick={() => onReply(message)}
+              className="text-[11px] opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity mr-0.5"
+              title="Reply"
+            >
+              &#8617;
+            </button>
+          )}
           {onReact && (
             <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {(['thumbs_up', 'heart', 'smile'] as ReactionType[]).map(r => (

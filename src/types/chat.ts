@@ -52,6 +52,8 @@ export interface Message {
   media_size?: number
   video_thumbnail_url?: string
   video_duration_ms?: number
+  // Reply
+  reply_to_id?: number | null
 }
 
 export interface PagingInfo {

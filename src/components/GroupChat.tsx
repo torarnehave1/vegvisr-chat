@@ -54,6 +54,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
   const [showPollCreator, setShowPollCreator] = useState(false)
   const [creatingPoll, setCreatingPoll] = useState(false)
   const [allReactions, setAllReactions] = useState<Record<number, MessageReactions>>({})
+  const [replyTo, setReplyTo] = useState<Message | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -196,13 +197,16 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
     setSending(true)
     setInput('')
 
+    const replyId = replyTo?.id
+    setReplyTo(null)
+
     if (aiMode) {
       // AI mode: send to AI, then post AI response as a message
       const userMsg: AiMessage = { role: 'user', content: text }
       const history = [...aiHistory, userMsg]
       try {
         // Post user text as a normal message first
-        const userSent = await sendMessage(groupId, { body: text }, auth)
+        const userSent = await sendMessage(groupId, { body: text, reply_to_id: replyId }, auth)
         mergeMessages([userSent])
         atBottomRef.current = true
 
@@ -224,7 +228,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
       }
     } else {
       try {
-        const msg = await sendMessage(groupId, { body: text }, auth)
+        const msg = await sendMessage(groupId, { body: text, reply_to_id: replyId }, auth)
         mergeMessages([msg])
         atBottomRef.current = true
       } catch (err) {
@@ -569,6 +573,9 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
                   currentUserId={currentUserId}
                   reactions={allReactions[msg.id]}
                   onReact={handleReact}
+                  onReply={(m) => { setReplyTo(m); inputRef.current?.focus() }}
+                  replyToMessage={msg.reply_to_id ? messages.get(msg.reply_to_id) ?? null : null}
+                  replyToProfile={msg.reply_to_id && messages.get(msg.reply_to_id) ? profiles.get(messages.get(msg.reply_to_id)!.user_id) : undefined}
                 />
               </div>
             )
@@ -642,6 +649,30 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             filter={mentionFilter}
             onSelect={handleBotSelect}
           />
+        )}
+        {replyTo && (
+          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+            <div className="flex-1 min-w-0 border-l-2 border-sky-400 pl-2">
+              <div className="text-[10px] text-sky-300 font-medium">
+                {profiles.get(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
+              </div>
+              <div className="text-xs text-white/50 truncate">
+                {replyTo.message_type === 'voice' ? 'Voice message' :
+                 replyTo.message_type === 'image' ? 'Photo' :
+                 replyTo.message_type === 'video' ? 'Video' :
+                 replyTo.message_type === 'poll' ? 'Poll' :
+                 replyTo.body?.slice(0, 80) || '...'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              className="text-white/30 hover:text-white/70 text-sm flex-shrink-0"
+              title="Cancel reply"
+            >
+              &#x2715;
+            </button>
+          </div>
         )}
         {showPollCreator && (
           <div className="max-w-3xl mx-auto mb-2">
