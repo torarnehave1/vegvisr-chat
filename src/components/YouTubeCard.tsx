@@ -18,11 +18,19 @@ export function YouTubeCard({ videoId, url }: Props) {
     setTranscriptError(null)
     try {
       const res = await fetch(
-        `https://api.vegvisr.org/youtube-transcript-io?videoId=${encodeURIComponent(videoId)}`
+        `https://api.vegvisr.org/youtube-transcript-io/${encodeURIComponent(videoId)}`
       )
       if (!res.ok) throw new Error(`Transcript fetch failed (${res.status})`)
       const data = await res.json()
-      const text = data.transcript || data.text
+      // API returns { transcript: [{ text }, ...] } — join segments
+      let text: string
+      if (Array.isArray(data.transcript)) {
+        text = data.transcript.map((s: { text: string }) => s.text).join(' ')
+      } else if (typeof data.transcript === 'string') {
+        text = data.transcript
+      } else {
+        text = data.text
+      }
       if (!text) throw new Error('No transcript available')
       setTranscript(text)
     } catch (err) {
