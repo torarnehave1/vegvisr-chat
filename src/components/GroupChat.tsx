@@ -391,9 +391,8 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    if (e.dataTransfer.types.includes('Files')) {
-      setDragOver(true)
-    }
+    e.dataTransfer.dropEffect = 'copy'
+    setDragOver(true)
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -401,12 +400,43 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
     setDragOver(false)
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
+
+    // Case 1: Dropped file(s) from desktop or file picker
     const file = e.dataTransfer.files[0]
     if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
       stageMedia(file)
+      return
+    }
+
+    // Case 2: Dropped image URL from another web app (e.g. photos app)
+    // Try to extract image URL from HTML or plain text
+    const html = e.dataTransfer.getData('text/html')
+    const plainUrl = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain')
+
+    let imageUrl: string | null = null
+    if (html) {
+      const match = html.match(/<img[^>]+src=["']([^"']+)["']/)
+      if (match) imageUrl = match[1]
+    }
+    if (!imageUrl && plainUrl && /^https?:\/\/.+\.(png|jpe?g|gif|webp|svg|mp4|webm|mov)/i.test(plainUrl)) {
+      imageUrl = plainUrl.trim()
+    }
+
+    if (imageUrl) {
+      try {
+        const res = await fetch(imageUrl)
+        const blob = await res.blob()
+        if (blob.type.startsWith('image/') || blob.type.startsWith('video/')) {
+          const ext = blob.type.split('/')[1]?.split(';')[0] || 'png'
+          const droppedFile = new File([blob], `dropped_${Date.now()}.${ext}`, { type: blob.type })
+          stageMedia(droppedFile)
+        }
+      } catch (err) {
+        console.error('Failed to fetch dropped image URL:', err)
+      }
     }
   }
 
@@ -618,6 +648,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
       {dragOver && (
         <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex items-center justify-center z-50 pointer-events-none">
           <span className="text-sky-200 text-lg font-medium bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
+          <span className="text-sky-200/50 text-xs mt-2 bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
       )}
     </div>
