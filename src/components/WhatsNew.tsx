@@ -1,7 +1,53 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
 const GRAPH_ID = 'graph_chat_new_features'
+
+// Parses markdown image syntax: ![alt|width: 300px](url) or ![alt](url)
+const MD_IMAGE_RE = /!\[([^\]]*)\]\(([^)]+)\)/g
+
+function renderInfo(info: string): ReactNode[] {
+  const parts: ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let key = 0
+
+  while ((match = MD_IMAGE_RE.exec(info)) !== null) {
+    // Text before this image
+    if (match.index > lastIndex) {
+      parts.push(<span key={key++}>{info.slice(lastIndex, match.index)}</span>)
+    }
+
+    const alt = match[1]
+    const url = match[2]
+
+    // Extract width from alt like "image|width: 300px"
+    const widthMatch = alt.match(/width:\s*(\d+(?:px|%)?)/i)
+    const style: React.CSSProperties = {
+      maxWidth: '100%',
+      borderRadius: '0.5rem',
+      marginTop: '0.5rem',
+      marginBottom: '0.5rem',
+    }
+    if (widthMatch) {
+      style.width = widthMatch[1].includes('%') || widthMatch[1].includes('px')
+        ? widthMatch[1]
+        : `${widthMatch[1]}px`
+    }
+
+    const cleanAlt = alt.replace(/\|.*$/, '').trim() || 'image'
+    parts.push(<img key={key++} src={url} alt={cleanAlt} style={style} loading="lazy" />)
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // Remaining text after last image
+  if (lastIndex < info.length) {
+    parts.push(<span key={key++}>{info.slice(lastIndex)}</span>)
+  }
+
+  return parts
+}
 
 interface FeatureNode {
   id: string
@@ -82,9 +128,9 @@ export function WhatsNew({ onBack }: Props) {
               />
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-white/90">{feature.label}</h3>
-                <p className="mt-1 text-xs text-white/60 leading-relaxed whitespace-pre-line">
-                  {feature.info}
-                </p>
+                <div className="mt-1 text-xs text-white/60 leading-relaxed whitespace-pre-line">
+                  {renderInfo(feature.info)}
+                </div>
               </div>
             </div>
           </div>
