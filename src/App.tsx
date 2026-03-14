@@ -12,6 +12,7 @@ import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
 import { UpdateBanner } from './components/UpdateBanner';
 import { WhatsNew } from './components/WhatsNew';
+import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
@@ -47,6 +48,7 @@ function App() {
   const [view, setView] = useState<View>({ screen: 'groups' });
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
   const [profileVersion, setProfileVersion] = useState(0);
+  const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -308,7 +310,7 @@ function App() {
 
           {view.screen === 'whatsnew' && authStatus !== 'authed' && (
             <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
-              <WhatsNew onBack={() => setView(prevView)} />
+              <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
             </main>
           )}
 
@@ -345,7 +347,7 @@ function App() {
                     }
                     main={
                       view.screen === 'whatsnew' ? (
-                        <WhatsNew onBack={() => setView(prevView)} />
+                        <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
                       ) : view.screen === 'settings' ? (
                         <ProfileSettings
                           auth={auth}
@@ -362,6 +364,7 @@ function App() {
                           onInfo={() => setView({ screen: 'info', group: view.group })}
                           onSettings={() => { setPrevView(view); setView({ screen: 'settings' }); }}
                           onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
+                          hasNewFeatures={hasNewFeatures}
                         />
                       ) : view.screen === 'info' ? (
                         <GroupInfo
@@ -385,7 +388,11 @@ function App() {
             </div>
           )}
         </div>
-        <UpdateBanner onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }} />
+        <UpdateBanner
+          onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
+          hasNewFeatures={hasNewFeatures}
+          newFeatureCount={newFeatureCount}
+        />
       </div>
     </LanguageContext.Provider>
   );

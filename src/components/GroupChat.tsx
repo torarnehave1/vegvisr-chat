@@ -24,6 +24,7 @@ interface Props {
   onInfo: () => void
   onSettings?: () => void
   onWhatsNew?: () => void
+  hasNewFeatures?: boolean
 }
 
 function dayLabel(ts: number): string {
@@ -37,7 +38,7 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew }: Props) {
+export function GroupChat({ groupId, groupName, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures }: Props) {
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -533,10 +534,13 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
         {onWhatsNew && (
           <button
             onClick={onWhatsNew}
-            className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            className="relative text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
             title="What's New"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {hasNewFeatures && (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-sky-400 animate-pulse" />
+            )}
           </button>
         )}
         {onSettings && (

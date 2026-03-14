@@ -1,13 +1,27 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { writeFileSync } from 'fs'
+import { resolve } from 'path'
+
+/** Writes version.json with a unique build hash into dist/ after each build */
+function versionJsonPlugin(): Plugin {
+  return {
+    name: 'version-json',
+    closeBundle() {
+      const version = { buildHash: Date.now().toString(36), builtAt: new Date().toISOString() }
+      writeFileSync(resolve('dist', 'version.json'), JSON.stringify(version))
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    versionJsonPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       manifest: {
         id: 'vegvisr-chat',
         name: 'Vegvisr Chat',
@@ -34,6 +48,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallbackDenylist: [/^\/version\.json$/],
+        globIgnores: ['**/version.json'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/favicons\.vegvisr\.org\/.*/i,
