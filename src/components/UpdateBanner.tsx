@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useVersionCheck } from '../hooks/useVersionCheck';
 
@@ -7,22 +8,10 @@ interface Props {
   newFeatureCount?: number
 }
 
-/**
- * Shows a banner when a new version is deployed OR new features are added.
- *
- * Three independent triggers:
- * 1. **version.json polling** — detects code deploys (buildHash change)
- * 2. **Service Worker prompt** — for PWA-installed users
- * 3. **hasNewFeatures prop** — detects new What's New entries (agent or manual)
- *
- * Code deploy → "New update available" + Refresh button
- * Content update only → "New features added" + What's new? button (no refresh needed)
- */
 export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Props) {
-  // Primary: version.json polling (reliable, CDN-proof)
+  const [dismissed, setDismissed] = useState(false)
   const { updateAvailable, reload } = useVersionCheck()
 
-  // Secondary: SW prompt (for PWA-installed users)
   const {
     needRefresh: [swNeedsRefresh],
   } = useRegisterSW({
@@ -36,10 +25,10 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Pr
   const isCodeUpdate = updateAvailable || swNeedsRefresh
   const isContentOnly = !isCodeUpdate && hasNewFeatures
 
-  if (!isCodeUpdate && !isContentOnly) return null;
+  if (dismissed || (!isCodeUpdate && !isContentOnly)) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl border border-sky-400/30 bg-slate-900/95 px-5 py-3 shadow-xl shadow-sky-500/10 backdrop-blur-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 border-b border-sky-400/30 bg-slate-900/95 px-4 py-2 backdrop-blur-sm">
       <div className="flex items-center gap-2 text-sm text-white/80">
         <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
         {isCodeUpdate
@@ -49,20 +38,32 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Pr
       </div>
       {onWhatsNew && (
         <button
-          onClick={onWhatsNew}
-          className="rounded-xl border border-white/20 px-3 py-1.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          type="button"
+          onClick={() => { setDismissed(true); onWhatsNew(); }}
+          className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
         >
           What's new?
         </button>
       )}
       {isCodeUpdate && (
         <button
+          type="button"
           onClick={reload}
-          className="rounded-xl bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-sky-400 transition-colors"
+          className="rounded-lg bg-sky-500 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-400 transition-colors"
         >
           Refresh
         </button>
       )}
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        className="ml-1 p-1 text-white/40 hover:text-white/80 transition-colors"
+        title="Dismiss"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
   );
 }
