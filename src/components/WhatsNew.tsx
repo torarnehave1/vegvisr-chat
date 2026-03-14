@@ -32,10 +32,7 @@ export function WhatsNew({ onBack }: Props) {
       .then((data) => {
         const nodes: FeatureNode[] = (data.nodes || [])
           .filter((n: FeatureNode) => n.label && n.info)
-          .sort((a: FeatureNode, b: FeatureNode) => {
-            // Sort by id descending (newest first) — nodes created later have higher IDs
-            return (b.id || '').localeCompare(a.id || '')
-          })
+          .reverse() // API returns oldest-first; reverse for newest-first
         setFeatures(nodes)
       })
       .catch((err) => setError(err.message))
