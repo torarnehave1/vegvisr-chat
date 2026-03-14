@@ -275,6 +275,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
       const msg = await sendMessage(
         groupId,
         {
+          body: recording.title,
           message_type: 'voice',
           audio_url: audioUrl,
           audio_duration_ms: recording.durationMs,

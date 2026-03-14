@@ -1,6 +1,10 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-export function UpdateBanner() {
+interface Props {
+  onWhatsNew?: () => void
+}
+
+export function UpdateBanner({ onWhatsNew }: Props) {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
@@ -21,6 +25,14 @@ export function UpdateBanner() {
         <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
         New update available
       </div>
+      {onWhatsNew && (
+        <button
+          onClick={onWhatsNew}
+          className="rounded-xl border border-white/20 px-3 py-1.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          What's new?
+        </button>
+      )}
       <button
         onClick={() => updateServiceWorker(true)}
         className="rounded-xl bg-sky-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-sky-400 transition-colors"

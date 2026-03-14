@@ -1,9 +1,13 @@
 import { useCallback, useRef, useState } from 'react'
 
-export interface VoiceRecording {
+export interface RawRecording {
   blob: Blob
   durationMs: number
   mimeType: string
+}
+
+export interface VoiceRecording extends RawRecording {
+  title: string
 }
 
 export function useVoiceRecorder() {
@@ -12,8 +16,8 @@ export function useVoiceRecorder() {
   const chunksRef = useRef<Blob[]>([])
   const startTimeRef = useRef(0)
 
-  const start = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+  const start = useCallback(async (existingStream?: MediaStream) => {
+    const stream = existingStream || await navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Prefer webm/opus, fall back to mp4 (Safari)
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -35,7 +39,7 @@ export function useVoiceRecorder() {
     setRecording(true)
   }, [])
 
-  const stop = useCallback((): Promise<VoiceRecording> => {
+  const stop = useCallback((): Promise<RawRecording> => {
     return new Promise((resolve, reject) => {
       const recorder = recorderRef.current
       if (!recorder || recorder.state === 'inactive') {

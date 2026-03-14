@@ -11,6 +11,7 @@ import { GroupChat } from './components/GroupChat';
 import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
 import { UpdateBanner } from './components/UpdateBanner';
+import { WhatsNew } from './components/WhatsNew';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
@@ -21,6 +22,7 @@ type View =
   | { screen: 'chat'; group: Group }
   | { screen: 'info'; group: Group }
   | { screen: 'settings' }
+  | { screen: 'whatsnew' }
 
 function readChatPhone(): string | null {
   try {
@@ -249,6 +251,13 @@ function App() {
             />
             <div className="flex items-center gap-3">
               <LanguageSelector value={language} onChange={setLanguage} />
+              <button
+                onClick={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
+                className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+                title="What's New"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </button>
               {authStatus === 'authed' && (
                 <button
                   onClick={() => { setPrevView(view); setView({ screen: 'settings' }); }}
@@ -313,13 +322,19 @@ function App() {
             </div>
           )}
 
-          {authStatus === 'checking' && (
+          {view.screen === 'whatsnew' && authStatus !== 'authed' && (
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
+              <WhatsNew onBack={() => setView(prevView)} />
+            </main>
+          )}
+
+          {authStatus === 'checking' && view.screen !== 'whatsnew' && (
             <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/70">
               Checking session...
             </div>
           )}
 
-          {authStatus === 'anonymous' && (
+          {authStatus === 'anonymous' && view.screen !== 'whatsnew' && (
             <div className="mt-10 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-100">
               You are not signed in. Click “Sign in” to continue.
             </div>
@@ -345,7 +360,9 @@ function App() {
                       />
                     }
                     main={
-                      view.screen === 'settings' ? (
+                      view.screen === 'whatsnew' ? (
+                        <WhatsNew onBack={() => setView(prevView)} />
+                      ) : view.screen === 'settings' ? (
                         <ProfileSettings
                           auth={auth}
                           onBack={() => { setProfileVersion(v => v + 1); setView(prevView); }}
@@ -382,7 +399,7 @@ function App() {
             </div>
           )}
         </div>
-        <UpdateBanner />
+        <UpdateBanner onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }} />
       </div>
     </LanguageContext.Provider>
   );

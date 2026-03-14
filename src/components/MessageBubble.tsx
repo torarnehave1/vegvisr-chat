@@ -176,7 +176,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               {replyToProfile?.displayName || replyToMessage.user_id?.slice(0, 8)}
             </div>
             <div className="text-[11px] text-white/50 truncate max-w-[200px]">
-              {replyToMessage.message_type === 'voice' ? 'Voice message' :
+              {replyToMessage.message_type === 'voice' ? (replyToMessage.body || 'Voice message') :
                replyToMessage.message_type === 'image' ? 'Photo' :
                replyToMessage.message_type === 'video' ? 'Video' :
                replyToMessage.message_type === 'poll' ? 'Poll' :
@@ -215,6 +215,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {/* Voice */}
         {msgType === 'voice' && (
           <div>
+            {/* Voice title / subject */}
+            {message.body && (
+              <p className="text-sm font-semibold mb-1.5 text-sky-300/90">
+                {message.body}
+              </p>
+            )}
             <div className="flex items-center gap-2">
               <audio src={message.audio_url} controls className="max-w-full h-8" />
               {message.audio_duration_ms != null && (
