@@ -10,6 +10,7 @@ import { GroupList, markGroupRead } from './components/GroupList';
 import { GroupChat } from './components/GroupChat';
 import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
+import { UpdateBanner } from './components/UpdateBanner';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
@@ -381,6 +382,7 @@ function App() {
             </div>
           )}
         </div>
+        <UpdateBanner />
       </div>
     </LanguageContext.Provider>
   );
