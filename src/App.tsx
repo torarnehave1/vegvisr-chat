@@ -12,7 +12,9 @@ import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
 import { UpdateBanner } from './components/UpdateBanner';
 import { WhatsNew } from './components/WhatsNew';
+import { UserSuggestions } from './components/UserSuggestions';
 import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
+import { useSuggestionsCheck } from './hooks/useSuggestionsCheck';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
@@ -24,6 +26,7 @@ type View =
   | { screen: 'info'; group: Group }
   | { screen: 'settings' }
   | { screen: 'whatsnew' }
+  | { screen: 'suggestions' }
 
 function readChatPhone(): string | null {
   try {
@@ -49,6 +52,7 @@ function App() {
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
   const [profileVersion, setProfileVersion] = useState(0);
   const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
+  const { hasNew: hasNewSuggestions, markSeen: markSuggestionsSeen } = useSuggestionsCheck();
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -314,6 +318,12 @@ function App() {
             </main>
           )}
 
+          {view.screen === 'suggestions' && authStatus !== 'authed' && (
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
+              <UserSuggestions onBack={() => { markSuggestionsSeen(); setView(prevView); }} />
+            </main>
+          )}
+
           {authStatus === 'checking' && view.screen !== 'whatsnew' && (
             <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/70">
               Checking session...
@@ -348,6 +358,11 @@ function App() {
                     main={
                       view.screen === 'whatsnew' ? (
                         <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
+                      ) : view.screen === 'suggestions' ? (
+                        <UserSuggestions
+                          onBack={() => { markSuggestionsSeen(); setView(prevView); }}
+                          auth={{ user_id: authUser.userId, email: authUser.email }}
+                        />
                       ) : view.screen === 'settings' ? (
                         <ProfileSettings
                           auth={auth}
@@ -365,6 +380,8 @@ function App() {
                           onSettings={() => { setPrevView(view); setView({ screen: 'settings' }); }}
                           onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
                           hasNewFeatures={hasNewFeatures}
+                          onSuggestions={() => { setPrevView(view); setView({ screen: 'suggestions' }); }}
+                          hasNewSuggestions={hasNewSuggestions}
                         />
                       ) : view.screen === 'info' ? (
                         <GroupInfo
