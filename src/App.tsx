@@ -361,7 +361,7 @@ function App() {
                       ) : view.screen === 'suggestions' ? (
                         <UserSuggestions
                           onBack={() => { markSuggestionsSeen(); setView(prevView); }}
-                          auth={{ user_id: authUser.userId, email: authUser.email }}
+                          auth={{ user_id: authUser.userId, email: authUser.email, role: authUser.role || undefined }}
                         />
                       ) : view.screen === 'settings' ? (
                         <ProfileSettings

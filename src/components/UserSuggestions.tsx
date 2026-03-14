@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, type ReactNode } from 'react'
+import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
 const GRAPH_ID = 'graph_chat_user_suggestions'
@@ -91,7 +91,7 @@ interface SuggestionNode {
 
 interface Props {
   onBack: () => void
-  auth?: { user_id: string; email?: string }
+  auth?: { user_id: string; email?: string; role?: string }
 }
 
 type FilterTab = 'all' | 'new' | 'planned' | 'shipped'
@@ -106,6 +106,64 @@ export function UserSuggestions({ onBack, auth }: Props) {
   const [formDescription, setFormDescription] = useState('')
   const [formCategory, setFormCategory] = useState('feature')
   const [submitting, setSubmitting] = useState(false)
+  const [statusMenuId, setStatusMenuId] = useState<string | null>(null)
+  const statusMenuRef = useRef<HTMLDivElement>(null)
+
+  const isAdmin = auth?.role === 'Superadmin'
+
+  // Close status menu on click outside
+  useEffect(() => {
+    if (!statusMenuId) return
+    const handler = (e: MouseEvent) => {
+      if (statusMenuRef.current && !statusMenuRef.current.contains(e.target as Node)) {
+        setStatusMenuId(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [statusMenuId])
+
+  const handleStatusChange = async (suggestion: SuggestionNode, newStatus: string) => {
+    setStatusMenuId(null)
+    const meta = suggestion.metadata || {}
+    const oldStatus = meta.status || 'new'
+    if (newStatus === oldStatus) return
+
+    const newColor = STATUS_COLORS[newStatus] || STATUS_COLORS.new
+
+    // Optimistic update
+    setSuggestions(prev =>
+      prev.map(s =>
+        s.id === suggestion.id
+          ? { ...s, color: newColor, metadata: { ...meta, status: newStatus } }
+          : s
+      )
+    )
+
+    try {
+      await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          graphId: GRAPH_ID,
+          nodeId: suggestion.id,
+          fields: {
+            color: newColor,
+            metadata: { ...meta, status: newStatus },
+          },
+        }),
+      })
+    } catch {
+      // Revert on failure
+      setSuggestions(prev =>
+        prev.map(s =>
+          s.id === suggestion.id
+            ? { ...s, color: STATUS_COLORS[oldStatus], metadata: { ...meta, status: oldStatus } }
+            : s
+        )
+      )
+    }
+  }
 
   const fetchSuggestions = useCallback(async () => {
     try {
@@ -388,8 +446,35 @@ export function UserSuggestions({ onBack, auth }: Props) {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_STYLES[category] || CATEGORY_STYLES.other}`}>
                       {CATEGORY_LABELS[category] || category}
                     </span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium`} style={{ backgroundColor: `${STATUS_COLORS[status]}20`, color: STATUS_COLORS[status] }}>
-                      {STATUS_LABELS[status] || status}
+                    <span className="relative">
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isAdmin ? 'cursor-pointer hover:ring-1 hover:ring-white/20' : ''}`}
+                        style={{ backgroundColor: `${STATUS_COLORS[status]}20`, color: STATUS_COLORS[status] }}
+                        onClick={isAdmin ? () => setStatusMenuId(statusMenuId === suggestion.id ? null : suggestion.id) : undefined}
+                        title={isAdmin ? 'Click to change status' : (STATUS_LABELS[status] || status)}
+                      >
+                        {STATUS_LABELS[status] || status}
+                      </span>
+                      {statusMenuId === suggestion.id && (
+                        <div
+                          ref={statusMenuRef}
+                          className="absolute z-50 top-6 left-0 bg-slate-800 border border-white/10 rounded-lg shadow-xl py-1 min-w-[120px]"
+                        >
+                          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => handleStatusChange(suggestion, key)}
+                              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
+                                key === status ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                              }`}
+                            >
+                              <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[key] }} />
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </span>
                   </div>
                   <div className="mt-1 text-xs text-white/60 leading-relaxed whitespace-pre-line">
