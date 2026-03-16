@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AuthBar, EcosystemNav, LanguageSelector, ScreenRecorder } from 'vegvisr-ui-kit';
+import { AuthBar, EcosystemNav, LanguageSelector } from 'vegvisr-ui-kit';
 const appLogo = 'https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png';
 import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
@@ -280,10 +280,7 @@ function App() {
             </p>
           </div>
 
-          <div className="mt-4 flex items-center gap-3">
-            <EcosystemNav className="flex-1" />
-            <ScreenRecorder streamApiUrl="https://videostream.vegvisr.org" />
-          </div>
+          <EcosystemNav className="mt-4" />
 
           {authStatus === 'anonymous' && loginOpen && (
             <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/80">
