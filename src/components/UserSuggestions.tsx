@@ -6,6 +6,7 @@ const GRAPH_ID = 'graph_chat_user_suggestions'
 const STATUS_COLORS: Record<string, string> = {
   new: '#38bdf8',
   reviewed: '#f59e0b',
+  icebox: '#94a3b8',
   planned: '#a78bfa',
   shipped: '#34d399',
 }
@@ -13,6 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   new: 'New',
   reviewed: 'Reviewed',
+  icebox: 'Icebox',
   planned: 'Planned',
   shipped: 'Shipped',
 }
@@ -94,7 +96,7 @@ interface Props {
   auth?: { user_id: string; email?: string; role?: string }
 }
 
-type FilterTab = 'all' | 'new' | 'planned' | 'shipped'
+type FilterTab = 'all' | 'new' | 'icebox' | 'planned' | 'shipped'
 
 export function UserSuggestions({ onBack, auth }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionNode[]>([])
@@ -314,6 +316,7 @@ export function UserSuggestions({ onBack, auth }: Props) {
   const tabs: { key: FilterTab; label: string }[] = [
     { key: 'all', label: 'All' },
     { key: 'new', label: 'New' },
+    { key: 'icebox', label: 'Icebox' },
     { key: 'planned', label: 'Planned' },
     { key: 'shipped', label: 'Shipped' },
   ]
