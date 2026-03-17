@@ -21,7 +21,7 @@ export default defineConfig({
     react(),
     versionJsonPlugin(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       manifest: {
         id: 'vegvisr-chat',
         name: 'Vegvisr Chat',
@@ -47,6 +47,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallbackDenylist: [/^\/version\.json$/],
         globIgnores: ['**/version.json'],
