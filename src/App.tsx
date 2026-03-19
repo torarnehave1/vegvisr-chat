@@ -361,7 +361,8 @@ function App() {
                       ) : view.screen === 'suggestions' ? (
                         <UserSuggestions
                           onBack={() => { markSuggestionsSeen(); setView(prevView); }}
-                          auth={{ user_id: authUser.userId, email: authUser.email, role: authUser.role || undefined }}
+                          auth={{ user_id: authUser.userId, email: authUser.email, role: authUser.role || undefined, phone: phone || undefined }}
+                          groupId={prevView.screen === 'chat' ? prevView.group.id : undefined}
                         />
                       ) : view.screen === 'settings' ? (
                         <ProfileSettings

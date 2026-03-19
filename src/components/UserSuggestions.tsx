@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
+import { sendMessage } from '../services/chat-service'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
 const GRAPH_ID = 'graph_chat_user_suggestions'
@@ -81,6 +82,7 @@ interface SuggestionMetadata {
   votes?: number
   votedBy?: string[]
   createdAt?: string
+  groupId?: string
 }
 
 interface SuggestionNode {
@@ -93,12 +95,13 @@ interface SuggestionNode {
 
 interface Props {
   onBack: () => void
-  auth?: { user_id: string; email?: string; role?: string }
+  auth?: { user_id: string; email?: string; role?: string; phone?: string }
+  groupId?: string
 }
 
 type FilterTab = 'all' | 'new' | 'icebox' | 'planned' | 'shipped'
 
-export function UserSuggestions({ onBack, auth }: Props) {
+export function UserSuggestions({ onBack, auth, groupId }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -155,6 +158,23 @@ export function UserSuggestions({ onBack, auth }: Props) {
           },
         }),
       })
+
+      // When shipped: send a message to the originating group
+      if (newStatus === 'shipped') {
+        const targetGroupId = meta.groupId || groupId
+        if (targetGroupId && auth?.user_id && auth?.phone) {
+          const title = suggestion.label
+          try {
+            await sendMessage(
+              targetGroupId,
+              { body: `🚀 Shipped! «${title}» — suggestion er nå levert. Takk for innspillet! ✅` },
+              { user_id: auth.user_id, phone: auth.phone, email: auth.email },
+            )
+          } catch {
+            // Non-critical — don't revert the status change
+          }
+        }
+      }
     } catch {
       // Revert on failure
       setSuggestions(prev =>
@@ -242,6 +262,7 @@ export function UserSuggestions({ onBack, auth }: Props) {
           votes: 0,
           votedBy: [],
           createdAt: new Date().toISOString(),
+          ...(groupId ? { groupId } : {}),
         },
       }
 
