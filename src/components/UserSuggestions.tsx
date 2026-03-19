@@ -146,7 +146,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
-      await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
+      const res = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,6 +158,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
           },
         }),
       })
+      if (!res.ok) throw new Error(`patchNode failed: ${res.status}`)
 
       // When shipped: send a message to the originating group
       if (newStatus === 'shipped') {
@@ -167,7 +168,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
           try {
             await sendMessage(
               targetGroupId,
-              { body: `🚀 Shipped! «${title}» — suggestion er nå levert. Takk for innspillet! ✅` },
+              { body: `🚀 Shipped! «${title}» — suggestion er nå levert. Takk for innspillet! ✅`, message_type: 'text' },
               { user_id: auth.user_id, phone: auth.phone, email: auth.email },
             )
           } catch {
@@ -306,7 +307,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
-      await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
+      const voteRes = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -317,6 +318,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
           },
         }),
       })
+      if (!voteRes.ok) throw new Error(`patchNode failed: ${voteRes.status}`)
     } catch {
       // Revert on failure
       setSuggestions(prev =>
