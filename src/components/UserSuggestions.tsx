@@ -101,6 +101,15 @@ interface Props {
 
 type FilterTab = 'all' | 'new' | 'icebox' | 'planned' | 'shipped'
 
+function authHeaders(auth?: { user_id: string; email?: string; role?: string; phone?: string }): Record<string, string> {
+  if (!auth) return {}
+  return {
+    'x-user-id': auth.user_id,
+    'x-user-role': auth.role || '',
+    'x-user-email': auth.email || '',
+  }
+}
+
 export function UserSuggestions({ onBack, auth, groupId }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionNode[]>([])
   const [loading, setLoading] = useState(true)
@@ -148,7 +157,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     try {
       const res = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
         body: JSON.stringify({
           graphId: GRAPH_ID,
           nodeId: suggestion.id,
@@ -269,7 +278,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
 
       const res = await fetch(`${KNOWLEDGE_BASE}/addNode`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
         body: JSON.stringify({ graphId: GRAPH_ID, node }),
       })
 
@@ -309,7 +318,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     try {
       const voteRes = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
         body: JSON.stringify({
           graphId: GRAPH_ID,
           nodeId: suggestion.id,
