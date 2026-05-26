@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, createInvite, updateGroup, uploadMedia } from '../services/chat-service'
-import type { AuthParams, Member, Group } from '../types/chat'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia } from '../services/chat-service'
+import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
   group: Group
@@ -11,6 +11,7 @@ interface Props {
 
 export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [members, setMembers] = useState<Member[]>([])
+  const [profiles, setProfiles] = useState<Map<string, MemberProfile>>(new Map())
   const [loading, setLoading] = useState(true)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
@@ -41,10 +42,20 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   }, [group.id, auth, uploadingImage, onGroupUpdated])
 
   useEffect(() => {
-    fetchMembers(group.id, auth)
-      .then(setMembers)
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    let mounted = true
+    setLoading(true)
+    Promise.all([
+      fetchMembers(group.id, auth),
+      fetchMemberProfiles(group.id, auth),
+    ])
+      .then(([m, p]) => {
+        if (!mounted) return
+        setMembers(m)
+        setProfiles(p)
+      })
+      .catch(err => { console.error('Load members failed:', err) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
   }, [group.id, auth])
 
   const handleInvite = async () => {
@@ -298,17 +309,32 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             <p className="text-white/30 text-sm mt-2">Loading...</p>
           ) : (
             <div className="mt-2 space-y-2">
-              {members.map(m => (
-                <div key={m.user_id} className="flex items-center gap-3 py-1.5">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm">
-                    {(m.email || m.phone || '?').charAt(0).toUpperCase()}
+              {members.map(m => {
+                const profile = profiles.get(m.user_id)
+                const displayName = profile?.displayName || m.email || m.phone || m.user_id.slice(0, 8)
+                const subtitle = profile?.email || m.email || profile?.phone || m.phone || ''
+                const initial = displayName.charAt(0).toUpperCase()
+                return (
+                  <div key={m.user_id} className="flex items-center gap-3 py-1.5">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm overflow-hidden flex-shrink-0">
+                      {profile?.profileimage ? (
+                        <img src={profile.profileimage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        initial
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm truncate">
+                        {displayName}
+                        {subtitle && subtitle !== displayName && (
+                          <span className="text-white/40 text-xs ml-2">{subtitle}</span>
+                        )}
+                      </div>
+                      <div className="text-white/30 text-xs">{m.role}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm truncate">{m.email || m.phone}</div>
-                    <div className="text-white/30 text-xs">{m.role}</div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
