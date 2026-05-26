@@ -309,7 +309,10 @@ export async function getInvite(code: string): Promise<{ code: string; group_id:
   return data.invite
 }
 
-export async function joinInvite(code: string, auth: AuthParams): Promise<Group> {
+export async function joinInvite(
+  code: string,
+  auth: AuthParams,
+): Promise<{ group_id: string; group_name: string; already_member: boolean }> {
   const res = await fetch(`${BASE}/invite/${code}/join`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -317,7 +320,11 @@ export async function joinInvite(code: string, auth: AuthParams): Promise<Group>
   })
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to join group')
-  return data.group
+  return {
+    group_id: data.group_id,
+    group_name: data.group_name,
+    already_member: !!data.already_member,
+  }
 }
 
 // ── Polls ───────────────────────────────────────────────────────

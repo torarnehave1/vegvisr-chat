@@ -106,17 +106,24 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
     setJoining(true)
     setJoinError(null)
     try {
-      const group = await joinInvite(code, auth)
+      const result = await joinInvite(code, auth)
       try { sessionStorage.removeItem(INVITE_STORAGE_KEY) } catch { /* ignore */ }
-      setGroups(prev => prev.some(g => g.id === group.id) ? prev : [group, ...prev])
+      const fresh = await fetchGroups(auth, { includeArchived: showArchived && isSuperAdmin })
+      const sorted = fresh.sort((a, b) => b.updated_at - a.updated_at)
+      setGroups(sorted)
       setJoinInput('')
-      onSelectGroup(group)
+      const joined = sorted.find(g => g.id === result.group_id)
+      if (joined) {
+        onSelectGroup(joined)
+      } else {
+        setJoinError('Joined, but the group did not appear in your list. Try refreshing.')
+      }
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : 'Failed to join group')
     } finally {
       setJoining(false)
     }
-  }, [auth, onSelectGroup])
+  }, [auth, onSelectGroup, showArchived, isSuperAdmin])
 
   const handleJoin = () => {
     const code = parseInviteCode(joinInput)
