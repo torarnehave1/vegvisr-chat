@@ -11,6 +11,7 @@ import { GroupChat } from './components/GroupChat';
 import { GroupInfo } from './components/GroupInfo';
 import { ProfileSettings } from './components/ProfileSettings';
 import { UpdateBanner } from './components/UpdateBanner';
+import { InstallPrompt } from './components/InstallPrompt';
 import { WhatsNew } from './components/WhatsNew';
 import { UserSuggestions } from './components/UserSuggestions';
 import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
@@ -257,7 +258,7 @@ function App() {
     <LanguageContext.Provider value={contextValue}>
       <div className="h-screen bg-slate-950 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(139,92,246,0.25),_transparent_55%)]" />
-        <div className="relative mx-auto flex h-full max-w-5xl flex-col px-6 py-4">
+        <div className="relative mx-auto flex h-full max-w-5xl flex-col pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           <header className="flex flex-wrap items-center justify-between gap-4">
             <img
               src={appLogo}
@@ -420,6 +421,7 @@ function App() {
           hasNewFeatures={hasNewFeatures}
           newFeatureCount={newFeatureCount}
         />
+        <InstallPrompt />
       </div>
     </LanguageContext.Provider>
   );
