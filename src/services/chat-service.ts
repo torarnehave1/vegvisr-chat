@@ -87,6 +87,19 @@ export async function fetchMembers(groupId: string, auth: AuthParams): Promise<M
   return data.members || []
 }
 
+export async function removeMember(
+  groupId: string,
+  userId: string,
+  auth: AuthParams,
+): Promise<void> {
+  const res = await fetch(
+    `${BASE}/groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(userId)}?${authQuery(auth)}`,
+    { method: 'DELETE' },
+  )
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to remove member')
+}
+
 // ── Messages ────────────────────────────────────────────────────
 
 export async function fetchMessages(

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia } from '../services/chat-service'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember } from '../services/chat-service'
 import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
@@ -13,6 +13,8 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [members, setMembers] = useState<Member[]>([])
   const [profiles, setProfiles] = useState<Map<string, MemberProfile>>(new Map())
   const [loading, setLoading] = useState(true)
+  const [removing, setRemoving] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -67,6 +69,26 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
       console.error('Create invite failed:', err)
     } finally {
       setInviteLoading(false)
+    }
+  }
+
+  const handleRemoveMember = async (targetUserId: string, displayName: string) => {
+    if (removing) return
+    if (!window.confirm(`Remove ${displayName} from this group?`)) return
+    setRemoving(targetUserId)
+    setRemoveError(null)
+    try {
+      await removeMember(group.id, targetUserId, auth)
+      setMembers(prev => prev.filter(m => m.user_id !== targetUserId))
+      setProfiles(prev => {
+        const next = new Map(prev)
+        next.delete(targetUserId)
+        return next
+      })
+    } catch (err) {
+      setRemoveError(err instanceof Error ? err.message : 'Failed to remove member')
+    } finally {
+      setRemoving(null)
     }
   }
 
@@ -305,6 +327,9 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           <label className="text-white/40 text-xs uppercase tracking-wider">
             Members ({members.length})
           </label>
+          {removeError && (
+            <p className="text-xs text-rose-300 mt-1">{removeError}</p>
+          )}
           {loading ? (
             <p className="text-white/30 text-sm mt-2">Loading...</p>
           ) : (
@@ -314,6 +339,11 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 const displayName = profile?.displayName || m.email || m.phone || m.user_id.slice(0, 8)
                 const subtitle = profile?.email || m.email || profile?.phone || m.phone || ''
                 const initial = displayName.charAt(0).toUpperCase()
+                const canRemove =
+                  isOwner &&
+                  m.user_id !== auth.user_id &&
+                  m.role !== 'owner' &&
+                  !m.user_id.startsWith('bot:')
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 py-1.5">
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm overflow-hidden flex-shrink-0">
@@ -332,6 +362,17 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                       </div>
                       <div className="text-white/30 text-xs">{m.role}</div>
                     </div>
+                    {canRemove && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(m.user_id, displayName)}
+                        disabled={removing === m.user_id}
+                        className="text-[10px] px-2 py-1 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors flex-shrink-0 disabled:opacity-50"
+                        title={`Remove ${displayName}`}
+                      >
+                        {removing === m.user_id ? '...' : 'Remove'}
+                      </button>
+                    )}
                   </div>
                 )
               })}
