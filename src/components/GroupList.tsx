@@ -1,12 +1,25 @@
-import { useState, useEffect, useCallback } from 'react'
-import { fetchGroups, createGroup, archiveGroup, restoreGroup, fetchUnansweredPollCount } from '../services/chat-service'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { fetchGroups, createGroup, archiveGroup, restoreGroup, fetchUnansweredPollCount, joinInvite } from '../services/chat-service'
 import type { AuthParams, Group } from '../types/chat'
+
+export const INVITE_STORAGE_KEY = 'pending_invite_code'
 
 interface Props {
   auth: AuthParams
   userRole?: string | null
   onSelectGroup: (group: Group) => void
   selectedGroupId?: string
+}
+
+function parseInviteCode(input: string): string | null {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+  try {
+    const url = new URL(trimmed)
+    const code = url.searchParams.get('invite')
+    if (code) return code
+  } catch { /* not a URL — treat as raw code */ }
+  return trimmed
 }
 
 function getLastRead(groupId: string): number {
@@ -33,6 +46,10 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
   const [showArchived, setShowArchived] = useState(false)
   const [archiving, setArchiving] = useState<string | null>(null)
   const [unansweredPolls, setUnansweredPolls] = useState<Record<string, number>>({})
+  const [joinInput, setJoinInput] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
+  const inviteAttempted = useRef(false)
 
   const isSuperAdmin = userRole === 'Superadmin'
 
@@ -85,6 +102,40 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
     }
   }
 
+  const runJoin = useCallback(async (code: string) => {
+    setJoining(true)
+    setJoinError(null)
+    try {
+      const group = await joinInvite(code, auth)
+      try { sessionStorage.removeItem(INVITE_STORAGE_KEY) } catch { /* ignore */ }
+      setGroups(prev => prev.some(g => g.id === group.id) ? prev : [group, ...prev])
+      setJoinInput('')
+      onSelectGroup(group)
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'Failed to join group')
+    } finally {
+      setJoining(false)
+    }
+  }, [auth, onSelectGroup])
+
+  const handleJoin = () => {
+    const code = parseInviteCode(joinInput)
+    if (!code || joining) {
+      if (!code) setJoinError('Paste an invite link or code')
+      return
+    }
+    runJoin(code)
+  }
+
+  useEffect(() => {
+    if (inviteAttempted.current) return
+    let code: string | null = null
+    try { code = sessionStorage.getItem(INVITE_STORAGE_KEY) } catch { /* ignore */ }
+    if (!code) return
+    inviteAttempted.current = true
+    runJoin(code)
+  }, [runJoin])
+
   const handleArchive = async (e: React.MouseEvent, groupId: string) => {
     e.stopPropagation()
     if (archiving) return
@@ -136,6 +187,29 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
         >
           + New
         </button>
+      </div>
+
+      {/* Join by invite */}
+      <div className="px-4 py-2 border-b border-white/10 flex flex-col gap-1.5">
+        <div className="flex gap-2">
+          <input
+            value={joinInput}
+            onChange={e => { setJoinInput(e.target.value); if (joinError) setJoinError(null); }}
+            onKeyDown={e => e.key === 'Enter' && handleJoin()}
+            placeholder="Paste invite link or code..."
+            disabled={joining}
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-sky-400/50 placeholder:text-white/30 disabled:opacity-50"
+          />
+          <button
+            type="button"
+            onClick={handleJoin}
+            disabled={joining || !joinInput.trim()}
+            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {joining ? '...' : 'Join'}
+          </button>
+        </div>
+        {joinError && <p className="text-[11px] text-rose-300">{joinError}</p>}
       </div>
 
       {/* Superadmin: show archived toggle */}
