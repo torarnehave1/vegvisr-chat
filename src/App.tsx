@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AuthBar, EcosystemNav, LanguageSelector } from 'vegvisr-ui-kit';
 const appLogo = 'https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png';
 import { LanguageContext } from './lib/LanguageContext';
@@ -15,10 +15,12 @@ import { WhatsNew } from './components/WhatsNew';
 import { UserSuggestions } from './components/UserSuggestions';
 import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
 import { useSuggestionsCheck } from './hooks/useSuggestionsCheck';
+import { joinInvite } from './services/chat-service';
 import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
 const DASHBOARD_BASE = 'https://dashboard.vegvisr.org';
+const INVITE_STORAGE_KEY = 'pending_invite_code';
 
 type View =
   | { screen: 'groups' }
@@ -51,6 +53,7 @@ function App() {
   const [view, setView] = useState<View>({ screen: 'groups' });
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
   const [profileVersion, setProfileVersion] = useState(0);
+  const inviteAttempted = useRef(false);
   const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
   const { hasNew: hasNewSuggestions, markSeen: markSuggestionsSeen } = useSuggestionsCheck();
 
@@ -226,6 +229,15 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const invite = url.searchParams.get('invite');
+    if (!invite) return;
+    try { sessionStorage.setItem(INVITE_STORAGE_KEY, invite); } catch { /* ignore storage errors */ }
+    url.searchParams.delete('invite');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
     const bootstrap = async () => {
       const stored = readStoredUser();
@@ -243,6 +255,30 @@ function App() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (inviteAttempted.current) return;
+    if (authStatus !== 'authed' || !authUser || !phone) return;
+    let code: string | null = null;
+    try { code = sessionStorage.getItem(INVITE_STORAGE_KEY); } catch { /* ignore */ }
+    if (!code) return;
+    inviteAttempted.current = true;
+    const auth: AuthParams = {
+      user_id: authUser.userId,
+      phone,
+      email: authUser.email,
+    };
+    joinInvite(code, auth)
+      .then((group) => {
+        try { sessionStorage.removeItem(INVITE_STORAGE_KEY); } catch { /* ignore */ }
+        markGroupRead(group.id);
+        setView({ screen: 'chat', group });
+      })
+      .catch((err) => {
+        console.error('Join invite failed:', err);
+        try { sessionStorage.removeItem(INVITE_STORAGE_KEY); } catch { /* ignore */ }
+      });
+  }, [authStatus, authUser, phone]);
 
   return (
     <LanguageContext.Provider value={contextValue}>
