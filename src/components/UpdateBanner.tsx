@@ -6,9 +6,10 @@ interface Props {
   onWhatsNew?: () => void
   hasNewFeatures?: boolean
   newFeatureCount?: number
+  onMarkFeaturesSeen?: () => void
 }
 
-export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Props) {
+export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMarkFeaturesSeen }: Props) {
   const [dismissed, setDismissed] = useState(false)
   const { updateAvailable, reload } = useVersionCheck()
 
@@ -39,7 +40,13 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Pr
       {onWhatsNew && (
         <button
           type="button"
-          onClick={() => { setDismissed(true); onWhatsNew(); }}
+          onClick={() => {
+            // Mark features as seen immediately so the banner doesn't reappear
+            // on refresh if the user never clicks Back inside the WhatsNew page.
+            if (isContentOnly && onMarkFeaturesSeen) onMarkFeaturesSeen();
+            setDismissed(true);
+            onWhatsNew();
+          }}
           className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
         >
           What's new?
@@ -56,7 +63,12 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount }: Pr
       )}
       <button
         type="button"
-        onClick={() => setDismissed(true)}
+        onClick={() => {
+          // Explicit dismissal: also persist the seen count so the banner doesn't
+          // come back on the next reload for these same feature entries.
+          if (isContentOnly && onMarkFeaturesSeen) onMarkFeaturesSeen();
+          setDismissed(true);
+        }}
         className="ml-1 p-1 text-white/40 hover:text-white/80 transition-colors"
         title="Dismiss"
       >

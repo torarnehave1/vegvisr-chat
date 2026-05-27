@@ -420,6 +420,7 @@ function App() {
           onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
           hasNewFeatures={hasNewFeatures}
           newFeatureCount={newFeatureCount}
+          onMarkFeaturesSeen={markFeaturesSeen}
         />
         <InstallPrompt />
       </div>
