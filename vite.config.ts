@@ -49,10 +49,28 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallbackDenylist: [/^\/version\.json$/],
-        globIgnores: ['**/version.json'],
+        // Exclude html from precache — every navigation hits the network for a
+        // fresh index.html so the asset-hash references in the HTML can never
+        // drift out of sync with what the SW has cached. Offline support for
+        // navigation is handled by the html-cache runtimeCaching rule below.
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
+        globIgnores: ['**/version.json', '**/*.html'],
+        // Disable the auto-generated NavigationRoute that would otherwise try to
+        // serve index.html from precache (and fail, since we removed it).
+        navigateFallback: undefined,
         runtimeCaching: [
+          {
+            // Top-level page loads: always try network first; fall back to last-
+            // good HTML only when offline. Eliminates the stale-paint state where
+            // the cached HTML referenced asset hashes that no longer exist.
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-cache',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 5, maxAgeSeconds: 60 * 60 * 24 },
+            },
+          },
           {
             urlPattern: /^https:\/\/favicons\.vegvisr\.org\/.*/i,
             handler: 'CacheFirst',
