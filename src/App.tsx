@@ -20,6 +20,7 @@ import type { AuthParams, Group } from './types/chat';
 
 const MAGIC_BASE = 'https://cookie.vegvisr.org';
 const DASHBOARD_BASE = 'https://dashboard.vegvisr.org';
+const GROUP_DEEPLINK_KEY = 'chat_deeplink_group';
 
 type View =
   | { screen: 'groups' }
@@ -51,9 +52,14 @@ function App() {
   const [phone, setPhone] = useState<string | null>(readChatPhone());
   const [view, setView] = useState<View>({ screen: 'groups' });
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
-  // Deep-link target from an email alert link (?group=<id>); consumed once groups load.
+  // Deep-link target from an email alert link (?group=<id>); consumed once groups
+  // load. Persisted in sessionStorage so it survives the magic-link login redirect.
   const [deepLinkGroupId, setDeepLinkGroupId] = useState<string | null>(() => {
-    try { return new URL(window.location.href).searchParams.get('group'); } catch { return null; }
+    try {
+      const fromUrl = new URL(window.location.href).searchParams.get('group');
+      if (fromUrl) { sessionStorage.setItem(GROUP_DEEPLINK_KEY, fromUrl); return fromUrl; }
+      return sessionStorage.getItem(GROUP_DEEPLINK_KEY);
+    } catch { return null; }
   });
   const [profileVersion, setProfileVersion] = useState(0);
   const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
@@ -376,7 +382,10 @@ function App() {
                         selectedGroupId={view.screen === 'chat' || view.screen === 'info' ? view.group.id : undefined}
                         onSelectGroup={(g) => { markGroupRead(g.id); setView({ screen: 'chat', group: g }) }}
                         deepLinkGroupId={deepLinkGroupId}
-                        onDeepLinkConsumed={() => setDeepLinkGroupId(null)}
+                        onDeepLinkConsumed={() => {
+                          setDeepLinkGroupId(null);
+                          try { sessionStorage.removeItem(GROUP_DEEPLINK_KEY); } catch { /* ignore */ }
+                        }}
                       />
                     }
                     main={
