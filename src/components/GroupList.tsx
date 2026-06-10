@@ -9,6 +9,8 @@ interface Props {
   userRole?: string | null
   onSelectGroup: (group: Group) => void
   selectedGroupId?: string
+  deepLinkGroupId?: string | null
+  onDeepLinkConsumed?: () => void
 }
 
 function parseInviteCode(input: string): string | null {
@@ -37,7 +39,7 @@ export function markGroupRead(groupId: string) {
   } catch { /* ignore */ }
 }
 
-export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Props) {
+export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deepLinkGroupId, onDeepLinkConsumed }: Props) {
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -65,6 +67,19 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId }: Pr
     const interval = setInterval(loadGroups, 30000)
     return () => clearInterval(interval)
   }, [loadGroups])
+
+  // Deep-link: once groups are loaded, open the one named in ?group=<id> (from an
+  // email alert link). Consume once so it doesn't re-fire on later refreshes.
+  const deepLinkConsumed = useRef(false)
+  useEffect(() => {
+    if (deepLinkConsumed.current || !deepLinkGroupId || groups.length === 0) return
+    const target = groups.find(g => g.id === deepLinkGroupId)
+    if (!target) return
+    deepLinkConsumed.current = true
+    markGroupRead(target.id)
+    onSelectGroup(target)
+    onDeepLinkConsumed?.()
+  }, [deepLinkGroupId, groups, onSelectGroup, onDeepLinkConsumed])
 
   // Fetch unanswered poll counts for active groups
   useEffect(() => {

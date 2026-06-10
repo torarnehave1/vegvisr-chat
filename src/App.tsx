@@ -51,6 +51,10 @@ function App() {
   const [phone, setPhone] = useState<string | null>(readChatPhone());
   const [view, setView] = useState<View>({ screen: 'groups' });
   const [prevView, setPrevView] = useState<View>({ screen: 'groups' });
+  // Deep-link target from an email alert link (?group=<id>); consumed once groups load.
+  const [deepLinkGroupId, setDeepLinkGroupId] = useState<string | null>(() => {
+    try { return new URL(window.location.href).searchParams.get('group'); } catch { return null; }
+  });
   const [profileVersion, setProfileVersion] = useState(0);
   const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
   const { hasNew: hasNewSuggestions, markSeen: markSuggestionsSeen } = useSuggestionsCheck();
@@ -235,6 +239,14 @@ function App() {
     window.history.replaceState({}, '', url.toString());
   }, []);
 
+  // Strip ?group= from the address bar once captured (kept in state for selection).
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('group')) return;
+    url.searchParams.delete('group');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const bootstrap = async () => {
@@ -363,6 +375,8 @@ function App() {
                         userRole={authUser.role}
                         selectedGroupId={view.screen === 'chat' || view.screen === 'info' ? view.group.id : undefined}
                         onSelectGroup={(g) => { markGroupRead(g.id); setView({ screen: 'chat', group: g }) }}
+                        deepLinkGroupId={deepLinkGroupId}
+                        onDeepLinkConsumed={() => setDeepLinkGroupId(null)}
                       />
                     }
                     main={
