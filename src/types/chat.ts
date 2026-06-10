@@ -13,6 +13,7 @@ export interface Group {
   email?: string
   image_url?: string
   graph_id?: string
+  alert_sender_email?: string | null
   archived_at?: number | null
   archived_by?: string | null
   created_at: number
@@ -25,6 +26,7 @@ export interface Member {
   email?: string
   role: string
   joined_at: number
+  alerts_enabled?: number  // 1 = opted into owner email alerts for this group
 }
 
 export type MessageType = 'text' | 'voice' | 'image' | 'video' | 'poll'

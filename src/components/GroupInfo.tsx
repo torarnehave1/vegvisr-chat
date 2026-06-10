@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup } from '../services/chat-service'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup, setMyAlerts, fetchAlertSenders } from '../services/chat-service'
+import type { AlertSender } from '../services/chat-service'
 import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
@@ -15,6 +16,13 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
   const [removeError, setRemoveError] = useState<string | null>(null)
+  const [myAlerts, setMyAlertsState] = useState(false)
+  const [savingAlerts, setSavingAlerts] = useState(false)
+  const [senders, setSenders] = useState<AlertSender[]>([])
+  const [senderEmail, setSenderEmail] = useState(group.alert_sender_email || '')
+  const [sendersLoading, setSendersLoading] = useState(false)
+  const [sendersError, setSendersError] = useState<string | null>(null)
+  const [savingSender, setSavingSender] = useState(false)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -54,11 +62,42 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
         if (!mounted) return
         setMembers(m)
         setProfiles(p)
+        const me = m.find(x => x.user_id === auth.user_id)
+        setMyAlertsState(!!me?.alerts_enabled)
       })
       .catch(err => { console.error('Load members failed:', err) })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [group.id, auth])
+
+  // Owner-only: load the selectable alert sender addresses.
+  useEffect(() => {
+    if (!isOwner) return
+    let mounted = true
+    setSendersLoading(true)
+    setSendersError(null)
+    fetchAlertSenders(group.id, auth)
+      .then(s => { if (mounted) setSenders(s) })
+      .catch(err => { if (mounted) setSendersError(err instanceof Error ? err.message : 'Failed to load senders') })
+      .finally(() => { if (mounted) setSendersLoading(false) })
+    return () => { mounted = false }
+  }, [group.id, auth, isOwner])
+
+  const handleSelectSender = async (value: string) => {
+    if (savingSender) return
+    const prev = senderEmail
+    setSenderEmail(value)  // optimistic
+    setSavingSender(true)
+    try {
+      const updated = await updateGroup(group.id, { alert_sender_email: value }, auth)
+      onGroupUpdated?.(updated)
+    } catch (err) {
+      console.error('Save alert sender failed:', err)
+      setSenderEmail(prev)  // revert
+    } finally {
+      setSavingSender(false)
+    }
+  }
 
   const handleInvite = async () => {
     setInviteLoading(true)
@@ -97,6 +136,25 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
       setRemoveError(err instanceof Error ? err.message : 'Failed to remove member')
     } finally {
       setRemoving(null)
+    }
+  }
+
+  const handleToggleAlerts = async () => {
+    if (savingAlerts) return
+    const next = !myAlerts
+    setSavingAlerts(true)
+    setMyAlertsState(next)  // optimistic
+    try {
+      await setMyAlerts(group.id, next, auth)
+      // Keep the members list in sync so the owner's view is accurate.
+      setMembers(prev => prev.map(m =>
+        m.user_id === auth.user_id ? { ...m, alerts_enabled: next ? 1 : 0 } : m
+      ))
+    } catch (err) {
+      console.error('Update alert preference failed:', err)
+      setMyAlertsState(!next)  // revert
+    } finally {
+      setSavingAlerts(false)
     }
   }
 
@@ -327,6 +385,60 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             >
               {inviteLoading ? 'Creating...' : 'Create Invite Link'}
             </button>
+          )}
+        </div>
+
+        {/* Email alerts opt-in (per-user, per-group) */}
+        <div>
+          <label className="text-white/40 text-xs uppercase tracking-wider">Email Alerts</label>
+          <button
+            type="button"
+            onClick={handleToggleAlerts}
+            disabled={savingAlerts}
+            className="mt-2 w-full flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm text-white/80">Receive email alerts</span>
+              <span className="block text-[11px] text-white/40">
+                Let the group owner email you when there's new activity here.
+              </span>
+            </span>
+            <span
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+                myAlerts ? 'bg-sky-600' : 'bg-white/15'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  myAlerts ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </span>
+          </button>
+
+          {/* Owner-only: pick which address alerts are sent from */}
+          {isOwner && (
+            <div className="mt-3">
+              <div className="text-[11px] text-white/40 mb-1">Send alerts from</div>
+              <select
+                value={senderEmail}
+                onChange={e => handleSelectSender(e.target.value)}
+                disabled={sendersLoading || savingSender || senders.length === 0}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-sky-400/50 disabled:opacity-50"
+              >
+                <option value="">Default sender</option>
+                {senders.map(s => (
+                  <option key={s.email} value={s.email}>
+                    {s.name ? `${s.name} <${s.email}>` : s.email}{s.isDefault ? ' (default)' : ''}
+                  </option>
+                ))}
+              </select>
+              {sendersLoading && <p className="mt-1 text-[11px] text-white/30">Loading senders...</p>}
+              {sendersError && <p className="mt-1 text-[11px] text-rose-300">{sendersError}</p>}
+              {!sendersLoading && !sendersError && senders.length === 0 && (
+                <p className="mt-1 text-[11px] text-white/30">No sender accounts configured.</p>
+              )}
+            </div>
           )}
         </div>
 

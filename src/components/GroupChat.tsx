@@ -12,6 +12,7 @@ import type { VoiceRecording } from '../hooks/useVoiceRecorder'
 import { BotMentionDropdown } from './BotMentionDropdown'
 import { EmojiPicker } from './EmojiPicker'
 import { PollCreator } from './PollCreator'
+import { AlertMenu } from './AlertMenu'
 import type { AuthParams, Message, MemberProfile, ChatBot } from '../types/chat'
 
 interface Props {
@@ -557,6 +558,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
             )}
           </button>
         )}
+        <AlertMenu groupId={groupId} auth={auth} currentUserId={currentUserId} />
         {onSettings && (
           <button
             onClick={onSettings}

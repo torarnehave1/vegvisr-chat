@@ -65,7 +65,7 @@ export async function createGroup(name: string, auth: AuthParams): Promise<Group
 
 export async function updateGroup(
   groupId: string,
-  fields: { name?: string; image_url?: string },
+  fields: { name?: string; image_url?: string; alert_sender_email?: string },
   auth: AuthParams,
 ): Promise<Group> {
   const res = await fetch(`${BASE}/groups/${groupId}`, {
@@ -98,6 +98,63 @@ export async function removeMember(
   )
   const data = await res.json()
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to remove member')
+}
+
+/**
+ * Set the current user's email-alert opt-in for a group. When enabled, the
+ * group owner can send this user an email alert from the chat header menu.
+ */
+export async function setMyAlerts(
+  groupId: string,
+  enabled: boolean,
+  auth: AuthParams,
+): Promise<void> {
+  const res = await fetch(`${BASE}/groups/${encodeURIComponent(groupId)}/alerts-pref`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...authBody(auth), alerts_enabled: enabled }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to update alert preference')
+}
+
+export interface AlertSender {
+  email: string
+  name: string
+  isDefault: boolean
+}
+
+/**
+ * Owner-only: list the sender addresses the owner can send alerts from
+ * (resolved server-side from the owner's configured email accounts).
+ */
+export async function fetchAlertSenders(
+  groupId: string,
+  auth: AuthParams,
+): Promise<AlertSender[]> {
+  const res = await fetch(`${BASE}/groups/${encodeURIComponent(groupId)}/alert-senders?${authQuery(auth)}`)
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load alert senders')
+  return data.senders || []
+}
+
+/**
+ * Owner-only: send an email alert to a member who has opted into alerts.
+ * The email is composed and delivered server-side (group-chat-worker →
+ * email-worker); the client only names the target.
+ */
+export async function sendGroupAlert(
+  groupId: string,
+  targetUserId: string,
+  auth: AuthParams,
+): Promise<void> {
+  const res = await fetch(`${BASE}/groups/${encodeURIComponent(groupId)}/alert`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...authBody(auth), target_user_id: targetUserId }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to send alert')
 }
 
 /**
