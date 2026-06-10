@@ -100,6 +100,24 @@ export async function removeMember(
   if (!res.ok || !data.success) throw new Error(data.error || 'Failed to remove member')
 }
 
+/**
+ * Remove a bot from a group. Bots live in two tables (group_members for
+ * listing + group_bot_members for bot metadata); the worker endpoint cleans up
+ * both. Pass the bare bot id, NOT the 'bot:' prefixed user_id.
+ */
+export async function removeBotFromGroup(
+  groupId: string,
+  botId: string,
+  auth: AuthParams,
+): Promise<void> {
+  const res = await fetch(
+    `${BASE}/groups/${encodeURIComponent(groupId)}/bots/${encodeURIComponent(botId)}?${authQuery(auth)}`,
+    { method: 'DELETE' },
+  )
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to remove bot')
+}
+
 // ── Messages ────────────────────────────────────────────────────
 
 export async function fetchMessages(

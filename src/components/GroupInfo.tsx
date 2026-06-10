@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember } from '../services/chat-service'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup } from '../services/chat-service'
 import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
@@ -78,7 +78,15 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
     setRemoving(targetUserId)
     setRemoveError(null)
     try {
-      await removeMember(group.id, targetUserId, auth)
+      if (targetUserId.startsWith('bot:')) {
+        // Bots live in two tables — group_members (for listing) and
+        // group_bot_members (for bot-specific metadata). The bot-remove
+        // endpoint cleans up both. Strip the 'bot:' prefix to get the raw id.
+        const botId = targetUserId.slice('bot:'.length)
+        await removeBotFromGroup(group.id, botId, auth)
+      } else {
+        await removeMember(group.id, targetUserId, auth)
+      }
       setMembers(prev => prev.filter(m => m.user_id !== targetUserId))
       setProfiles(prev => {
         const next = new Map(prev)
@@ -342,8 +350,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 const canRemove =
                   isOwner &&
                   m.user_id !== auth.user_id &&
-                  m.role !== 'owner' &&
-                  !m.user_id.startsWith('bot:')
+                  m.role !== 'owner'
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 py-1.5">
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm overflow-hidden flex-shrink-0">
