@@ -14,6 +14,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { InstallPrompt } from './components/InstallPrompt';
 import { WhatsNew } from './components/WhatsNew';
 import { UserSuggestions } from './components/UserSuggestions';
+import { GroupQuestions } from './components/GroupQuestions';
 import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
 import { useSuggestionsCheck } from './hooks/useSuggestionsCheck';
 import type { AuthParams, Group } from './types/chat';
@@ -29,6 +30,7 @@ type View =
   | { screen: 'settings' }
   | { screen: 'whatsnew' }
   | { screen: 'suggestions' }
+  | { screen: 'questions'; group: Group }
 
 function readChatPhone(): string | null {
   try {
@@ -408,6 +410,7 @@ function App() {
                           groupName={view.group.name}
                           groupCreatedBy={view.group.created_by}
                           postingLocked={!!view.group.posting_locked}
+                          onAskQuestion={() => { setPrevView(view); setView({ screen: 'questions', group: view.group }); }}
                           auth={auth}
                           currentUserId={authUser.userId}
                           profileVersion={profileVersion}
@@ -425,6 +428,14 @@ function App() {
                           auth={auth}
                           onBack={() => setView({ screen: 'chat', group: view.group })}
                           onGroupUpdated={(updated) => setView({ screen: 'info', group: updated })}
+                        />
+                      ) : view.screen === 'questions' ? (
+                        <GroupQuestions
+                          groupId={view.group.id}
+                          groupName={view.group.name}
+                          isOwner={view.group.created_by === authUser.userId}
+                          auth={{ user_id: authUser.userId, email: authUser.email, role: authUser.role || undefined, phone: phone || undefined }}
+                          onBack={() => setView({ screen: 'chat', group: view.group })}
                         />
                       ) : null
                     }
