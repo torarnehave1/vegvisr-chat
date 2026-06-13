@@ -24,6 +24,10 @@ interface Props {
   onReply?: (message: Message) => void
   replyToMessage?: Message | null
   replyToProfile?: MemberProfile
+  /** True when this message's author is the group's owner. Renders an OWNER
+   * badge next to the display name and an amber accent ring on the avatar so
+   * announcements stand out from regular member chatter (locked groups). */
+  isOwner?: boolean
 }
 
 function formatTime(ts: number): string {
@@ -110,7 +114,7 @@ function parseTextWithLinks(text: string): TextPart[] {
   return parts
 }
 
-export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile, isOwner }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
@@ -133,11 +137,15 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
       {!isOwn && (
         <div className="flex-shrink-0 mr-2 mt-1">
           {avatarUrl ? (
-            <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full object-cover" />
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className={`w-7 h-7 rounded-full object-cover ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}
+            />
           ) : (
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
               isBot ? 'bg-violet-500/30 text-violet-300' : 'bg-white/10 text-white/60'
-            }`}>
+            } ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}>
               {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -154,6 +162,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           <div className="text-[11px] text-white/50 mb-0.5 flex items-center gap-1.5">
             <span>{displayName}</span>
             {isBot && <span className="text-[9px] bg-violet-500/30 text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
+            {isOwner && !isBot && <span className="text-[9px] bg-amber-500/30 text-amber-300 px-1 py-px rounded font-medium">OWNER</span>}
           </div>
         )}
 

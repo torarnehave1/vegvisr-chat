@@ -18,6 +18,10 @@ import type { AuthParams, Message, MemberProfile, ChatBot } from '../types/chat'
 interface Props {
   groupId: string
   groupName: string
+  /** user_id of the group's creator. When set, messages authored by that user
+   * show an OWNER badge + amber avatar ring so admin announcements stand out
+   * from regular chatter. Bot messages keep their BOT styling. */
+  groupCreatedBy?: string
   auth: AuthParams
   currentUserId: string
   profileVersion?: number
@@ -41,7 +45,7 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
+export function GroupChat({ groupId, groupName, groupCreatedBy, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -607,6 +611,7 @@ export function GroupChat({ groupId, groupName, auth, currentUserId, profileVers
                 <MessageBubble
                   message={msg}
                   isOwn={msg.user_id === currentUserId}
+                  isOwner={!!groupCreatedBy && msg.user_id === groupCreatedBy && !msg.user_id?.startsWith('bot:')}
                   profile={profiles.get(msg.user_id)}
                   onDelete={msg.user_id === currentUserId ? handleDelete : undefined}
                   onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}

@@ -406,6 +406,7 @@ function App() {
                         <GroupChat
                           groupId={view.group.id}
                           groupName={view.group.name}
+                          groupCreatedBy={view.group.created_by}
                           auth={auth}
                           currentUserId={authUser.userId}
                           profileVersion={profileVersion}
