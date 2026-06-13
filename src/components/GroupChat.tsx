@@ -22,6 +22,12 @@ interface Props {
    * show an OWNER badge + amber avatar ring so admin announcements stand out
    * from regular chatter. Bot messages keep their BOT styling. */
   groupCreatedBy?: string
+  /** True when the group is locked to owner-only posting. Members see a banner
+   * instead of the composer; the owner still sees the normal composer. */
+  postingLocked?: boolean
+  /** Optional handler wired to the "Ask a Question" CTA shown in the locked
+   * composer banner. When omitted, the banner renders without the CTA. */
+  onAskQuestion?: () => void
   auth: AuthParams
   currentUserId: string
   profileVersion?: number
@@ -45,7 +51,7 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, groupCreatedBy, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
+export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -729,60 +735,84 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, auth, currentUse
             />
           </div>
         )}
-        <div className="flex gap-2 items-end max-w-3xl mx-auto">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="px-2.5 py-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-            title="Attach image or video"
-          >
-            &#x1F4CE;
-          </button>
-          <button
-            onClick={() => setShowPollCreator(!showPollCreator)}
-            className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-white/10' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-            title="Create a poll"
-          >
-            &#x1F4CA;
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleMediaSelect}
-            className="hidden"
-          />
-          <VoiceRecorder onSend={handleVoiceSend} />
-          <EmojiPicker onSelect={(emoji) => {
-            setInput(prev => prev + emoji)
-            inputRef.current?.focus()
-          }} />
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={handleInputChange}
-            onPaste={handlePaste}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                setMentionFilter(null)
-                handleSend()
-              }
-              if (e.key === 'Escape') {
-                setMentionFilter(null)
-              }
-            }}
-            placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
-            rows={1}
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || sending}
-            className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
-          >
-            {sending ? '...' : 'Send'}
-          </button>
-        </div>
+        {(() => {
+          const canPost = !postingLocked || currentUserId === groupCreatedBy
+          if (!canPost) {
+            const ownerName = (groupCreatedBy && profiles.get(groupCreatedBy)?.displayName) || 'the owner'
+            return (
+              <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 py-1.5">
+                <span className="text-sm text-white/60">
+                  Only <span className="text-amber-300">@{ownerName}</span> can post here.
+                </span>
+                {onAskQuestion && (
+                  <button
+                    type="button"
+                    onClick={onAskQuestion}
+                    className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 transition-colors"
+                  >
+                    Ask a Question &rarr;
+                  </button>
+                )}
+              </div>
+            )
+          }
+          return (
+            <div className="flex gap-2 items-end max-w-3xl mx-auto">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-2.5 py-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                title="Attach image or video"
+              >
+                &#x1F4CE;
+              </button>
+              <button
+                onClick={() => setShowPollCreator(!showPollCreator)}
+                className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-white/10' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                title="Create a poll"
+              >
+                &#x1F4CA;
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaSelect}
+                className="hidden"
+              />
+              <VoiceRecorder onSend={handleVoiceSend} />
+              <EmojiPicker onSelect={(emoji) => {
+                setInput(prev => prev + emoji)
+                inputRef.current?.focus()
+              }} />
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={handleInputChange}
+                onPaste={handlePaste}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    setMentionFilter(null)
+                    handleSend()
+                  }
+                  if (e.key === 'Escape') {
+                    setMentionFilter(null)
+                  }
+                }}
+                placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
+                rows={1}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || sending}
+                className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+              >
+                {sending ? '...' : 'Send'}
+              </button>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Drag overlay */}

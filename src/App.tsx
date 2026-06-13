@@ -407,6 +407,7 @@ function App() {
                           groupId={view.group.id}
                           groupName={view.group.name}
                           groupCreatedBy={view.group.created_by}
+                          postingLocked={!!view.group.posting_locked}
                           auth={auth}
                           currentUserId={authUser.userId}
                           profileVersion={profileVersion}

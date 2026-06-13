@@ -16,6 +16,10 @@ export interface Group {
   alert_sender_email?: string | null
   archived_at?: number | null
   archived_by?: string | null
+  /** When 1, only the group owner (and bots) can post messages or create polls.
+   * Members can still read, react, and submit questions via the Questions screen.
+   * Default 0 (unlocked) so legacy groups behave unchanged. */
+  posting_locked?: number
   created_at: number
   updated_at: number
 }

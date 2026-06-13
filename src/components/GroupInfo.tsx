@@ -25,6 +25,10 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [savingSender, setSavingSender] = useState(false)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
+  // "Members can post" toggle. The truthy axis is inverted vs the DB column
+  // (posting_locked) — checked == unlocked == members can post.
+  const [membersCanPost, setMembersCanPost] = useState(!group.posting_locked)
+  const [savingPostingLock, setSavingPostingLock] = useState(false)
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(group.name)
   const [saving, setSaving] = useState(false)
@@ -82,6 +86,22 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
       .finally(() => { if (mounted) setSendersLoading(false) })
     return () => { mounted = false }
   }, [group.id, auth, isOwner])
+
+  const handleTogglePostingLock = async () => {
+    if (savingPostingLock) return
+    const next = !membersCanPost
+    setMembersCanPost(next)  // optimistic
+    setSavingPostingLock(true)
+    try {
+      const updated = await updateGroup(group.id, { posting_locked: !next }, auth)
+      onGroupUpdated?.(updated)
+    } catch (err) {
+      console.error('Save posting lock failed:', err)
+      setMembersCanPost(!next)  // revert
+    } finally {
+      setSavingPostingLock(false)
+    }
+  }
 
   const handleSelectSender = async (value: string) => {
     if (savingSender) return
@@ -441,6 +461,37 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             </div>
           )}
         </div>
+
+        {/* Owner-only: lock posting for a broadcast / announcement channel */}
+        {isOwner && (
+          <div>
+            <label className="text-white/40 text-xs uppercase tracking-wider">Posting</label>
+            <button
+              type="button"
+              onClick={handleTogglePostingLock}
+              disabled={savingPostingLock}
+              className="mt-2 w-full flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm text-white/80">Members can post</span>
+                <span className="block text-[11px] text-white/40">
+                  Turn off to make this an announcement channel — only you can send messages. Members still react and can submit questions.
+                </span>
+              </span>
+              <span
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+                  membersCanPost ? 'bg-sky-600' : 'bg-amber-600'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                    membersCanPost ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Members */}
         <div>

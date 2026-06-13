@@ -65,7 +65,7 @@ export async function createGroup(name: string, auth: AuthParams): Promise<Group
 
 export async function updateGroup(
   groupId: string,
-  fields: { name?: string; image_url?: string; alert_sender_email?: string },
+  fields: { name?: string; image_url?: string; alert_sender_email?: string; posting_locked?: boolean },
   auth: AuthParams,
 ): Promise<Group> {
   const res = await fetch(`${BASE}/groups/${groupId}`, {
