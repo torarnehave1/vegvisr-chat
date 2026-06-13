@@ -141,6 +141,61 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [statusMenuId])
 
+  /**
+   * Patch a node with auto-retry on optimistic-concurrency conflicts. If a
+   * graph editor (or any other client) modifies the graph between our read
+   * and our write, our cached graphVersion becomes stale and patchNode
+   * rejects the request. We refetch the version and retry once. This lets
+   * users edit the same graph from multiple tools without status/vote
+   * actions silently failing.
+   */
+  const runPatch = async (
+    nodeId: string,
+    fields: Record<string, unknown>,
+  ): Promise<void> => {
+    if (graphVersion === null) throw new Error('Graph version not loaded')
+
+    const tryWith = (ver: number) =>
+      fetch(`${KNOWLEDGE_BASE}/patchNode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
+        body: JSON.stringify({
+          graphId: GRAPH_ID,
+          nodeId,
+          fields,
+          expectedVersion: ver,
+        }),
+      })
+
+    let res = await tryWith(graphVersion)
+
+    if (!res.ok) {
+      // Could be a version mismatch caused by an external edit. Refetch the
+      // graph metadata to learn the latest version and retry once. If the
+      // version is unchanged, the failure is for a different reason — don't
+      // retry, just propagate.
+      try {
+        const meta = await fetch(
+          `${KNOWLEDGE_BASE}/getknowgraph?id=${encodeURIComponent(GRAPH_ID)}`,
+        ).then(r => r.json())
+        const freshVer =
+          typeof meta?.metadata?.version === 'number' ? meta.metadata.version : null
+        if (freshVer !== null && freshVer !== graphVersion) {
+          setGraphVersion(freshVer)
+          res = await tryWith(freshVer)
+        }
+      } catch {
+        // Refetch failed — fall through with the original error response.
+      }
+      if (!res.ok) throw new Error(`patchNode failed: ${res.status}`)
+    }
+
+    const data = await res.json().catch(() => null)
+    if (data && typeof data.newVersion === 'number') {
+      setGraphVersion(data.newVersion)
+    }
+  }
+
   const handleStatusChange = async (suggestion: SuggestionNode, newStatus: string) => {
     setStatusMenuId(null)
     const meta = suggestion.metadata || {}
@@ -159,25 +214,10 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
-      if (graphVersion === null) throw new Error('Graph version not loaded yet')
-      const res = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
-        body: JSON.stringify({
-          graphId: GRAPH_ID,
-          nodeId: suggestion.id,
-          fields: {
-            color: newColor,
-            metadata: { ...meta, status: newStatus },
-          },
-          expectedVersion: graphVersion,
-        }),
+      await runPatch(suggestion.id, {
+        color: newColor,
+        metadata: { ...meta, status: newStatus },
       })
-      if (!res.ok) throw new Error(`patchNode failed: ${res.status}`)
-      const patchData = await res.json().catch(() => null)
-      if (patchData && typeof patchData.newVersion === 'number') {
-        setGraphVersion(patchData.newVersion)
-      }
 
       // When shipped: send a message to the originating group
       if (newStatus === 'shipped') {
@@ -332,24 +372,9 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
-      if (graphVersion === null) throw new Error('Graph version not loaded yet')
-      const voteRes = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
-        body: JSON.stringify({
-          graphId: GRAPH_ID,
-          nodeId: suggestion.id,
-          fields: {
-            metadata: { ...meta, votes: newVotes, votedBy: newVotedBy },
-          },
-          expectedVersion: graphVersion,
-        }),
+      await runPatch(suggestion.id, {
+        metadata: { ...meta, votes: newVotes, votedBy: newVotedBy },
       })
-      if (!voteRes.ok) throw new Error(`patchNode failed: ${voteRes.status}`)
-      const voteData = await voteRes.json().catch(() => null)
-      if (voteData && typeof voteData.newVersion === 'number') {
-        setGraphVersion(voteData.newVersion)
-      }
     } catch {
       // Revert on failure
       setSuggestions(prev =>
