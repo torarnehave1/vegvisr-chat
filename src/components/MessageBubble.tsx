@@ -364,11 +364,11 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             </div>
           )}
           <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>
-          {isOwn && onDelete && (
+          {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
               className="text-[10px] opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity"
-              title="Delete"
+              title={isOwn ? 'Delete' : 'Delete (owner)'}
             >
               &#x2715;
             </button>

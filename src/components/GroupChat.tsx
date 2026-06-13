@@ -256,6 +256,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, o
   }
 
   const handleDelete = async (id: number) => {
+    // Confirm when deleting someone else's message (owner-moderation flow).
+    // Own messages stay one-click — matches the pre-existing behaviour.
+    const target = messages.get(id)
+    if (target && target.user_id !== currentUserId) {
+      if (!window.confirm('Delete this message? The author won\'t be notified.')) return
+    }
     try {
       await deleteMessage(groupId, id, auth)
       setMessages(prev => {
@@ -640,7 +646,11 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, o
                   isOwn={msg.user_id === currentUserId}
                   isOwner={!!groupCreatedBy && msg.user_id === groupCreatedBy && !msg.user_id?.startsWith('bot:')}
                   profile={profiles.get(msg.user_id)}
-                  onDelete={msg.user_id === currentUserId ? handleDelete : undefined}
+                  onDelete={
+                    msg.user_id === currentUserId || currentUserId === groupCreatedBy
+                      ? handleDelete
+                      : undefined
+                  }
                   onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                   auth={auth}
                   currentUserId={currentUserId}
