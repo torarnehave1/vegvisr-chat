@@ -514,10 +514,22 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, o
           &#x2190;
         </button>
         <h2
-          className="text-white font-semibold truncate flex-1 cursor-pointer hover:text-sky-300 transition-colors"
+          className="text-white font-semibold truncate flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
           onClick={onInfo}
         >
-          {groupName}
+          <span className="truncate">{groupName}</span>
+          {postingLocked && (
+            <span
+              title="Announcement channel — only the owner can post"
+              className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-semibold px-2 py-0.5 flex-shrink-0 normal-case tracking-normal"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 11l18-5v12L3 14v-3z" />
+                <path d="M11.6 16.8a3 3 0 11-5.8-1.6" />
+              </svg>
+              ANNOUNCE
+            </span>
+          )}
         </h2>
         <button
           onClick={() => {
