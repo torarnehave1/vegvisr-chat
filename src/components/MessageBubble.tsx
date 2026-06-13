@@ -367,10 +367,16 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className="text-[10px] opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity"
-              title={isOwn ? 'Delete' : 'Delete (owner)'}
+              className={`p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
+              title={isOwn ? 'Delete message' : 'Delete (owner)'}
+              aria-label={isOwn ? 'Delete message' : 'Delete message (owner)'}
             >
-              &#x2715;
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+              </svg>
             </button>
           )}
         </div>
