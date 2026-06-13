@@ -114,6 +114,10 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // patchNode requires expectedVersion (integer) for optimistic concurrency.
+  // We seed this from getknowgraph (data.metadata.version) and update it from
+  // patchNode's newVersion field after every successful write.
+  const [graphVersion, setGraphVersion] = useState<number | null>(null)
   const [filter, setFilter] = useState<FilterTab>('all')
   const [showForm, setShowForm] = useState(false)
   const [formTitle, setFormTitle] = useState('')
@@ -155,6 +159,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
+      if (graphVersion === null) throw new Error('Graph version not loaded yet')
       const res = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
@@ -165,9 +170,14 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
             color: newColor,
             metadata: { ...meta, status: newStatus },
           },
+          expectedVersion: graphVersion,
         }),
       })
       if (!res.ok) throw new Error(`patchNode failed: ${res.status}`)
+      const patchData = await res.json().catch(() => null)
+      if (patchData && typeof patchData.newVersion === 'number') {
+        setGraphVersion(patchData.newVersion)
+      }
 
       // When shipped: send a message to the originating group
       if (newStatus === 'shipped') {
@@ -214,6 +224,12 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
         .filter((n: SuggestionNode) => n.label && n.info)
         .reverse()
       setSuggestions(nodes)
+      // Capture the current graph version so subsequent patchNode calls can
+      // pass expectedVersion. Without this, patchNode returns HTTP 400 and the
+      // optimistic UI updates silently revert.
+      if (typeof data.metadata?.version === 'number') {
+        setGraphVersion(data.metadata.version)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
@@ -316,6 +332,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     )
 
     try {
+      if (graphVersion === null) throw new Error('Graph version not loaded yet')
       const voteRes = await fetch(`${KNOWLEDGE_BASE}/patchNode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders(auth) },
@@ -325,9 +342,14 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
           fields: {
             metadata: { ...meta, votes: newVotes, votedBy: newVotedBy },
           },
+          expectedVersion: graphVersion,
         }),
       })
       if (!voteRes.ok) throw new Error(`patchNode failed: ${voteRes.status}`)
+      const voteData = await voteRes.json().catch(() => null)
+      if (voteData && typeof voteData.newVersion === 'number') {
+        setGraphVersion(voteData.newVersion)
+      }
     } catch {
       // Revert on failure
       setSuggestions(prev =>
