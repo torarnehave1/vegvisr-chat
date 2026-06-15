@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
-const GRAPH_ID = 'graph_chat_user_suggestions'
-const STORAGE_KEY = 'suggestions_seen_count'
 const POLL_INTERVAL = 120_000 // 2 minutes
 
+/** Per-group graph + seen-count key. Mirrors UserSuggestions' graphIdFor. */
+function graphIdFor(groupId: string): string {
+  return `graph_chat_suggestions_${groupId}`
+}
+function storageKeyFor(groupId: string): string {
+  return `suggestions_seen_count_${groupId}`
+}
+
 /**
- * Polls the User Suggestions knowledge graph to detect new entries.
- * Same pattern as useWhatsNewCheck — compares node count against localStorage baseline.
+ * Polls a group's Suggestions knowledge graph to detect new entries.
+ * Same pattern as useWhatsNewCheck — compares node count against a per-group
+ * localStorage baseline. No-ops when groupId is undefined (e.g. on the group
+ * list, where no group is open).
  */
-export function useSuggestionsCheck() {
+export function useSuggestionsCheck(groupId?: string) {
   const [hasNew, setHasNew] = useState(false)
   const [newCount, setNewCount] = useState(0)
   const currentTotal = useRef<number | null>(null)
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>
+    if (!groupId) return
+
+    const GRAPH_ID = graphIdFor(groupId)
+    const STORAGE_KEY = storageKeyFor(groupId)
 
     const check = async () => {
       try {
@@ -50,17 +61,24 @@ export function useSuggestionsCheck() {
     }
 
     check()
-    timer = setInterval(check, POLL_INTERVAL)
-    return () => clearInterval(timer)
-  }, [])
+    const timer = setInterval(check, POLL_INTERVAL)
+    // On group switch (or unmount) clear the badge so a stale count from the
+    // previous group doesn't carry over before the next poll lands.
+    return () => {
+      clearInterval(timer)
+      setHasNew(false)
+      setNewCount(0)
+      currentTotal.current = null
+    }
+  }, [groupId])
 
   const markSeen = useCallback(() => {
-    if (currentTotal.current !== null) {
-      localStorage.setItem(STORAGE_KEY, String(currentTotal.current))
+    if (groupId && currentTotal.current !== null) {
+      localStorage.setItem(storageKeyFor(groupId), String(currentTotal.current))
     }
     setHasNew(false)
     setNewCount(0)
-  }, [])
+  }, [groupId])
 
   return { hasNew, newCount, markSeen }
 }

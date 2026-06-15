@@ -2,7 +2,13 @@ import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import { sendMessage } from '../services/chat-service'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
-const GRAPH_ID = 'graph_chat_user_suggestions'
+
+/** One knowledge-graph per group, addressed by group_id. Mirrors GroupQuestions
+ * (graph_chat_questions_${groupId}) so the two screens share the same per-group
+ * topology. */
+function graphIdFor(groupId: string): string {
+  return `graph_chat_suggestions_${groupId}`
+}
 
 const STATUS_COLORS: Record<string, string> = {
   new: '#38bdf8',
@@ -94,9 +100,15 @@ interface SuggestionNode {
 }
 
 interface Props {
+  /** Required — suggestions are per-group. App.tsx supplies the groupId from
+   * the View state (set from the chat header CTA). */
+  groupId: string
+  groupName: string
+  /** True when the current user is the group's created_by user; controls
+   * whether the status menu (new/reviewed/icebox/planned/shipped) is shown. */
+  isOwner: boolean
   onBack: () => void
   auth?: { user_id: string; email?: string; role?: string; phone?: string }
-  groupId?: string
 }
 
 type FilterTab = 'all' | 'new' | 'icebox' | 'planned' | 'shipped'
@@ -110,7 +122,9 @@ function authHeaders(auth?: { user_id: string; email?: string; role?: string; ph
   }
 }
 
-export function UserSuggestions({ onBack, auth, groupId }: Props) {
+export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: Props) {
+  const GRAPH_ID = graphIdFor(groupId)
+
   const [suggestions, setSuggestions] = useState<SuggestionNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -127,7 +141,9 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
   const [statusMenuId, setStatusMenuId] = useState<string | null>(null)
   const statusMenuRef = useRef<HTMLDivElement>(null)
 
-  const isAdmin = auth?.role === 'Superadmin'
+  // The group owner controls the status flow (was Superadmin in the old global
+  // feed). isOwner is computed by App.tsx from group.created_by.
+  const canManageStatus = isOwner
 
   // Close status menu on click outside
   useEffect(() => {
@@ -248,6 +264,8 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
   }
 
   const fetchSuggestions = useCallback(async () => {
+    setLoading(true)
+    setError('')
     try {
       const res = await fetch(
         `${KNOWLEDGE_BASE}/getknowgraph?id=${encodeURIComponent(GRAPH_ID)}`
@@ -275,7 +293,7 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [GRAPH_ID])
 
   useEffect(() => {
     fetchSuggestions()
@@ -296,14 +314,21 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
           nodes: [],
           edges: [],
           metadata: {
-            title: 'Chat User Suggestions',
-            description: 'User-submitted suggestions for the Vegvisr Chat app',
+            title: `Suggestions — ${groupName}`,
+            description: `User-submitted suggestions for the ${groupName} group`,
             metaArea: 'chat',
           },
         },
         override: true,
       }),
     })
+    // Refetch version so the first status change (patchNode) doesn't hit a 400.
+    if (res.ok) {
+      try {
+        const refetch = await fetch(`${KNOWLEDGE_BASE}/getknowgraph?id=${encodeURIComponent(GRAPH_ID)}`).then(r => r.json())
+        if (typeof refetch?.metadata?.version === 'number') setGraphVersion(refetch.metadata.version)
+      } catch { /* ignore */ }
+    }
     return res.ok
   }
 
@@ -412,8 +437,8 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70 flex-1">
-          Suggestions
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70 flex-1 truncate">
+          Suggestions <span className="text-white/30 normal-case tracking-normal">— {groupName}</span>
         </h2>
         {auth && (
           <button
@@ -530,10 +555,10 @@ export function UserSuggestions({ onBack, auth, groupId }: Props) {
                     </span>
                     <span className="relative">
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isAdmin ? 'cursor-pointer hover:ring-1 hover:ring-white/20' : ''}`}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${canManageStatus ? 'cursor-pointer hover:ring-1 hover:ring-white/20' : ''}`}
                         style={{ backgroundColor: `${STATUS_COLORS[status]}20`, color: STATUS_COLORS[status] }}
-                        onClick={isAdmin ? () => setStatusMenuId(statusMenuId === suggestion.id ? null : suggestion.id) : undefined}
-                        title={isAdmin ? 'Click to change status' : (STATUS_LABELS[status] || status)}
+                        onClick={canManageStatus ? () => setStatusMenuId(statusMenuId === suggestion.id ? null : suggestion.id) : undefined}
+                        title={canManageStatus ? 'Click to change status' : (STATUS_LABELS[status] || status)}
                       >
                         {STATUS_LABELS[status] || status}
                       </span>
