@@ -2,6 +2,8 @@ export type AuthUser = {
   userId: string;
   email: string;
   role?: string | null;
+  emailVerificationToken?: string | null;
+  displayName?: string | null;
 };
 
 const AUTH_SESSION_URL = '/auth/openauth/session';
@@ -15,7 +17,13 @@ export const readStoredUser = (): AuthUser | null => {
     const userId = parsed.user_id || parsed.oauth_id;
     const email = parsed.email;
     if (!userId || !email) return null;
-    return { userId, email, role: parsed.role || null };
+    return {
+      userId,
+      email,
+      role: parsed.role || null,
+      emailVerificationToken: parsed.emailVerificationToken || null,
+      displayName: parsed.displayName || parsed.display_name || null,
+    };
   } catch {
     return null;
   }

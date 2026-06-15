@@ -14,6 +14,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { InstallPrompt } from './components/InstallPrompt';
 import { WhatsNew } from './components/WhatsNew';
 import { UserSuggestions } from './components/UserSuggestions';
+import ImpersonationBar from './components/ImpersonationBar';
 import { GroupQuestions } from './components/GroupQuestions';
 import { useWhatsNewCheck } from './hooks/useWhatsNewCheck';
 import { useSuggestionsCheck } from './hooks/useSuggestionsCheck';
@@ -29,7 +30,7 @@ type View =
   | { screen: 'info'; group: Group }
   | { screen: 'settings' }
   | { screen: 'whatsnew' }
-  | { screen: 'suggestions' }
+  | { screen: 'suggestions'; group: Group }
   | { screen: 'questions'; group: Group }
 
 function readChatPhone(): string | null {
@@ -65,7 +66,9 @@ function App() {
   });
   const [profileVersion, setProfileVersion] = useState(0);
   const { hasNew: hasNewFeatures, newCount: newFeatureCount, markSeen: markFeaturesSeen } = useWhatsNewCheck();
-  const { hasNew: hasNewSuggestions, markSeen: markSuggestionsSeen } = useSuggestionsCheck();
+  // Suggestions are per-group; poll the open group's graph (undefined ⇒ no poll).
+  const currentGroupId = 'group' in view ? view.group.id : undefined;
+  const { hasNew: hasNewSuggestions, markSeen: markSuggestionsSeen } = useSuggestionsCheck(currentGroupId);
 
   const setLanguage = (value: typeof language) => {
     setLanguageState(value);
@@ -312,6 +315,14 @@ function App() {
 
           <EcosystemNav className="mt-4" />
 
+          {/* System Owner "Login as…" control + impersonation banner.
+              Renders nothing for non-owners (403 from /admin/users). */}
+          {authStatus === 'authed' && (
+            <div className="mt-4">
+              <ImpersonationBar />
+            </div>
+          )}
+
           {authStatus === 'anonymous' && loginOpen && (
             <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/80">
               <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
@@ -345,12 +356,6 @@ function App() {
           {view.screen === 'whatsnew' && authStatus !== 'authed' && (
             <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
               <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
-            </main>
-          )}
-
-          {view.screen === 'suggestions' && authStatus !== 'authed' && (
-            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
-              <UserSuggestions onBack={() => { markSuggestionsSeen(); setView(prevView); }} />
             </main>
           )}
 
@@ -395,9 +400,11 @@ function App() {
                         <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
                       ) : view.screen === 'suggestions' ? (
                         <UserSuggestions
-                          onBack={() => { markSuggestionsSeen(); setView(prevView); }}
+                          groupId={view.group.id}
+                          groupName={view.group.name}
+                          isOwner={view.group.created_by === authUser.userId}
                           auth={{ user_id: authUser.userId, email: authUser.email, role: authUser.role || undefined, phone: phone || undefined }}
-                          groupId={prevView.screen === 'chat' ? prevView.group.id : undefined}
+                          onBack={() => { markSuggestionsSeen(); setView({ screen: 'chat', group: view.group }); }}
                         />
                       ) : view.screen === 'settings' ? (
                         <ProfileSettings
@@ -419,7 +426,7 @@ function App() {
                           onSettings={() => { setPrevView(view); setView({ screen: 'settings' }); }}
                           onWhatsNew={() => { setPrevView(view); setView({ screen: 'whatsnew' }); }}
                           hasNewFeatures={hasNewFeatures}
-                          onSuggestions={() => { setPrevView(view); setView({ screen: 'suggestions' }); }}
+                          onSuggestions={() => { setPrevView(view); setView({ screen: 'suggestions', group: view.group }); }}
                           hasNewSuggestions={hasNewSuggestions}
                         />
                       ) : view.screen === 'info' ? (
