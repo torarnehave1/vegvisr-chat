@@ -22,6 +22,10 @@ interface Props {
    * show an OWNER badge + amber avatar ring so admin announcements stand out
    * from regular chatter. Bot messages keep their BOT styling. */
   groupCreatedBy?: string
+  /** Global role of the viewer. Superadmin gets the delete affordance on every
+   * message (human or bot) in every group, matching the worker's authorisation
+   * at group-chat-worker/index.js:2236-2253. */
+  currentUserRole?: string
   /** True when the group is locked to owner-only posting. Members see a banner
    * instead of the composer; the owner still sees the normal composer. */
   postingLocked?: boolean
@@ -51,7 +55,7 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
+export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -647,7 +651,9 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, postingLocked, o
                   isOwner={!!groupCreatedBy && msg.user_id === groupCreatedBy && !msg.user_id?.startsWith('bot:')}
                   profile={profiles.get(msg.user_id)}
                   onDelete={
-                    msg.user_id === currentUserId || currentUserId === groupCreatedBy
+                    msg.user_id === currentUserId
+                    || currentUserId === groupCreatedBy
+                    || currentUserRole === 'Superadmin'
                       ? handleDelete
                       : undefined
                   }

@@ -416,6 +416,7 @@ function App() {
                           groupId={view.group.id}
                           groupName={view.group.name}
                           groupCreatedBy={view.group.created_by}
+                          currentUserRole={authUser.role || undefined}
                           postingLocked={!!view.group.posting_locked}
                           onAskQuestion={() => { setPrevView(view); setView({ screen: 'questions', group: view.group }); }}
                           auth={auth}
