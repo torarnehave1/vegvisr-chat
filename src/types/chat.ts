@@ -33,7 +33,7 @@ export interface Member {
   alerts_enabled?: number  // 1 = opted into owner email alerts for this group
 }
 
-export type MessageType = 'text' | 'voice' | 'image' | 'video' | 'poll'
+export type MessageType = 'text' | 'voice' | 'image' | 'video' | 'poll' | 'bot_thinking' | 'bot_error'
 
 export interface Message {
   id: number

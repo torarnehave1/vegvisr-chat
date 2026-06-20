@@ -195,6 +195,27 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         )}
 
         {/* Text */}
+        {/* Bot 'thinking' placeholder — the worker inserts this before firing
+            bot-respond and updates the row in place when the real reply lands. */}
+        {msgType === 'bot_thinking' && (
+          <div className="flex items-center gap-2 text-sm italic text-white/60">
+            <span>{message.body || 'Thinking…'}</span>
+            <span className="inline-flex gap-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </span>
+          </div>
+        )}
+
+        {/* Bot error — when bot-respond failed or timed out and the placeholder
+            got finalized as an error instead of a real reply. */}
+        {msgType === 'bot_error' && (
+          <p className="text-sm text-rose-300/90 italic">
+            {message.body || 'Bot couldn’t reply — please try again.'}
+          </p>
+        )}
+
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
           const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube')
