@@ -60,6 +60,12 @@ export interface Message {
   video_duration_ms?: number
   // Reply
   reply_to_id?: number | null
+  // Forward attribution — populated when the message was forwarded from another
+  // group. forwarded_from_user_name is denormalised at forward time so the
+  // bubble can render "Forwarded from <name>" without a cross-group lookup.
+  forwarded_from_message_id?: number | null
+  forwarded_from_user_id?: string | null
+  forwarded_from_user_name?: string | null
 }
 
 export interface PagingInfo {

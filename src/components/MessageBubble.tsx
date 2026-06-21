@@ -28,6 +28,12 @@ interface Props {
    * badge next to the display name and an amber accent ring on the avatar so
    * announcements stand out from regular member chatter (locked groups). */
   isOwner?: boolean
+  /** Open the "forward to another group" picker. Shown to anyone who can read
+   * the message. */
+  onForward?: (message: Message) => void
+  /** Open the "move to another group" picker. Shown only to the group owner
+   * and Superadmins — caller decides. */
+  onMove?: (message: Message) => void
 }
 
 function formatTime(ts: number): string {
@@ -114,7 +120,7 @@ function parseTextWithLinks(text: string): TextPart[] {
   return parts
 }
 
-export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile, isOwner }: Props) {
+export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile, isOwner, onForward, onMove }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
@@ -191,6 +197,20 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                replyToMessage.message_type === 'poll' ? 'Poll' :
                replyToMessage.body?.slice(0, 60) || '...'}
             </div>
+          </div>
+        )}
+
+        {/* Forward attribution — small italic label above the body when this
+            message was forwarded from another group. Name is denormalised on
+            the worker side (forwarded_from_user_name) so we don't have to
+            cross-resolve a profile that may not be a member of this group. */}
+        {message.forwarded_from_message_id != null && (
+          <div className="flex items-center gap-1 text-[10px] italic text-white/50 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 17 20 12 15 7" />
+              <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
+            </svg>
+            <span>Forwarded{message.forwarded_from_user_name ? ` from ${message.forwarded_from_user_name}` : ''}</span>
           </div>
         )}
 
@@ -385,6 +405,33 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             </div>
           )}
           <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>
+          {onForward && (
+            <button
+              onClick={() => onForward(message)}
+              className="p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              title="Forward to another group"
+              aria-label="Forward message"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 17 20 12 15 7" />
+                <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
+              </svg>
+            </button>
+          )}
+          {onMove && (
+            <button
+              onClick={() => onMove(message)}
+              className="p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
+              title="Move to another group (owner / Superadmin)"
+              aria-label="Move message"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 9l4-4 4 4" />
+                <path d="M9 5v8a4 4 0 0 0 4 4h6" />
+                <polyline points="15 13 19 17 15 21" />
+              </svg>
+            </button>
+          )}
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}

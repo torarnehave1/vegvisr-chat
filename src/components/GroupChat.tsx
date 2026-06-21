@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll, toggleReaction, fetchReactions } from '../services/chat-service'
+import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll, toggleReaction, fetchReactions, forwardMessage, moveMessage, fetchGroups } from '../services/chat-service'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
 import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
 import { updateMessage } from '../services/chat-service'
@@ -13,7 +13,8 @@ import { BotMentionDropdown } from './BotMentionDropdown'
 import { EmojiPicker } from './EmojiPicker'
 import { PollCreator } from './PollCreator'
 import { AlertMenu } from './AlertMenu'
-import type { AuthParams, Message, MemberProfile, ChatBot } from '../types/chat'
+import type { AuthParams, Message, MemberProfile, ChatBot, Group } from '../types/chat'
+import { GroupPickerModal } from './GroupPickerModal'
 
 interface Props {
   groupId: string
@@ -75,6 +76,11 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
   const [creatingPoll, setCreatingPoll] = useState(false)
   const [allReactions, setAllReactions] = useState<Record<number, MessageReactions>>({})
   const [replyTo, setReplyTo] = useState<Message | null>(null)
+  // Forward / move modals: when a message is staged, the GroupPickerModal opens
+  // with the user's other groups. Picking one calls the worker endpoint.
+  const [forwardTarget, setForwardTarget] = useState<Message | null>(null)
+  const [moveTarget, setMoveTarget] = useState<Message | null>(null)
+  const [pickerGroups, setPickerGroups] = useState<Group[] | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
@@ -275,6 +281,73 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       })
     } catch (err) {
       console.error('Delete failed:', err)
+    }
+  }
+
+  // Lazy-load the user's group list the first time forward or move is opened.
+  // Cached on pickerGroups so the second open is instant.
+  const ensurePickerGroups = useCallback(async () => {
+    if (pickerGroups) return pickerGroups
+    try {
+      const list = await fetchGroups(auth)
+      setPickerGroups(list)
+      return list
+    } catch (err) {
+      console.error('Failed to load groups for picker:', err)
+      setPickerGroups([])
+      return []
+    }
+  }, [auth, pickerGroups])
+
+  const handleForwardOpen = async (msg: Message) => {
+    await ensurePickerGroups()
+    setForwardTarget(msg)
+  }
+  const handleMoveOpen = async (msg: Message) => {
+    await ensurePickerGroups()
+    setMoveTarget(msg)
+  }
+
+  // Resolve a display name for the original author at forward time. Bots use
+  // their own user_id (bot:<id>) — for those, the BotMention pattern stores
+  // the display name in sender_avatar_url-adjacent state; fall back to the
+  // profile cache for humans. If neither resolves, leave null and the worker
+  // stores NULL → the bubble just renders "Forwarded" without a name.
+  const resolveAuthorName = (msg: Message): string | null => {
+    if (msg.user_id?.startsWith('bot:')) {
+      // We don't have the bot's name in props here, but the message body shows
+      // the bot's avatar/name via sender_avatar_url + the bot cache. Returning
+      // null is fine — the receiving group will show "Forwarded" without a name.
+      return null
+    }
+    const p = profiles.get(msg.user_id)
+    return p?.displayName || null
+  }
+
+  const handleForwardConfirm = async (target: Group) => {
+    if (!forwardTarget) return
+    try {
+      await forwardMessage(groupId, forwardTarget.id, target.id, resolveAuthorName(forwardTarget), auth)
+      setForwardTarget(null)
+    } catch (err) {
+      console.error('Forward failed:', err)
+      alert(`Forward failed: ${err instanceof Error ? err.message : 'unknown error'}`)
+    }
+  }
+
+  const handleMoveConfirm = async (target: Group) => {
+    if (!moveTarget) return
+    try {
+      await moveMessage(groupId, moveTarget.id, target.id, auth)
+      setMessages(prev => {
+        const next = new Map(prev)
+        next.delete(moveTarget.id)
+        return next
+      })
+      setMoveTarget(null)
+    } catch (err) {
+      console.error('Move failed:', err)
+      alert(`Move failed: ${err instanceof Error ? err.message : 'unknown error'}`)
     }
   }
 
@@ -665,6 +738,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                   onReply={(m) => { setReplyTo(m); inputRef.current?.focus() }}
                   replyToMessage={msg.reply_to_id ? messages.get(msg.reply_to_id) ?? null : null}
                   replyToProfile={msg.reply_to_id && messages.get(msg.reply_to_id) ? profiles.get(messages.get(msg.reply_to_id)!.user_id) : undefined}
+                  onForward={handleForwardOpen}
+                  onMove={
+                    currentUserId === groupCreatedBy || currentUserRole === 'Superadmin'
+                      ? handleMoveOpen
+                      : undefined
+                  }
                 />
               </div>
             )
@@ -859,6 +938,25 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           <span className="text-sky-200/50 text-xs mt-2 bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
       )}
+
+      <GroupPickerModal
+        open={!!forwardTarget}
+        title="Forward to…"
+        ctaLabel="Forward"
+        groups={pickerGroups || []}
+        excludeGroupIds={[groupId]}
+        onCancel={() => setForwardTarget(null)}
+        onPick={handleForwardConfirm}
+      />
+      <GroupPickerModal
+        open={!!moveTarget}
+        title="Move to…"
+        ctaLabel="Move"
+        groups={pickerGroups || []}
+        excludeGroupIds={[groupId]}
+        onCancel={() => setMoveTarget(null)}
+        onPick={handleMoveConfirm}
+      />
     </div>
   )
 }

@@ -225,6 +225,58 @@ export async function sendMessage(
   return data.message
 }
 
+// Copy a message into a different group while preserving attribution to the
+// original author. The forwarded row is owned by the caller but renders with a
+// "Forwarded from <forwardedFromUserName>" label. Worker validates membership
+// of both source and target groups.
+export async function forwardMessage(
+  sourceGroupId: string,
+  messageId: number,
+  targetGroupId: string,
+  forwardedFromUserName: string | null,
+  auth: AuthParams,
+): Promise<Message> {
+  const res = await fetch(
+    `${BASE}/groups/${sourceGroupId}/messages/${messageId}/forward`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...authBody(auth),
+        target_group_id: targetGroupId,
+        forwarded_from_user_name: forwardedFromUserName || undefined,
+      }),
+    },
+  )
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to forward message')
+  return data.message
+}
+
+// Re-parent a message to a different group. Owner-of-source or Superadmin only.
+// The message disappears from the source group's view. Reactions follow the
+// message_id; reply_to_id is cleared on the worker side.
+export async function moveMessage(
+  sourceGroupId: string,
+  messageId: number,
+  targetGroupId: string,
+  auth: AuthParams,
+): Promise<void> {
+  const res = await fetch(
+    `${BASE}/groups/${sourceGroupId}/messages/${messageId}/move`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...authBody(auth),
+        target_group_id: targetGroupId,
+      }),
+    },
+  )
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to move message')
+}
+
 export async function deleteMessage(
   groupId: string,
   messageId: number,
