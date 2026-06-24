@@ -124,6 +124,8 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
     mimeType: string
     url: string
   } | null>(null)
+  // 'choice' = show two buttons; 'voice' = show title input for voice send
+  const [previewMode, setPreviewMode] = useState<'choice' | 'voice'>('choice')
   const [title, setTitle] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
@@ -146,6 +148,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
   const handleStart = async () => {
     setError('')
     setPreview(null)
+    setPreviewMode('choice')
     setTitle('')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -179,6 +182,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
     setAnalyser(null)
     if (preview?.url) URL.revokeObjectURL(preview.url)
     setPreview(null)
+    setPreviewMode('choice')
     setTitle('')
   }
 
@@ -195,62 +199,90 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
     setTitle('')
   }
 
-  // Preview state — title input + waveform + send
+  // Preview — choice screen first, then voice-title if needed
   if (preview) {
+    // Sub-state: title input for sending as a voice message
+    if (previewMode === 'voice') {
+      return (
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex items-center gap-2">
+            <StaticWaveform audioUrl={preview.url} />
+            <span className="text-[11px] text-white/50">{formatTimer(preview.durationMs)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) handleSend() }}
+              placeholder="Subject (required)"
+              autoFocus
+              className="flex-1 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+            />
+            <button
+              type="button"
+              onClick={() => setPreviewMode('choice')}
+              className="rounded-full p-1.5 text-white/50 hover:text-white/80 hover:bg-white/10"
+              title="Back"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!title.trim()}
+              className="rounded-full bg-emerald-500 p-1.5 text-white hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Send voice message"
+            >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    // Default: choice screen
     return (
       <div className="flex flex-col gap-2 w-full">
         <div className="flex items-center gap-2">
           <StaticWaveform audioUrl={preview.url} />
           <span className="text-[11px] text-white/50">{formatTimer(preview.durationMs)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) handleSend() }}
-            placeholder="Subject (required)"
-            autoFocus
-            className="flex-1 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
-          />
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-full p-1.5 text-white/50 hover:text-white/80 hover:bg-white/10"
+            className="ml-auto rounded-full p-1.5 text-white/40 hover:text-white/80 hover:bg-white/10"
             title="Discard"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
+        <div className="flex gap-2 w-full">
           {onDictate && (
             <button
               type="button"
               onClick={() => {
-                if (!preview) return
                 onDictate(preview.blob, preview.mimeType, preview.durationMs)
                 URL.revokeObjectURL(preview.url)
                 setPreview(null)
-                setTitle('')
+                setPreviewMode('choice')
               }}
-              className="rounded-full bg-sky-500 p-1.5 text-white hover:bg-sky-400"
-              title="Post as text (dictate)"
+              className="flex-1 rounded-xl bg-sky-600/80 hover:bg-sky-500 text-white text-xs font-semibold py-2 transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
+              Post as text
             </button>
           )}
           <button
             type="button"
-            onClick={handleSend}
-            disabled={!title.trim()}
-            className="rounded-full bg-emerald-500 p-1.5 text-white hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Send voice message"
+            onClick={() => setPreviewMode('voice')}
+            className="flex-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-semibold py-2 transition-colors"
           >
-            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-            </svg>
+            Send as voice
           </button>
         </div>
       </div>
