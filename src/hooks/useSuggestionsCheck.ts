@@ -3,12 +3,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
 const POLL_INTERVAL = 120_000 // 2 minutes
 
-/** Per-group graph + seen-count key. Mirrors UserSuggestions' graphIdFor. */
-function graphIdFor(groupId: string): string {
-  return `graph_chat_suggestions_${groupId}`
+/** Global suggestions graph — all groups share one feed. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function graphIdFor(_groupId: string): string {
+  return 'graph_chat_user_suggestions'
 }
-function storageKeyFor(groupId: string): string {
-  return `suggestions_seen_count_${groupId}`
+function storageKeyFor(_groupId: string): string {
+  return 'suggestions_seen_count'
 }
 
 /**

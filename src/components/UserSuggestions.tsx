@@ -3,11 +3,10 @@ import { sendMessage } from '../services/chat-service'
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
 
-/** One knowledge-graph per group, addressed by group_id. Mirrors GroupQuestions
- * (graph_chat_questions_${groupId}) so the two screens share the same per-group
- * topology. */
-function graphIdFor(groupId: string): string {
-  return `graph_chat_suggestions_${groupId}`
+/** Global suggestions graph — all groups share one feed. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function graphIdFor(_groupId: string): string {
+  return 'graph_chat_user_suggestions'
 }
 
 const STATUS_COLORS: Record<string, string> = {
