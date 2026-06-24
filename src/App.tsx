@@ -289,6 +289,13 @@ function App() {
               className="h-12 w-auto"
             />
             <div className="flex items-center gap-3">
+              <span
+                aria-label="Build marker V1"
+                title="Build marker V1 — visual confirmation of latest deploy"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500 text-white text-[10px] font-bold tracking-wider"
+              >
+                V1
+              </span>
               <LanguageSelector value={language} onChange={setLanguage} />
               <AuthBar
                 userEmail={authStatus === 'authed' ? authUser?.email : undefined}
