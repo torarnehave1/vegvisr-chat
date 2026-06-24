@@ -393,6 +393,29 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
     }
   }
 
+  const handleDictate = async (blob: Blob, mimeType: string, durationMs: number) => {
+    try {
+      setSending(true)
+      const ext = mimeType.includes('mp4') ? 'm4a' : 'webm'
+      const fileName = `dictate_${Date.now()}.${ext}`
+      // Upload to R2 so the audio is preserved (can be referenced later)
+      const { objectKey } = await uploadAudio(blob, fileName, groupId)
+      const tr = await transcribeAudio(objectKey)
+      if (!tr.text) return
+      const msg = await sendMessage(
+        groupId,
+        { body: tr.text, message_type: 'text' },
+        auth,
+      )
+      mergeMessages([msg])
+      atBottomRef.current = true
+    } catch (err) {
+      console.error('Dictate send failed:', err)
+    } finally {
+      setSending(false)
+    }
+  }
+
   // Manual transcribe for existing voice messages
   const handleTranscribe = async (message: Message) => {
     if (!message.audio_url) return
@@ -895,7 +918,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                 onChange={handleMediaSelect}
                 className="hidden"
               />
-              <VoiceRecorder onSend={handleVoiceSend} />
+              <VoiceRecorder onSend={handleVoiceSend} onDictate={handleDictate} />
               <EmojiPicker onSelect={(emoji) => {
                 setInput(prev => prev + emoji)
                 inputRef.current?.focus()

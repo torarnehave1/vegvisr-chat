@@ -4,6 +4,7 @@ import type { VoiceRecording } from '../hooks/useVoiceRecorder'
 
 interface Props {
   onSend: (recording: VoiceRecording) => void
+  onDictate?: (blob: Blob, mimeType: string, durationMs: number) => void
 }
 
 function formatTimer(ms: number) {
@@ -112,7 +113,7 @@ function StaticWaveform({ audioUrl }: { audioUrl: string }) {
   )
 }
 
-export function VoiceRecorder({ onSend }: Props) {
+export function VoiceRecorder({ onSend, onDictate }: Props) {
   const { recording, start, stop, cancel } = useVoiceRecorder()
   const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState('')
@@ -222,6 +223,24 @@ export function VoiceRecorder({ onSend }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          {onDictate && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!preview) return
+                onDictate(preview.blob, preview.mimeType, preview.durationMs)
+                URL.revokeObjectURL(preview.url)
+                setPreview(null)
+                setTitle('')
+              }}
+              className="rounded-full bg-sky-500 p-1.5 text-white hover:bg-sky-400"
+              title="Post as text (dictate)"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSend}
