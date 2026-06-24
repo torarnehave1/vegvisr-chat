@@ -393,7 +393,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
     }
   }
 
-  const handleDictate = async (blob: Blob, mimeType: string, durationMs: number) => {
+  const handleDictate = async (blob: Blob, mimeType: string, _durationMs: number) => {
     try {
       setSending(true)
       const ext = mimeType.includes('mp4') ? 'm4a' : 'webm'
