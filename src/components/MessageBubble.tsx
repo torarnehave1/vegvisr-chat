@@ -160,7 +160,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
       <div
         className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
           isOwn
-            ? 'bg-white border border-slate-900 text-slate-900 dark:bg-sky-600 dark:border-transparent dark:text-white rounded-br-md'
+            ? 'bg-sky-100 text-slate-900 dark:bg-sky-600 dark:text-white rounded-br-md'
             : 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md'
         }`}
       >
