@@ -815,7 +815,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             <button
               onClick={confirmMedia}
               disabled={sending}
-              className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+              className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-sky-500 transition-colors"
             >
               {sending ? '...' : 'Send'}
             </button>
@@ -945,7 +945,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+                className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-sky-500 transition-colors"
               >
                 {sending ? '...' : 'Send'}
               </button>
