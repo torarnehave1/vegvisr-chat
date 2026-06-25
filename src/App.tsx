@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AuthBar, EcosystemNav, LanguageSelector } from 'vegvisr-ui-kit';
+// vegvisr-ui-kit AuthBar / EcosystemNav / LanguageSelector intentionally removed —
+// the chat app keeps only the Sign in / Log out button in the header.
 const appLogo = 'https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png';
 import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
@@ -289,22 +290,23 @@ function App() {
               className="h-12 w-auto"
             />
             <div className="flex items-center gap-3">
-              <span
-                aria-label="Build marker V1"
-                title="Build marker V1 — visual confirmation of latest deploy"
-                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500 text-slate-900 dark:text-white text-[10px] font-bold tracking-wider"
-              >
-                V1
-              </span>
-              <LanguageSelector value={language} onChange={setLanguage} />
-              <AuthBar
-                userEmail={authStatus === 'authed' ? authUser?.email : undefined}
-                badgeLabel={t('app.badge')}
-                signInLabel="Sign in"
-                onSignIn={() => setLoginOpen((prev) => !prev)}
-                logoutLabel="Log out"
-                onLogout={handleLogout}
-              />
+              {authStatus === 'authed' ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20"
+                >
+                  Log out
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setLoginOpen((prev) => !prev)}
+                  className="rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20"
+                >
+                  Sign in
+                </button>
+              )}
             </div>
           </header>
 
@@ -319,8 +321,6 @@ function App() {
               Open words. Clear intentions. Communication without walls.
             </p>
           </div>
-
-          <EcosystemNav className="mt-4" />
 
           {/* System Owner "Login as…" control + impersonation banner.
               Renders nothing for non-owners (403 from /admin/users). */}
