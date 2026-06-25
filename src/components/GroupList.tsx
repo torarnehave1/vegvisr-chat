@@ -226,7 +226,7 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
             type="button"
             onClick={handleJoin}
             disabled={joining || !joinInput.trim()}
-            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-slate-900 dark:text-white rounded-lg text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {joining ? '...' : 'Join'}
           </button>

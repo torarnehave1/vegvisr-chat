@@ -132,7 +132,7 @@ export default function ImpersonationBar() {
           ))}
       </select>
       <button
-        className="rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-white disabled:opacity-40"
+        className="rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-40"
         disabled={!selected || busy}
         onClick={impersonate}
       >
