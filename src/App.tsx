@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 // vegvisr-ui-kit AuthBar / EcosystemNav / LanguageSelector intentionally removed —
-// the chat app keeps only the Sign in / Log out button in the header.
+// the chat app keeps only the Sign in / Log out button + screen recorder in the header.
+import { ScreenRecorder } from 'vegvisr-ui-kit'
 const appLogo = 'https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png';
 import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
@@ -290,6 +291,7 @@ function App() {
               className="h-12 w-auto"
             />
             <div className="flex items-center gap-3">
+              <ScreenRecorder streamApiUrl="https://videostream.vegvisr.org" />
               {authStatus === 'authed' ? (
                 <button
                   type="button"
