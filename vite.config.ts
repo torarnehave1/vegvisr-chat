@@ -3,13 +3,22 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
+import { execSync } from 'child_process'
 
-/** Writes version.json with a unique build hash into dist/ after each build */
+// One build-id per config load. Shared between the version.json plugin and the
+// __BUILD_ID__ define so the green pill in the UI and the dist/version.json
+// always agree. Tries git short SHA (correlates with commit history) and
+// falls back to a base36 timestamp when git isn't available (e.g. some CIs).
+const BUILD_ID = (() => {
+  try { return execSync('git rev-parse --short=7 HEAD').toString().trim() }
+  catch { return Date.now().toString(36) }
+})()
+
 function versionJsonPlugin(): Plugin {
   return {
     name: 'version-json',
     closeBundle() {
-      const version = { buildHash: Date.now().toString(36), builtAt: new Date().toISOString() }
+      const version = { buildHash: BUILD_ID, builtAt: new Date().toISOString() }
       writeFileSync(resolve('dist', 'version.json'), JSON.stringify(version))
     },
   }
@@ -17,6 +26,9 @@ function versionJsonPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
   plugins: [
     react(),
     versionJsonPlugin(),

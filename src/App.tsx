@@ -291,6 +291,17 @@ function App() {
               className="h-12 w-auto"
             />
             <div className="flex items-center gap-3">
+              {/* Auto-bumping build marker. Value comes from __BUILD_ID__
+                  defined in vite.config.ts — first 7 chars of git SHA at
+                  build time. Lets you eyeball which deploy is actually
+                  running without opening DevTools. */}
+              <span
+                aria-label={`Build ${__BUILD_ID__}`}
+                title={`Build ${__BUILD_ID__} — visual confirmation of the live deploy`}
+                className="inline-flex items-center justify-center rounded-full bg-green-500 text-slate-900 dark:text-white text-[10px] font-bold tracking-wider px-2 py-1 font-mono"
+              >
+                {__BUILD_ID__}
+              </span>
               <ScreenRecorder streamApiUrl="https://videostream.vegvisr.org" />
               {authStatus === 'authed' && (
                 <button
