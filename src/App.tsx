@@ -400,7 +400,7 @@ function App() {
           )}
 
           {authStatus === 'anonymous' && view.screen !== 'whatsnew' && (
-            <div className="mt-10 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-100">
+            <div className="mt-10 rounded-2xl border border-rose-400/30 bg-rose-100 dark:bg-rose-500/10 px-6 py-4 text-sm text-rose-900 dark:text-rose-100">
               You are not signed in. Click “Sign in” to continue.
             </div>
           )}

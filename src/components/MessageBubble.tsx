@@ -150,7 +150,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             />
           ) : (
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
-              isBot ? 'bg-violet-500/30 text-violet-300' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/60'
+              isBot ? 'bg-violet-200 text-violet-900 dark:bg-violet-500/30 dark:text-violet-300' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/60'
             } ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}>
               {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
             </div>
@@ -160,15 +160,15 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
       <div
         className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
           isOwn
-            ? 'bg-sky-600 text-slate-900 dark:text-white rounded-br-md'
+            ? 'bg-white border border-slate-900 text-slate-900 dark:bg-sky-600 dark:border-transparent dark:text-white rounded-br-md'
             : 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md'
         }`}
       >
         {!isOwn && (
-          <div className="text-[11px] text-slate-500 dark:text-white/50 mb-0.5 flex items-center gap-1.5">
-            <span>{displayName}</span>
-            {isBot && <span className="text-[9px] bg-violet-500/30 text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
-            {isOwner && !isBot && <span className="text-[9px] bg-amber-500/30 text-amber-300 px-1 py-px rounded font-medium">OWNER</span>}
+          <div className="text-[11px] mb-0.5 flex items-center gap-1.5">
+            <span className={isBot ? 'text-slate-900 dark:text-white/80 font-semibold' : 'text-slate-700 dark:text-white/50'}>{displayName}</span>
+            {isBot && <span className="text-[9px] bg-violet-200 text-violet-900 dark:bg-violet-500/30 dark:text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
+            {isOwner && !isBot && <span className="text-[9px] bg-amber-200 text-amber-900 dark:bg-amber-500/30 dark:text-amber-300 px-1 py-px rounded font-medium">OWNER</span>}
           </div>
         )}
 
@@ -187,7 +187,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               }
             }}
           >
-            <div className="text-[10px] text-sky-300/80 font-medium">
+            <div className="text-[10px] text-sky-700 dark:text-sky-300/80 font-medium">
               {replyToProfile?.displayName || replyToMessage.user_id?.slice(0, 8)}
             </div>
             <div className="text-[11px] text-slate-500 dark:text-white/50 truncate max-w-[200px]">
@@ -245,7 +245,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                 {parts.map((part, i) => {
                   if (part.type === 'text') return <span key={i}>{part.value}</span>
                   return (
-                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-300 underline break-all hover:text-sky-200">
+                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-700 dark:text-sky-300 underline break-all hover:text-sky-900 dark:hover:text-sky-200">
                       {part.value}
                     </a>
                   )
@@ -267,7 +267,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           <div>
             {/* Voice title / subject */}
             {message.body && (
-              <p className="text-sm font-semibold mb-1.5 text-sky-300/90">
+              <p className="text-sm font-semibold mb-1.5 text-sky-700 dark:text-sky-300/90">
                 {message.body}
               </p>
             )}
@@ -299,7 +299,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                       <button
                         onClick={handleTranscribe}
                         disabled={transcribing}
-                        className="text-[11px] text-sky-300/80 hover:text-sky-200 underline"
+                        className="text-[11px] text-sky-700 dark:text-sky-300/80 hover:text-sky-200 underline"
                       >
                         Retry
                       </button>
@@ -309,7 +309,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <button
                     onClick={handleTranscribe}
                     disabled={transcribing}
-                    className="text-[11px] text-sky-300/70 hover:text-sky-200 underline transition-colors"
+                    className="text-[11px] text-sky-700 dark:text-sky-300/70 hover:text-sky-200 underline transition-colors"
                   >
                     {transcribing ? 'Transcribing...' : 'Transcribe'}
                   </button>
@@ -408,7 +408,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onForward && (
             <button
               onClick={() => onForward(message)}
-              className="p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
               title="Forward to another group"
               aria-label="Forward message"
             >
@@ -421,7 +421,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onMove && (
             <button
               onClick={() => onMove(message)}
-              className="p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
+              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
               title="Move to another group (owner / Superadmin)"
               aria-label="Move message"
             >
@@ -435,7 +435,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className={`p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
+              className={`p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
               title={isOwn ? 'Delete message' : 'Delete (owner)'}
               aria-label={isOwn ? 'Delete message' : 'Delete message (owner)'}
             >
