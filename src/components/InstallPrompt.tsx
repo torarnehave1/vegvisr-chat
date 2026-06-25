@@ -103,21 +103,21 @@ export function InstallPrompt() {
   if (deferred) {
     return (
       <div
-        className="fixed left-0 right-0 z-40 flex items-center justify-center gap-3 border-t border-violet-400/30 bg-slate-900/95 px-4 py-3 backdrop-blur-sm"
+        className="fixed left-0 right-0 z-40 flex items-center justify-center gap-3 border-t border-violet-400/30 bg-white/95 dark:bg-slate-900/95 px-4 py-3 backdrop-blur-sm"
         style={{ bottom: 0, paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <span className="text-sm text-white/80">Install Vegvisr Chat for a faster, full-screen experience.</span>
+        <span className="text-sm text-slate-700 dark:text-white/80">Install Vegvisr Chat for a faster, full-screen experience.</span>
         <button
           type="button"
           onClick={handleInstall}
-          className="rounded-lg bg-violet-500 px-3 py-1 text-xs font-semibold text-white hover:bg-violet-400 transition-colors"
+          className="rounded-lg bg-violet-500 px-3 py-1 text-xs font-semibold text-slate-900 dark:text-white hover:bg-violet-400 transition-colors"
         >
           Install
         </button>
         <button
           type="button"
           onClick={dismiss}
-          className="ml-1 p-1 text-white/40 hover:text-white/80 transition-colors"
+          className="ml-1 p-1 text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/80 transition-colors"
           aria-label="Dismiss"
         >
           ✕
@@ -130,16 +130,16 @@ export function InstallPrompt() {
   if (showIosTip) {
     return (
       <div
-        className="fixed left-0 right-0 z-40 flex items-center justify-center gap-3 border-t border-violet-400/30 bg-slate-900/95 px-4 py-3 backdrop-blur-sm"
+        className="fixed left-0 right-0 z-40 flex items-center justify-center gap-3 border-t border-violet-400/30 bg-white/95 dark:bg-slate-900/95 px-4 py-3 backdrop-blur-sm"
         style={{ bottom: 0, paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <span className="text-xs text-white/80 text-center">
-          To install: tap <span className="inline-block px-1.5 py-0.5 rounded bg-white/10 text-white">Share</span> then <strong>Add to Home Screen</strong>.
+        <span className="text-xs text-slate-700 dark:text-white/80 text-center">
+          To install: tap <span className="inline-block px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white">Share</span> then <strong>Add to Home Screen</strong>.
         </span>
         <button
           type="button"
           onClick={dismiss}
-          className="ml-1 p-1 text-white/40 hover:text-white/80 transition-colors"
+          className="ml-1 p-1 text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/80 transition-colors"
           aria-label="Dismiss"
         >
           ✕

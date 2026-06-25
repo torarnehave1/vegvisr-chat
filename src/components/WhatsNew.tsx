@@ -88,16 +88,16 @@ export function WhatsNew({ onBack }: Props) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10">
         <button
           onClick={onBack}
-          className="rounded-lg p-1.5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          className="rounded-lg p-1.5 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-white/70">
           What's New
         </h2>
       </div>
@@ -105,7 +105,7 @@ export function WhatsNew({ onBack }: Props) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading && (
-          <div className="text-sm text-white/50 text-center py-8">Loading...</div>
+          <div className="text-sm text-slate-500 dark:text-white/50 text-center py-8">Loading...</div>
         )}
 
         {error && (
@@ -113,13 +113,13 @@ export function WhatsNew({ onBack }: Props) {
         )}
 
         {!loading && !error && features.length === 0 && (
-          <div className="text-sm text-white/50 text-center py-8">No updates yet.</div>
+          <div className="text-sm text-slate-500 dark:text-white/50 text-center py-8">No updates yet.</div>
         )}
 
         {features.map((feature) => (
           <div
             key={feature.id}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+            className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-4 py-3"
           >
             <div className="flex items-start gap-2">
               <span
@@ -127,8 +127,8 @@ export function WhatsNew({ onBack }: Props) {
                 style={{ backgroundColor: feature.color || '#38bdf8' }}
               />
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-white/90">{feature.label}</h3>
-                <div className="mt-1 text-xs text-white/60 leading-relaxed whitespace-pre-line">
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-white/90">{feature.label}</h3>
+                <div className="mt-1 text-xs text-slate-500 dark:text-white/60 leading-relaxed whitespace-pre-line">
                   {renderInfo(feature.info)}
                 </div>
               </div>

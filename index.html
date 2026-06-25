@@ -12,6 +12,26 @@
     <link rel="icon" type="image/png" sizes="32x32" href="https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-180x180.png">
     <link rel="icon" type="image/png" sizes="512x512" href="https://favicons.vegvisr.org/favicons/1773237743072-1-1773237750881-512x512.png">
+    <script>
+      // Theme boot — runs BEFORE React mounts so there's no flash of the
+      // wrong theme. Reads localStorage.theme ('light' | 'dark' | 'system').
+      // If unset, defaults to 'dark' to preserve the experience existing users
+      // already have; new users can switch in Settings. 'system' follows the
+      // OS preference. Mirrored in src/services/theme-service.ts.
+      (function() {
+        try {
+          var pref = localStorage.getItem('theme') || 'dark';
+          var resolved = pref === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : pref;
+          if (resolved === 'dark') document.documentElement.classList.add('dark');
+          else document.documentElement.classList.remove('dark');
+        } catch (e) {
+          // localStorage may be unavailable (private mode). Default to dark.
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

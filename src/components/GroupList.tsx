@@ -200,8 +200,8 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
-        <h2 className="text-white font-semibold text-lg">Chats</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+        <h2 className="text-slate-900 dark:text-white font-semibold text-lg">Chats</h2>
         <button
           type="button"
           onClick={() => setShowCreate(!showCreate)}
@@ -212,7 +212,7 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
       </div>
 
       {/* Join by invite */}
-      <div className="px-4 py-2 border-b border-white/10 flex flex-col gap-1.5">
+      <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex flex-col gap-1.5">
         <div className="flex gap-2">
           <input
             value={joinInput}
@@ -220,13 +220,13 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
             onKeyDown={e => e.key === 'Enter' && handleJoin()}
             placeholder="Paste invite link or code..."
             disabled={joining}
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-sky-400/50 placeholder:text-white/30 disabled:opacity-50"
+            className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-sky-400/50 placeholder:text-slate-400 dark:placeholder:text-white/30 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={handleJoin}
             disabled={joining || !joinInput.trim()}
-            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-slate-900 dark:text-white rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {joining ? '...' : 'Join'}
           </button>
@@ -236,13 +236,13 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
 
       {/* Superadmin: show archived toggle */}
       {isSuperAdmin && (
-        <div className="px-4 py-1.5 border-b border-white/10 flex items-center gap-2">
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-white/50 hover:text-white/70 transition-colors">
+        <div className="px-4 py-1.5 border-b border-slate-200 dark:border-white/10 flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-500 dark:text-white/50 hover:text-slate-600 dark:hover:text-white/70 transition-colors">
             <input
               type="checkbox"
               checked={showArchived}
               onChange={e => setShowArchived(e.target.checked)}
-              className="rounded border-white/20 bg-white/5 text-sky-500 focus:ring-sky-500/30"
+              className="rounded border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 text-sky-500 focus:ring-sky-500/30"
             />
             Show archived groups
           </label>
@@ -251,20 +251,20 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
 
       {/* Create group */}
       {showCreate && (
-        <div className="px-4 py-2 border-b border-white/10 flex gap-2">
+        <div className="px-4 py-2 border-b border-slate-200 dark:border-white/10 flex gap-2">
           <input
             value={newName}
             onChange={e => setNewName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
             placeholder="Group name..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-sky-400/50"
+            className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
             autoFocus
           />
           <button
             type="button"
             onClick={handleCreate}
             disabled={!newName.trim() || creating}
-            className="px-3 py-1.5 bg-sky-600 text-white rounded-lg text-sm disabled:opacity-40"
+            className="px-3 py-1.5 bg-sky-600 text-slate-900 dark:text-white rounded-lg text-sm disabled:opacity-40"
           >
             {creating ? '...' : 'Create'}
           </button>
@@ -274,9 +274,9 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
       {/* Group list */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="text-center text-white/40 py-8">Loading groups...</div>
+          <div className="text-center text-slate-400 dark:text-white/40 py-8">Loading groups...</div>
         ) : groups.length === 0 ? (
-          <div className="text-center text-white/30 py-8 px-4">
+          <div className="text-center text-slate-400 dark:text-white/30 py-8 px-4">
             <p>No groups yet.</p>
             <p className="text-sm mt-1">Create one to start chatting!</p>
           </div>
@@ -289,8 +289,8 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
               type="button"
               key={g.id}
               onClick={() => { markGroupRead(g.id); onSelectGroup(g) }}
-              className={`group w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
-                selectedGroupId === g.id ? 'bg-white/10' : ''
+              className={`group w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors border-b border-slate-200 dark:border-white/5 ${
+                selectedGroupId === g.id ? 'bg-slate-200 dark:bg-white/10' : ''
               } ${isArchived ? 'opacity-50' : ''}`}
             >
               {/* Avatar */}
@@ -306,11 +306,11 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm truncate ${hasUnread ? 'text-white font-semibold' : 'text-white font-medium'}`}>
+                  <span className={`text-sm truncate ${hasUnread ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-900 dark:text-white font-medium'}`}>
                     {g.name}
                     {isArchived && <span className="ml-1.5 text-[10px] text-amber-400/70 font-normal">(archived)</span>}
                   </span>
-                  <span className={`text-[11px] flex-shrink-0 ml-2 ${hasUnread ? 'text-sky-400' : 'text-white/30'}`}>
+                  <span className={`text-[11px] flex-shrink-0 ml-2 ${hasUnread ? 'text-sky-400' : 'text-slate-400 dark:text-white/30'}`}>
                     {formatDate(g.updated_at)}
                   </span>
                 </div>

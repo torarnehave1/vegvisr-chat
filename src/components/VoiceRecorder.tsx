@@ -62,7 +62,7 @@ function LiveWaveform({ analyser }: { analyser: AnalyserNode | null }) {
       ref={canvasRef}
       width={160}
       height={32}
-      className="rounded bg-white/5"
+      className="rounded bg-slate-100 dark:bg-white/5"
     />
   )
 }
@@ -108,7 +108,7 @@ function StaticWaveform({ audioUrl }: { audioUrl: string }) {
       ref={canvasRef}
       width={200}
       height={32}
-      className="rounded bg-white/5"
+      className="rounded bg-slate-100 dark:bg-white/5"
     />
   )
 }
@@ -207,7 +207,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <div className="flex flex-col gap-2 w-full">
           <div className="flex items-center gap-2">
             <StaticWaveform audioUrl={preview.url} />
-            <span className="text-[11px] text-white/50">{formatTimer(preview.durationMs)}</span>
+            <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTimer(preview.durationMs)}</span>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -217,12 +217,12 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
               onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) handleSend() }}
               placeholder="Subject (required)"
               autoFocus
-              className="flex-1 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+              className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-3 py-1.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
             />
             <button
               type="button"
               onClick={() => setPreviewMode('choice')}
-              className="rounded-full p-1.5 text-white/50 hover:text-white/80 hover:bg-white/10"
+              className="rounded-full p-1.5 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
               title="Back"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
               type="button"
               onClick={handleSend}
               disabled={!title.trim()}
-              className="rounded-full bg-emerald-500 p-1.5 text-white hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="rounded-full bg-emerald-500 p-1.5 text-slate-900 dark:text-white hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Send voice message"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
@@ -250,11 +250,11 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
       <div className="flex flex-col gap-2 w-full">
         <div className="flex items-center gap-2">
           <StaticWaveform audioUrl={preview.url} />
-          <span className="text-[11px] text-white/50">{formatTimer(preview.durationMs)}</span>
+          <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTimer(preview.durationMs)}</span>
           <button
             type="button"
             onClick={handleCancel}
-            className="ml-auto rounded-full p-1.5 text-white/40 hover:text-white/80 hover:bg-white/10"
+            className="ml-auto rounded-full p-1.5 text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
             title="Discard"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,7 +272,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
                 setPreview(null)
                 setPreviewMode('choice')
               }}
-              className="flex-1 rounded-xl bg-sky-600/80 hover:bg-sky-500 text-white text-xs font-semibold py-2 transition-colors"
+              className="flex-1 rounded-xl bg-sky-600/80 hover:bg-sky-500 text-slate-900 dark:text-white text-xs font-semibold py-2 transition-colors"
             >
               Post as text
             </button>
@@ -280,7 +280,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
           <button
             type="button"
             onClick={() => setPreviewMode('voice')}
-            className="flex-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-semibold py-2 transition-colors"
+            className="flex-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-slate-900 dark:text-white text-xs font-semibold py-2 transition-colors"
           >
             Send as voice
           </button>
@@ -301,7 +301,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <button
           type="button"
           onClick={handleCancel}
-          className="rounded-full p-2 text-white/50 hover:text-white/80 hover:bg-white/10"
+          className="rounded-full p-2 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
           title="Cancel"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +311,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <button
           type="button"
           onClick={handleStop}
-          className="rounded-full bg-emerald-500 p-2 text-white hover:bg-emerald-400"
+          className="rounded-full bg-emerald-500 p-2 text-slate-900 dark:text-white hover:bg-emerald-400"
           title="Stop recording"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -328,7 +328,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full p-2 text-white/50 hover:text-white/80 hover:bg-white/10"
+        className="rounded-full p-2 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
         title="Record voice message"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

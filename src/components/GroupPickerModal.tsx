@@ -45,11 +45,11 @@ export function GroupPickerModal({ open, title, ctaLabel, groups, excludeGroupId
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+        className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
         onClick={e => e.stopPropagation()}
       >
         <div className="px-4 pt-4 pb-2">
-          <h2 className="text-white text-base font-semibold">{title}</h2>
+          <h2 className="text-slate-900 dark:text-white text-base font-semibold">{title}</h2>
         </div>
         <div className="px-4 pb-2">
           <input
@@ -57,13 +57,13 @@ export function GroupPickerModal({ open, title, ctaLabel, groups, excludeGroupId
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search groups…"
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white text-sm placeholder-white/40 focus:outline-none focus:border-sky-400/60"
+            className="w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-sm placeholder-slate-400 dark:placeholder-white/40 focus:outline-none focus:border-sky-400/60"
             autoFocus
           />
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {filtered.length === 0 ? (
-            <div className="px-4 py-8 text-center text-white/50 text-sm">
+            <div className="px-4 py-8 text-center text-slate-500 dark:text-white/50 text-sm">
               {query ? 'No matching groups.' : 'No other groups available.'}
             </div>
           ) : (
@@ -73,26 +73,26 @@ export function GroupPickerModal({ open, title, ctaLabel, groups, excludeGroupId
                 <button
                   key={g.id}
                   onClick={() => setSelectedId(g.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${isSelected ? 'bg-sky-500/20 ring-1 ring-sky-400/60' : 'hover:bg-white/5'}`}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${isSelected ? 'bg-sky-500/20 ring-1 ring-sky-400/60' : 'hover:bg-slate-100 dark:hover:bg-white/5'}`}
                 >
                   {g.image_url ? (
                     <img src={g.image_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white/70 text-xs font-semibold flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-white/70 text-xs font-semibold flex-shrink-0">
                       {g.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-white text-sm truncate">{g.name}</span>
+                  <span className="text-slate-900 dark:text-white text-sm truncate">{g.name}</span>
                 </button>
               )
             })
           )}
         </div>
-        <div className="px-4 pt-2 pb-4 flex items-center justify-end gap-2 border-t border-white/10">
+        <div className="px-4 pt-2 pb-4 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-white/10">
           <button
             onClick={onCancel}
             disabled={submitting}
-            className="px-3 py-1.5 rounded-lg text-white/70 hover:text-white text-sm"
+            className="px-3 py-1.5 rounded-lg text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white text-sm"
           >
             Cancel
           </button>
@@ -104,7 +104,7 @@ export function GroupPickerModal({ open, title, ctaLabel, groups, excludeGroupId
               finally { setSubmitting(false) }
             }}
             disabled={!selected || submitting}
-            className="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 disabled:bg-slate-700 disabled:text-white/40 text-white text-sm font-medium"
+            className="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 disabled:bg-slate-200 dark:bg-slate-700 disabled:text-slate-400 dark:text-white/40 text-slate-900 dark:text-white text-sm font-medium"
           >
             {submitting ? 'Sending…' : ctaLabel}
           </button>

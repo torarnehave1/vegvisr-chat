@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { AuthParams } from '../types/chat'
 import { clearProfileCache } from '../services/chat-service'
+import { getThemePref, setThemePref, type ThemePref } from '../services/theme-service'
 
 const PROFILE_API = 'https://smsgway.vegvisr.org/api/auth/profile'
 const UPLOAD_API = 'https://api.vegvisr.org/upload'
@@ -31,7 +32,13 @@ export function ProfileSettings({ auth, onBack }: Props) {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'ok' | 'err' } | null>(null)
+  const [theme, setTheme] = useState<ThemePref>(() => getThemePref())
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleThemeChange = (next: ThemePref) => {
+    setTheme(next)
+    setThemePref(next)
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -140,17 +147,17 @@ export function ProfileSettings({ auth, onBack }: Props) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-slate-900/80 flex-shrink-0">
-        <button type="button" onClick={onBack} className="text-white/60 hover:text-white text-lg">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
+        <button type="button" onClick={onBack} className="text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white text-lg">
           &#x2190;
         </button>
-        <h2 className="text-white font-semibold">Profile Settings</h2>
+        <h2 className="text-slate-900 dark:text-white font-semibold">Profile Settings</h2>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {loading ? (
-          <div className="text-center text-white/40 py-8">Loading profile...</div>
+          <div className="text-center text-slate-400 dark:text-white/40 py-8">Loading profile...</div>
         ) : (
           <div className="max-w-sm mx-auto space-y-8">
             {/* Avatar */}
@@ -160,10 +167,10 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   <img
                     src={profile.profile_image_url}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-2 border-white/20"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-slate-300 dark:border-white/20"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-sky-600/30 border-2 border-white/20 flex items-center justify-center text-3xl font-bold text-sky-300">
+                  <div className="w-24 h-24 rounded-full bg-sky-600/30 border-2 border-slate-300 dark:border-white/20 flex items-center justify-center text-3xl font-bold text-sky-300">
                     {initials}
                   </div>
                 )}
@@ -171,7 +178,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-600 border-2 border-slate-900 flex items-center justify-center text-white hover:bg-sky-500 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-600 border-2 border-slate-900 flex items-center justify-center text-slate-900 dark:text-white hover:bg-sky-500 transition-colors"
                   title="Change profile image"
                 >
                   {uploading ? (
@@ -188,12 +195,12 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   className="hidden"
                 />
               </div>
-              <p className="mt-2 text-xs text-white/40">Tap the camera to change your photo</p>
+              <p className="mt-2 text-xs text-slate-400 dark:text-white/40">Tap the camera to change your photo</p>
             </div>
 
             {/* Display Name (local only — same as Flutter) */}
             <div>
-              <label className="block text-xs text-white/50 mb-1.5 uppercase tracking-wider">Display Name</label>
+              <label className="block text-xs text-slate-500 dark:text-white/50 mb-1.5 uppercase tracking-wider">Display Name</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -201,38 +208,66 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   onChange={e => setDisplayName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveName() }}
                   placeholder="Your display name"
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-sky-400/50"
+                  className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
                 />
                 <button
                   type="button"
                   onClick={handleSaveName}
                   disabled={saving || !displayName.trim()}
-                  className="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+                  className="px-4 py-2.5 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
                 >
                   {saving ? '...' : 'Save'}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-white/30">Visible to other group members</p>
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">Visible to other group members</p>
             </div>
 
             {/* Account Info */}
             <div className="space-y-3">
-              <label className="block text-xs text-white/50 uppercase tracking-wider">Account Info</label>
+              <label className="block text-xs text-slate-500 dark:text-white/50 uppercase tracking-wider">Account Info</label>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-white/40">Email</div>
-                <div className="text-sm text-white/80">{profile?.email || auth.email || '-'}</div>
+              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
+                <div className="text-[11px] text-slate-400 dark:text-white/40">Email</div>
+                <div className="text-sm text-slate-700 dark:text-white/80">{profile?.email || auth.email || '-'}</div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-white/40">Phone</div>
-                <div className="text-sm text-white/80">{profile?.phone || auth.phone || '-'}</div>
+              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
+                <div className="text-[11px] text-slate-400 dark:text-white/40">Phone</div>
+                <div className="text-sm text-slate-700 dark:text-white/80">{profile?.phone || auth.phone || '-'}</div>
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-white/40">User ID</div>
-                <div className="text-sm text-white/50 font-mono text-xs">{auth.user_id}</div>
+              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
+                <div className="text-[11px] text-slate-400 dark:text-white/40">User ID</div>
+                <div className="text-sm text-slate-500 dark:text-white/50 font-mono text-xs">{auth.user_id}</div>
               </div>
+            </div>
+
+            {/* Appearance — Light / Dark / System theme picker. The actual
+                class toggle happens in theme-service.setThemePref; this
+                section is just the UI shell. */}
+            <div className="space-y-2">
+              <label className="block text-xs text-slate-500 dark:text-white/50 uppercase tracking-wider">Appearance</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['light', 'dark', 'system'] as const).map(opt => {
+                  const active = theme === opt
+                  const label = opt === 'system' ? 'System' : opt === 'light' ? 'Light' : 'Dark'
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleThemeChange(opt)}
+                      className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
+                        active
+                          ? 'bg-sky-600 text-slate-900 dark:text-white border-sky-500'
+                          : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-[11px] text-slate-400 dark:text-white/30">System follows your OS preference.</p>
             </div>
 
             {/* Status message */}

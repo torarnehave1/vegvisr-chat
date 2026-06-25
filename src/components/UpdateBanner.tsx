@@ -29,8 +29,8 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMa
   if (dismissed || (!isCodeUpdate && !isContentOnly)) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 border-b border-sky-400/30 bg-slate-900/95 px-4 py-2 backdrop-blur-sm">
-      <div className="flex items-center gap-2 text-sm text-white/80">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 border-b border-sky-400/30 bg-white/95 dark:bg-slate-900/95 px-4 py-2 backdrop-blur-sm">
+      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-white/80">
         <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
         {isCodeUpdate
           ? 'New update available'
@@ -47,7 +47,7 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMa
             setDismissed(true);
             onWhatsNew();
           }}
-          className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          className="rounded-lg border border-slate-300 dark:border-white/20 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
         >
           What's new?
         </button>
@@ -56,7 +56,7 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMa
         <button
           type="button"
           onClick={reload}
-          className="rounded-lg bg-sky-500 px-3 py-1 text-xs font-semibold text-white hover:bg-sky-400 transition-colors"
+          className="rounded-lg bg-sky-500 px-3 py-1 text-xs font-semibold text-slate-900 dark:text-white hover:bg-sky-400 transition-colors"
         >
           Refresh
         </button>
@@ -69,7 +69,7 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMa
           if (isContentOnly && onMarkFeaturesSeen) onMarkFeaturesSeen();
           setDismissed(true);
         }}
-        className="ml-1 p-1 text-white/40 hover:text-white/80 transition-colors"
+        className="ml-1 p-1 text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/80 transition-colors"
         title="Dismiss"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

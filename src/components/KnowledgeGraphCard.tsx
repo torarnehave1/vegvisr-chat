@@ -54,7 +54,7 @@ export function KnowledgeGraphCard({ graphId, url }: Props) {
 
   if (loading) {
     return (
-      <div className="mt-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/40 animate-pulse">
+      <div className="mt-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-3 py-2 text-xs text-slate-400 dark:text-white/40 animate-pulse">
         Loading graph...
       </div>
     )
@@ -87,10 +87,10 @@ export function KnowledgeGraphCard({ graphId, url }: Props) {
         </svg>
         <span className="text-sm font-medium text-sky-200 truncate">{meta.title}</span>
       </div>
-      <div className="mt-1 flex items-center gap-3 text-[11px] text-white/40">
+      <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-400 dark:text-white/40">
         <span>{meta.nodeCount} nodes</span>
         <span>{meta.edgeCount} edges</span>
-        {meta.metaArea && <span className="bg-white/10 px-1.5 py-px rounded">{meta.metaArea}</span>}
+        {meta.metaArea && <span className="bg-slate-200 dark:bg-white/10 px-1.5 py-px rounded">{meta.metaArea}</span>}
       </div>
     </a>
   )

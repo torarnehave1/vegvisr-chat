@@ -29,11 +29,11 @@ export function PollCard({ messageId, auth, currentUserId }: Props) {
   // We'll receive poll data from parent instead of fetching ourselves
   // This avoids N+1 queries — parent fetches all polls for visible messages
   if (loading) {
-    return <div className="text-white/30 text-xs py-2">Loading poll...</div>
+    return <div className="text-slate-400 dark:text-white/30 text-xs py-2">Loading poll...</div>
   }
 
   if (!poll) {
-    return <div className="text-white/30 text-xs py-2">Poll data unavailable</div>
+    return <div className="text-slate-400 dark:text-white/30 text-xs py-2">Poll data unavailable</div>
   }
 
   const isClosed = !!(poll.closed_at && poll.closed_at > 0)
@@ -70,9 +70,9 @@ export function PollCard({ messageId, auth, currentUserId }: Props) {
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-3 mt-1 max-w-sm">
+    <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 mt-1 max-w-sm">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="text-white font-medium text-sm">{poll.question}</span>
+        <span className="text-slate-900 dark:text-white font-medium text-sm">{poll.question}</span>
         {isClosed && (
           <span className="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded flex-shrink-0">
             Closed
@@ -90,15 +90,15 @@ export function PollCard({ messageId, auth, currentUserId }: Props) {
             return (
               <div key={i} className="relative">
                 <div
-                  className={`absolute inset-0 rounded-lg ${isMyVote ? 'bg-sky-500/20' : 'bg-white/5'}`}
+                  className={`absolute inset-0 rounded-lg ${isMyVote ? 'bg-sky-500/20' : 'bg-slate-100 dark:bg-white/5'}`}
                   style={{ width: `${pct}%` }}
                 />
                 <div className={`relative flex items-center justify-between px-3 py-1.5 rounded-lg ${isMyVote ? 'border border-sky-400/30' : ''}`}>
-                  <span className={`text-sm ${isMyVote ? 'text-sky-300 font-medium' : 'text-white/70'}`}>
+                  <span className={`text-sm ${isMyVote ? 'text-sky-300 font-medium' : 'text-slate-600 dark:text-white/70'}`}>
                     {isMyVote && <span className="mr-1">&#10003;</span>}
                     {option}
                   </span>
-                  <span className="text-xs text-white/40 ml-2">{pct}%</span>
+                  <span className="text-xs text-slate-400 dark:text-white/40 ml-2">{pct}%</span>
                 </div>
               </div>
             )
@@ -110,7 +110,7 @@ export function PollCard({ messageId, auth, currentUserId }: Props) {
               type="button"
               onClick={() => handleVote(i)}
               disabled={voting}
-              className="w-full text-left px-3 py-1.5 rounded-lg border border-white/10 text-sm text-white/80 hover:bg-sky-600/20 hover:border-sky-400/30 hover:text-white transition-colors disabled:opacity-50"
+              className="w-full text-left px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-sm text-slate-700 dark:text-white/80 hover:bg-sky-600/20 hover:border-sky-400/30 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50"
             >
               {option}
             </button>
@@ -118,13 +118,13 @@ export function PollCard({ messageId, auth, currentUserId }: Props) {
         })}
       </div>
 
-      <div className="flex items-center justify-between mt-2 text-[11px] text-white/30">
+      <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400 dark:text-white/30">
         <span>{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
         {isCreator && !isClosed && (
           <button
             type="button"
             onClick={handleClose}
-            className="text-white/30 hover:text-rose-400 transition-colors"
+            className="text-slate-400 dark:text-white/30 hover:text-rose-400 transition-colors"
           >
             Close poll
           </button>
@@ -151,10 +151,10 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
   }, [pollId, auth])
 
   if (loading) {
-    return <div className="text-white/30 text-xs py-2">Loading poll...</div>
+    return <div className="text-slate-400 dark:text-white/30 text-xs py-2">Loading poll...</div>
   }
   if (!poll) {
-    return <div className="text-white/30 text-xs py-2">{error || 'Poll not found'}</div>
+    return <div className="text-slate-400 dark:text-white/30 text-xs py-2">{error || 'Poll not found'}</div>
   }
 
   const isClosed = !!(poll.closed_at && poll.closed_at > 0)
@@ -191,9 +191,9 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-3 mt-1 max-w-sm">
+    <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 mt-1 max-w-sm">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="text-white font-medium text-sm">{poll.question}</span>
+        <span className="text-slate-900 dark:text-white font-medium text-sm">{poll.question}</span>
         {isClosed && (
           <span className="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded flex-shrink-0">
             Closed
@@ -211,15 +211,15 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
             return (
               <div key={i} className="relative">
                 <div
-                  className={`absolute inset-0 rounded-lg ${isMyVote ? 'bg-sky-500/20' : 'bg-white/5'}`}
+                  className={`absolute inset-0 rounded-lg ${isMyVote ? 'bg-sky-500/20' : 'bg-slate-100 dark:bg-white/5'}`}
                   style={{ width: `${pct}%` }}
                 />
                 <div className={`relative flex items-center justify-between px-3 py-1.5 rounded-lg ${isMyVote ? 'border border-sky-400/30' : ''}`}>
-                  <span className={`text-sm ${isMyVote ? 'text-sky-300 font-medium' : 'text-white/70'}`}>
+                  <span className={`text-sm ${isMyVote ? 'text-sky-300 font-medium' : 'text-slate-600 dark:text-white/70'}`}>
                     {isMyVote && <span className="mr-1">&#10003;</span>}
                     {option}
                   </span>
-                  <span className="text-xs text-white/40 ml-2">{pct}%</span>
+                  <span className="text-xs text-slate-400 dark:text-white/40 ml-2">{pct}%</span>
                 </div>
               </div>
             )
@@ -231,7 +231,7 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
               type="button"
               onClick={() => handleVote(i)}
               disabled={voting}
-              className="w-full text-left px-3 py-1.5 rounded-lg border border-white/10 text-sm text-white/80 hover:bg-sky-600/20 hover:border-sky-400/30 hover:text-white transition-colors disabled:opacity-50"
+              className="w-full text-left px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-sm text-slate-700 dark:text-white/80 hover:bg-sky-600/20 hover:border-sky-400/30 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50"
             >
               {option}
             </button>
@@ -239,13 +239,13 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
         })}
       </div>
 
-      <div className="flex items-center justify-between mt-2 text-[11px] text-white/30">
+      <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400 dark:text-white/30">
         <span>{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
         {isCreator && !isClosed && (
           <button
             type="button"
             onClick={handleClose}
-            className="text-white/30 hover:text-rose-400 transition-colors"
+            className="text-slate-400 dark:text-white/30 hover:text-rose-400 transition-colors"
           >
             Close poll
           </button>

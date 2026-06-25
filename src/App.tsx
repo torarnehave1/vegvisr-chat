@@ -279,7 +279,7 @@ function App() {
 
   return (
     <LanguageContext.Provider value={contextValue}>
-      <div className="h-screen bg-slate-950 text-white overflow-hidden">
+      <div className="h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(139,92,246,0.25),_transparent_55%)]" />
         <div className="relative mx-auto flex h-full max-w-5xl flex-col pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           <header className="flex flex-wrap items-center justify-between gap-4">
@@ -292,7 +292,7 @@ function App() {
               <span
                 aria-label="Build marker V1"
                 title="Build marker V1 — visual confirmation of latest deploy"
-                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500 text-white text-[10px] font-bold tracking-wider"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500 text-slate-900 dark:text-white text-[10px] font-bold tracking-wider"
               >
                 V1
               </span>
@@ -315,7 +315,7 @@ function App() {
                 HALLO VEGVISR
               </h1>
             </div>
-            <p className="mt-2 text-sm text-white/50 tracking-wide">
+            <p className="mt-2 text-sm text-slate-500 dark:text-white/50 tracking-wide">
               Open words. Clear intentions. Communication without walls.
             </p>
           </div>
@@ -331,8 +331,8 @@ function App() {
           )}
 
           {authStatus === 'anonymous' && loginOpen && (
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/80">
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+            <div className="mt-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-700 dark:text-white/80">
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-white/60">
                 Magic Link Sign In
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -341,33 +341,33 @@ function App() {
                   value={loginEmail}
                   onChange={(event) => setLoginEmail(event.target.value)}
                   placeholder="you@email.com"
-                  className="flex-1 rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                  className="flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
                 />
                 <button
                   type="button"
                   onClick={sendMagicLink}
                   disabled={loginLoading}
-                  className="rounded-2xl bg-gradient-to-r from-sky-500 to-violet-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/30"
+                  className="rounded-2xl bg-gradient-to-r from-sky-500 to-violet-500 px-6 py-3 text-sm font-semibold text-slate-900 dark:text-white shadow-lg shadow-sky-500/30"
                 >
                   {loginLoading ? 'Sending...' : 'Send link'}
                 </button>
               </div>
               {loginStatus && <p className="mt-3 text-xs text-emerald-300">{loginStatus}</p>}
               {loginError && <p className="mt-3 text-xs text-rose-300">{loginError}</p>}
-              <p className="mt-3 text-xs text-white/50">
+              <p className="mt-3 text-xs text-slate-500 dark:text-white/50">
                 We will send a secure link that logs you into this app.
               </p>
             </div>
           )}
 
           {view.screen === 'whatsnew' && authStatus !== 'authed' && (
-            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 overflow-hidden">
               <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
             </main>
           )}
 
           {authStatus === 'checking' && view.screen !== 'whatsnew' && (
-            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/70">
+            <div className="mt-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-600 dark:text-white/70">
               Checking session...
             </div>
           )}
@@ -379,7 +379,7 @@ function App() {
           )}
 
           {authStatus === 'authed' && authUser && phone && (
-            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden">
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 overflow-hidden">
               {(() => {
                 const auth: AuthParams = {
                   user_id: authUser.userId,

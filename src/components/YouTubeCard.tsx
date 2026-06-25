@@ -80,7 +80,7 @@ export function YouTubeCard({ videoId, url }: Props) {
         <button
           type="button"
           onClick={() => setShowPlayer(prev => !prev)}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-colors"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors"
         >
           {showPlayer ? 'Hide player' : 'Play here'}
         </button>
@@ -88,7 +88,7 @@ export function YouTubeCard({ videoId, url }: Props) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-colors no-underline"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors no-underline"
         >
           Open on YouTube
         </a>
@@ -96,7 +96,7 @@ export function YouTubeCard({ videoId, url }: Props) {
           type="button"
           onClick={handleTranscribe}
           disabled={transcribing || !!transcript}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-colors disabled:opacity-40"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors disabled:opacity-40"
         >
           {transcribing ? 'Transcribing...' : transcript ? 'Transcribed' : 'Transcribe'}
         </button>
@@ -105,7 +105,7 @@ export function YouTubeCard({ videoId, url }: Props) {
       {/* Transcript display */}
       {transcript && (
         <div className="px-3 pb-2">
-          <p className="text-xs text-white/60 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+          <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
             {transcript}
           </p>
         </div>

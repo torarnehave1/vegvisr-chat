@@ -282,9 +282,9 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-shrink-0">
-        <button onClick={onBack} className="text-white/60 hover:text-white text-lg">&#x2190;</button>
-        <h2 className="text-white font-semibold">Group Info</h2>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+        <button onClick={onBack} className="text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white text-lg">&#x2190;</button>
+        <h2 className="text-slate-900 dark:text-white font-semibold">Group Info</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
@@ -307,12 +307,12 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
               )}
               {uploadingImage && (
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">...</span>
+                  <span className="text-slate-900 dark:text-white text-xs">...</span>
                 </div>
               )}
               {dragOver && !uploadingImage && (
                 <div className="absolute inset-0 bg-sky-500/30 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-medium">Drop</span>
+                  <span className="text-slate-900 dark:text-white text-xs font-medium">Drop</span>
                 </div>
               )}
             </div>
@@ -321,7 +321,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={uploadingImage}
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-slate-900 dark:text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
                 title="Change group photo"
               >
                 &#x1F4F7;
@@ -338,7 +338,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           />
           {isOwner && (
             <div className="flex flex-col items-center">
-              <span className="text-[10px] text-white/30 mt-1.5">Drop or paste an image</span>
+              <span className="text-[10px] text-slate-400 dark:text-white/30 mt-1.5">Drop or paste an image</span>
               {imageUrl && (
                 <button
                   type="button"
@@ -355,26 +355,26 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Group name */}
         <div>
-          <label className="text-white/40 text-xs uppercase tracking-wider">Name</label>
+          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Name</label>
           {editing ? (
             <div className="flex gap-2 mt-1">
               <input
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-sky-400/50"
+                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
               />
               <button onClick={handleSaveName} disabled={saving} className="text-sky-400 text-sm">
                 {saving ? '...' : 'Save'}
               </button>
-              <button onClick={() => { setEditing(false); setName(group.name) }} className="text-white/40 text-sm">
+              <button onClick={() => { setEditing(false); setName(group.name) }} className="text-slate-400 dark:text-white/40 text-sm">
                 Cancel
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-white text-lg">{name}</span>
+              <span className="text-slate-900 dark:text-white text-lg">{name}</span>
               {isOwner && (
-                <button onClick={() => setEditing(true)} className="text-white/30 hover:text-white text-sm">
+                <button onClick={() => setEditing(true)} className="text-slate-400 dark:text-white/30 hover:text-slate-900 dark:hover:text-white text-sm">
                   &#x270E;
                 </button>
               )}
@@ -384,10 +384,10 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Invite */}
         <div>
-          <label className="text-white/40 text-xs uppercase tracking-wider">Invite Link</label>
+          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Invite Link</label>
           {inviteUrl ? (
             <div className="mt-1 flex items-center gap-2">
-              <code className="text-sky-300 text-sm bg-white/5 px-2 py-1 rounded flex-1 truncate">
+              <code className="text-sky-300 text-sm bg-slate-100 dark:bg-white/5 px-2 py-1 rounded flex-1 truncate">
                 {inviteUrl}
               </code>
               <button
@@ -410,16 +410,16 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Email alerts opt-in (per-user, per-group) */}
         <div>
-          <label className="text-white/40 text-xs uppercase tracking-wider">Email Alerts</label>
+          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Email Alerts</label>
           <button
             type="button"
             onClick={handleToggleAlerts}
             disabled={savingAlerts}
-            className="mt-2 w-full flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+            className="mt-2 w-full flex items-center justify-between gap-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
           >
             <span className="min-w-0">
-              <span className="block text-sm text-white/80">Receive email alerts</span>
-              <span className="block text-[11px] text-white/40">
+              <span className="block text-sm text-slate-700 dark:text-white/80">Receive email alerts</span>
+              <span className="block text-[11px] text-slate-400 dark:text-white/40">
                 Let the group owner email you when there's new activity here.
               </span>
             </span>
@@ -439,12 +439,12 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           {/* Owner-only: pick which address alerts are sent from */}
           {isOwner && (
             <div className="mt-3">
-              <div className="text-[11px] text-white/40 mb-1">Send alerts from</div>
+              <div className="text-[11px] text-slate-400 dark:text-white/40 mb-1">Send alerts from</div>
               <select
                 value={senderEmail}
                 onChange={e => handleSelectSender(e.target.value)}
                 disabled={sendersLoading || savingSender || senders.length === 0}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-sky-400/50 disabled:opacity-50"
+                className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50 disabled:opacity-50"
               >
                 <option value="">Default sender</option>
                 {senders.map(s => (
@@ -453,10 +453,10 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                   </option>
                 ))}
               </select>
-              {sendersLoading && <p className="mt-1 text-[11px] text-white/30">Loading senders...</p>}
+              {sendersLoading && <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">Loading senders...</p>}
               {sendersError && <p className="mt-1 text-[11px] text-rose-300">{sendersError}</p>}
               {!sendersLoading && !sendersError && senders.length === 0 && (
-                <p className="mt-1 text-[11px] text-white/30">No sender accounts configured.</p>
+                <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">No sender accounts configured.</p>
               )}
             </div>
           )}
@@ -465,16 +465,16 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
         {/* Owner-only: lock posting for a broadcast / announcement channel */}
         {isOwner && (
           <div>
-            <label className="text-white/40 text-xs uppercase tracking-wider">Posting</label>
+            <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Posting</label>
             <button
               type="button"
               onClick={handleTogglePostingLock}
               disabled={savingPostingLock}
-              className="mt-2 w-full flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+              className="mt-2 w-full flex items-center justify-between gap-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
             >
               <span className="min-w-0">
-                <span className="block text-sm text-white/80">Members can post</span>
-                <span className="block text-[11px] text-white/40">
+                <span className="block text-sm text-slate-700 dark:text-white/80">Members can post</span>
+                <span className="block text-[11px] text-slate-400 dark:text-white/40">
                   Turn off to make this an announcement channel — only you can send messages. Members still react and can submit questions.
                 </span>
               </span>
@@ -495,14 +495,14 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Members */}
         <div>
-          <label className="text-white/40 text-xs uppercase tracking-wider">
+          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">
             Members ({members.length})
           </label>
           {removeError && (
             <p className="text-xs text-rose-300 mt-1">{removeError}</p>
           )}
           {loading ? (
-            <p className="text-white/30 text-sm mt-2">Loading...</p>
+            <p className="text-slate-400 dark:text-white/30 text-sm mt-2">Loading...</p>
           ) : (
             <div className="mt-2 space-y-2">
               {members.map(m => {
@@ -516,7 +516,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                   m.role !== 'owner'
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 py-1.5">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-sm overflow-hidden flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 text-sm overflow-hidden flex-shrink-0">
                       {profile?.profileimage ? (
                         <img src={profile.profileimage} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -524,13 +524,13 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-white text-sm truncate">
+                      <div className="text-slate-900 dark:text-white text-sm truncate">
                         {displayName}
                         {subtitle && subtitle !== displayName && (
-                          <span className="text-white/40 text-xs ml-2">{subtitle}</span>
+                          <span className="text-slate-400 dark:text-white/40 text-xs ml-2">{subtitle}</span>
                         )}
                       </div>
-                      <div className="text-white/30 text-xs">{m.role}</div>
+                      <div className="text-slate-400 dark:text-white/30 text-xs">{m.role}</div>
                     </div>
                     {canRemove && (
                       <button

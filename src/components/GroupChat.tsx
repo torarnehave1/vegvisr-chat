@@ -615,12 +615,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-slate-900/80 flex-shrink-0">
-        <button onClick={onBack} className="md:hidden text-white/60 hover:text-white text-lg">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
+        <button onClick={onBack} className="md:hidden text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white text-lg">
           &#x2190;
         </button>
         <h2
-          className="text-white font-semibold truncate flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
+          className="text-slate-900 dark:text-white font-semibold truncate flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
           onClick={onInfo}
         >
           <span className="truncate">{groupName}</span>
@@ -645,7 +645,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           className={`text-sm px-2.5 py-1 rounded-lg transition-colors ${
             aiMode
               ? 'bg-violet-500/20 text-violet-300 border border-violet-400/30'
-              : 'text-white/50 hover:text-white hover:bg-white/10'
+              : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'
           }`}
           title={aiMode ? `AI on (${aiProvider}) — click to disable` : 'Enable AI mode'}
         >
@@ -656,7 +656,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             value={aiProvider}
             onChange={e => setAiProvider(e.target.value as AiProvider)}
             title="AI provider"
-            className="text-xs bg-slate-800 border border-white/10 text-white/70 rounded px-1.5 py-0.5"
+            className="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 rounded px-1.5 py-0.5"
           >
             <option value="grok">Grok</option>
             <option value="openai">OpenAI</option>
@@ -665,7 +665,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         {onWhatsNew && (
           <button
             onClick={onWhatsNew}
-            className="relative text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            className="relative text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
             title="What's New"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -677,7 +677,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         {onSuggestions && (
           <button
             onClick={onSuggestions}
-            className="relative text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            className="relative text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
             title="Suggestions"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
@@ -689,7 +689,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         {onAskQuestion && (
           <button
             onClick={onAskQuestion}
-            className="text-white/50 hover:text-amber-300 transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            className="text-slate-500 dark:text-white/50 hover:text-amber-300 transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
             title="Questions"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -699,7 +699,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         {onSettings && (
           <button
             onClick={onSettings}
-            className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            className="text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
             title="Settings"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -707,7 +707,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         )}
         <button
           onClick={onInfo}
-          className="text-white/50 hover:text-white text-sm"
+          className="text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white text-sm"
           title="Group info"
         >
           &#x2139;
@@ -721,12 +721,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         className="flex-1 overflow-y-auto px-3 py-3"
       >
         {loadingOlder && (
-          <div className="text-center text-white/40 text-sm py-2">Loading older...</div>
+          <div className="text-center text-slate-400 dark:text-white/40 text-sm py-2">Loading older...</div>
         )}
         {loading ? (
-          <div className="text-center text-white/40 py-8">Loading messages...</div>
+          <div className="text-center text-slate-400 dark:text-white/40 py-8">Loading messages...</div>
         ) : sortedMessages.length === 0 ? (
-          <div className="text-center text-white/30 py-8">No messages yet. Say hello!</div>
+          <div className="text-center text-slate-400 dark:text-white/30 py-8">No messages yet. Say hello!</div>
         ) : (
           sortedMessages.map((msg, i) => {
             const prev = i > 0 ? sortedMessages[i - 1] : null
@@ -737,7 +737,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             return (
               <div key={msg.id}>
                 {showDay && (
-                  <div className="text-center text-white/30 text-xs py-2 my-1">
+                  <div className="text-center text-slate-400 dark:text-white/30 text-xs py-2 my-1">
                     {dayLabel(msg.created_at)}
                   </div>
                 )}
@@ -789,19 +789,19 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
               <span className="text-[10px] text-violet-300 bg-violet-500/20 px-1.5 py-px rounded">@{activeBotBanner.username}</span>
             </div>
             {activeBotBanner.system_prompt && (
-              <p className="text-xs text-white/40 truncate mt-0.5">{activeBotBanner.system_prompt}</p>
+              <p className="text-xs text-slate-400 dark:text-white/40 truncate mt-0.5">{activeBotBanner.system_prompt}</p>
             )}
           </div>
           <button
             onClick={() => setActiveBotBanner(null)}
-            className="text-white/30 hover:text-white/60 text-sm flex-shrink-0"
+            className="text-slate-400 dark:text-white/30 hover:text-slate-500 dark:hover:text-white/60 text-sm flex-shrink-0"
           >&#x2715;</button>
         </div>
       )}
 
       {/* Media preview before sending */}
       {pendingMedia && (
-        <div className="flex-shrink-0 border-t border-white/10 bg-slate-900/80 px-3 py-2">
+        <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3 py-2">
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             {pendingMedia.file.type.startsWith('video/') ? (
               <video src={pendingMedia.previewUrl} className="h-20 rounded-lg object-cover" />
@@ -809,20 +809,20 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
               <img src={pendingMedia.previewUrl} alt="Preview" className="h-20 rounded-lg object-cover" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/70 truncate">{pendingMedia.file.name}</p>
-              <p className="text-[11px] text-white/40">{(pendingMedia.file.size / 1024).toFixed(0)} KB</p>
+              <p className="text-sm text-slate-600 dark:text-white/70 truncate">{pendingMedia.file.name}</p>
+              <p className="text-[11px] text-slate-400 dark:text-white/40">{(pendingMedia.file.size / 1024).toFixed(0)} KB</p>
             </div>
             <button
               onClick={confirmMedia}
               disabled={sending}
-              className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+              className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
             >
               {sending ? '...' : 'Send'}
             </button>
             <button
               onClick={cancelMedia}
               disabled={sending}
-              className="px-3 py-2 text-white/50 hover:text-rose-400 rounded-xl text-sm transition-colors"
+              className="px-3 py-2 text-slate-500 dark:text-white/50 hover:text-rose-400 rounded-xl text-sm transition-colors"
               title="Cancel"
             >
               &#x2715;
@@ -832,7 +832,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-white/10 bg-slate-900/80 px-3 py-2 relative">
+      <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3 py-2 relative">
         {/* @mention dropdown */}
         {mentionFilter !== null && bots.length > 0 && (
           <BotMentionDropdown
@@ -842,12 +842,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           />
         )}
         {replyTo && (
-          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2">
             <div className="flex-1 min-w-0 border-l-2 border-sky-400 pl-2">
               <div className="text-[10px] text-sky-300 font-medium">
                 {profiles.get(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
               </div>
-              <div className="text-xs text-white/50 truncate">
+              <div className="text-xs text-slate-500 dark:text-white/50 truncate">
                 {replyTo.message_type === 'voice' ? 'Voice message' :
                  replyTo.message_type === 'image' ? 'Photo' :
                  replyTo.message_type === 'video' ? 'Video' :
@@ -858,7 +858,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              className="text-white/30 hover:text-white/70 text-sm flex-shrink-0"
+              className="text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/70 text-sm flex-shrink-0"
               title="Cancel reply"
             >
               &#x2715;
@@ -880,7 +880,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             const ownerName = (groupCreatedBy && profiles.get(groupCreatedBy)?.displayName) || 'the owner'
             return (
               <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 py-1.5">
-                <span className="text-sm text-white/60">
+                <span className="text-sm text-slate-500 dark:text-white/60">
                   Only <span className="text-amber-300">@{ownerName}</span> can post here.
                 </span>
                 {onAskQuestion && (
@@ -899,14 +899,14 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             <div className="flex gap-2 items-end max-w-3xl mx-auto">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-2.5 py-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                 title="Attach image or video"
               >
                 &#x1F4CE;
               </button>
               <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
-                className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-white/10' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-slate-200 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
                 title="Create a poll"
               >
                 &#x1F4CA;
@@ -940,12 +940,12 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                 }}
                 placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
                 rows={1}
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
+                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+                className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
               >
                 {sending ? '...' : 'Send'}
               </button>
@@ -957,8 +957,8 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       {/* Drag overlay */}
       {dragOver && (
         <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex flex-col items-center justify-center z-50 pointer-events-none">
-          <span className="text-sky-200 text-lg font-medium bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
-          <span className="text-sky-200/50 text-xs mt-2 bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
+          <span className="text-sky-200 text-lg font-medium bg-white/80 dark:bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
+          <span className="text-sky-200/50 text-xs mt-2 bg-white/80 dark:bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
       )}
 

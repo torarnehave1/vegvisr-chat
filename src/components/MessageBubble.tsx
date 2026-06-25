@@ -150,7 +150,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             />
           ) : (
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
-              isBot ? 'bg-violet-500/30 text-violet-300' : 'bg-white/10 text-white/60'
+              isBot ? 'bg-violet-500/30 text-violet-300' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/60'
             } ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}>
               {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
             </div>
@@ -160,12 +160,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
       <div
         className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
           isOwn
-            ? 'bg-sky-600 text-white rounded-br-md'
-            : 'bg-white/10 text-white rounded-bl-md'
+            ? 'bg-sky-600 text-slate-900 dark:text-white rounded-br-md'
+            : 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md'
         }`}
       >
         {!isOwn && (
-          <div className="text-[11px] text-white/50 mb-0.5 flex items-center gap-1.5">
+          <div className="text-[11px] text-slate-500 dark:text-white/50 mb-0.5 flex items-center gap-1.5">
             <span>{displayName}</span>
             {isBot && <span className="text-[9px] bg-violet-500/30 text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
             {isOwner && !isBot && <span className="text-[9px] bg-amber-500/30 text-amber-300 px-1 py-px rounded font-medium">OWNER</span>}
@@ -176,7 +176,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {replyToMessage && (
           <div
             className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-2 cursor-pointer ${
-              isOwn ? 'bg-sky-700/40 border-sky-300/50' : 'bg-white/5 border-sky-400/50'
+              isOwn ? 'bg-sky-700/40 border-sky-300/50' : 'bg-slate-100 dark:bg-white/5 border-sky-400/50'
             }`}
             onClick={() => {
               const el = document.getElementById(`msg-${replyToMessage.id}`)
@@ -190,7 +190,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             <div className="text-[10px] text-sky-300/80 font-medium">
               {replyToProfile?.displayName || replyToMessage.user_id?.slice(0, 8)}
             </div>
-            <div className="text-[11px] text-white/50 truncate max-w-[200px]">
+            <div className="text-[11px] text-slate-500 dark:text-white/50 truncate max-w-[200px]">
               {replyToMessage.message_type === 'voice' ? (replyToMessage.body || 'Voice message') :
                replyToMessage.message_type === 'image' ? 'Photo' :
                replyToMessage.message_type === 'video' ? 'Video' :
@@ -205,7 +205,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             the worker side (forwarded_from_user_name) so we don't have to
             cross-resolve a profile that may not be a member of this group. */}
         {message.forwarded_from_message_id != null && (
-          <div className="flex items-center gap-1 text-[10px] italic text-white/50 mb-1">
+          <div className="flex items-center gap-1 text-[10px] italic text-slate-500 dark:text-white/50 mb-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 17 20 12 15 7" />
               <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
@@ -218,7 +218,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {/* Bot 'thinking' placeholder — the worker inserts this before firing
             bot-respond and updates the row in place when the real reply lands. */}
         {msgType === 'bot_thinking' && (
-          <div className="flex items-center gap-2 text-sm italic text-white/60">
+          <div className="flex items-center gap-2 text-sm italic text-slate-500 dark:text-white/60">
             <span>{message.body || 'Thinking…'}</span>
             <span className="inline-flex gap-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -366,11 +366,11 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
                     isMine
                       ? 'bg-sky-500/20 border border-sky-400/30'
-                      : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                      : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10'
                   }`}
                 >
                   <span>{REACTION_EMOJI[r]}</span>
-                  <span className="text-[10px] text-white/60">{count}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-white/60">{count}</span>
                 </button>
               )
             })}
@@ -408,7 +408,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onForward && (
             <button
               onClick={() => onForward(message)}
-              className="p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
               title="Forward to another group"
               aria-label="Forward message"
             >
@@ -421,7 +421,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onMove && (
             <button
               onClick={() => onMove(message)}
-              className="p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
+              className="p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
               title="Move to another group (owner / Superadmin)"
               aria-label="Move message"
             >
@@ -435,7 +435,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className={`p-1 rounded-md text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
+              className={`p-1 rounded-md text-slate-500 dark:text-white/60 opacity-0 group-hover:opacity-70 hover:!opacity-100 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
               title={isOwn ? 'Delete message' : 'Delete (owner)'}
               aria-label={isOwn ? 'Delete message' : 'Delete message (owner)'}
             >

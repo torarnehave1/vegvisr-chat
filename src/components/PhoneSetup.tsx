@@ -24,10 +24,10 @@ export function PhoneSetup({ onSave }: Props) {
   }
 
   return (
-    <div className="flex items-center justify-center h-full bg-slate-950 px-4">
+    <div className="flex items-center justify-center h-full bg-white dark:bg-slate-950 px-4">
       <div className="max-w-sm w-full text-center">
-        <h2 className="text-white text-xl font-semibold mb-2">Phone Number Required</h2>
-        <p className="text-white/50 text-sm mb-6">
+        <h2 className="text-slate-900 dark:text-white text-xl font-semibold mb-2">Phone Number Required</h2>
+        <p className="text-slate-500 dark:text-white/50 text-sm mb-6">
           Enter your phone number to use the chat. This connects you with your existing groups.
         </p>
         <input
@@ -36,13 +36,13 @@ export function PhoneSetup({ onSave }: Props) {
           onChange={e => { setPhone(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
           placeholder="+47 12345678"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-center text-lg focus:outline-none focus:border-sky-400/50 mb-3"
+          className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-center text-lg focus:outline-none focus:border-sky-400/50 mb-3"
           autoFocus
         />
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <button
           onClick={handleSave}
-          className="w-full py-3 bg-sky-600 text-white rounded-xl font-medium hover:bg-sky-500 transition-colors"
+          className="w-full py-3 bg-sky-600 text-slate-900 dark:text-white rounded-xl font-medium hover:bg-sky-500 transition-colors"
         >
           Continue
         </button>
