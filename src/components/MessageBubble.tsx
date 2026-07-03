@@ -64,19 +64,28 @@ function extractYouTubeId(url: string): string | null {
   }
 }
 
-// Extract graphId from vegvisr knowledge graph URLs
+// Extract graphId from vegvisr knowledge graph URLs. Recognised shapes:
+//   www.vegvisr.org/gnew-viewer?graphId=xxx        (viewer, query param)
+//   www.vegvisr.org/gnew-viewer/graphs/<slug>      (viewer, slug is the id)
+//   editor.vegvisr.org/?graphId=xxx                (editor deep link)
+//   any-*.vegvisr.org/*?graphId=xxx                (fallback: any vegvisr host
+//                                                   carrying the graphId query
+//                                                   still resolves to a card)
 function extractGraphId(url: string): string | null {
   try {
     const u = new URL(url)
     if (!u.hostname.endsWith('vegvisr.org')) return null
-    // /gnew-viewer?graphId=xxx
     if (u.pathname.startsWith('/gnew-viewer')) {
       const gid = u.searchParams.get('graphId')
       if (gid) return gid
-      // /gnew-viewer/graphs/seo-slug — slug IS the graphId
       const slugMatch = u.pathname.match(/\/gnew-viewer\/graphs\/([^/]+)/)
       if (slugMatch) return slugMatch[1]
     }
+    // Fallback: any vegvisr.org URL that carries ?graphId=... — covers
+    // editor.vegvisr.org and any future subdomain that surfaces the same
+    // graph identifier.
+    const gid = u.searchParams.get('graphId')
+    if (gid) return gid
     return null
   } catch {
     return null
