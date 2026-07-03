@@ -194,6 +194,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               {replyToMessage.message_type === 'voice' ? (replyToMessage.body || 'Voice message') :
                replyToMessage.message_type === 'image' ? 'Photo' :
                replyToMessage.message_type === 'video' ? 'Video' :
+               replyToMessage.message_type === 'pdf' ? (replyToMessage.body || 'PDF') :
                replyToMessage.message_type === 'poll' ? 'Poll' :
                replyToMessage.body?.slice(0, 60) || '...'}
             </div>
@@ -329,6 +330,37 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               onClick={() => window.open(message.media_url, '_blank')}
             />
             {message.body && <p className="text-sm mt-1">{message.body}</p>}
+          </div>
+        )}
+
+        {/* PDF — MVP: file card with filename + size + "Open" button that
+            hands off to the browser's built-in PDF viewer in a new tab. The
+            original filename is stored in message.body at upload time. */}
+        {msgType === 'pdf' && message.media_url && (
+          <div>
+            <a
+              href={message.media_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-rose-400/40 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/15 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
+            >
+              <div className="w-10 h-12 rounded bg-rose-600 dark:bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                PDF
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  {message.body || 'Document.pdf'}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-white/60">
+                  {message.media_size ? `${(message.media_size / 1024).toFixed(0)} KB · ` : ''}Open in new tab
+                </p>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 dark:text-white/50 flex-shrink-0">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+            </a>
           </div>
         )}
 

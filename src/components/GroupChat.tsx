@@ -495,13 +495,17 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       setSending(true)
       const { media_url, content_type } = await uploadMedia(groupId, file, auth)
       const isVideo = content_type.startsWith('video/')
+      const isPdf = content_type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
       const msg = await sendMessage(
         groupId,
         {
-          message_type: isVideo ? 'video' : 'image',
+          message_type: isPdf ? 'pdf' : isVideo ? 'video' : 'image',
           media_url,
           media_content_type: content_type,
           media_size: file.size,
+          // PDFs use the "body" field for the display filename so the receiver
+          // sees the original name (browsers strip it from R2 object keys).
+          ...(isPdf ? { body: file.name } : {}),
         },
         auth,
       )
@@ -515,7 +519,11 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
   }
 
   const stageMedia = (file: File) => {
-    const previewUrl = URL.createObjectURL(file)
+    // For PDFs we skip the preview object-URL (browsers can't render PDFs in
+    // an <img>/<video> and we don't want a broken thumbnail). The pending-media
+    // banner falls back to the filename+size treatment.
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    const previewUrl = isPdf ? '' : URL.createObjectURL(file)
     setPendingMedia({ file, previewUrl })
   }
 
@@ -805,6 +813,10 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             {pendingMedia.file.type.startsWith('video/') ? (
               <video src={pendingMedia.previewUrl} className="h-20 rounded-lg object-cover" />
+            ) : pendingMedia.file.type === 'application/pdf' || pendingMedia.file.name.toLowerCase().endsWith('.pdf') ? (
+              <div className="h-20 w-16 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center text-rose-700 dark:text-rose-300 text-xs font-bold">
+                PDF
+              </div>
             ) : (
               <img src={pendingMedia.previewUrl} alt="Preview" className="h-20 rounded-lg object-cover" />
             )}
@@ -914,7 +926,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*,video/*,application/pdf,.pdf"
                 onChange={handleMediaSelect}
                 className="hidden"
               />
