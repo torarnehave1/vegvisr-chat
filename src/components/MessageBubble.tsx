@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Message, MemberProfile, AuthParams } from '../types/chat'
 import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 import { YouTubeCard } from './YouTubeCard'
+import { FinnListingCard } from './FinnListingCard'
 import { PollCardWithFetch } from './PollCard'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
 
@@ -92,11 +93,21 @@ function extractGraphId(url: string): string | null {
   }
 }
 
+// Recognise finn.no listing links so they render as a preview card.
+function isFinnUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return u.hostname === 'www.finn.no' || u.hostname === 'finn.no' || u.hostname === 'm.finn.no'
+  } catch {
+    return false
+  }
+}
+
 // URL regex for splitting text into parts
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph' | 'youtube'
+  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn'
   value: string
   graphId?: string
   youtubeId?: string
@@ -118,6 +129,8 @@ function parseTextWithLinks(text: string): TextPart[] {
       parts.push({ type: 'graph', value: url, graphId })
     } else if (youtubeId) {
       parts.push({ type: 'youtube', value: url, youtubeId })
+    } else if (isFinnUrl(url)) {
+      parts.push({ type: 'finn', value: url })
     } else {
       parts.push({ type: 'link', value: url })
     }
@@ -248,7 +261,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -266,6 +279,8 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <KnowledgeGraphCard key={`g-${i}`} graphId={p.graphId} url={p.value} />
                 ) : p.type === 'youtube' && p.youtubeId ? (
                   <YouTubeCard key={`yt-${i}`} videoId={p.youtubeId} url={p.value} />
+                ) : p.type === 'finn' ? (
+                  <FinnListingCard key={`finn-${i}`} url={p.value} />
                 ) : null
               )}
             </div>
