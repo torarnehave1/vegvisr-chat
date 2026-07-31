@@ -4,6 +4,7 @@ import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 import { YouTubeCard } from './YouTubeCard'
 import { FinnListingCard } from './FinnListingCard'
 import { SeoGraphCard } from './SeoGraphCard'
+import { RecordingCard } from './RecordingCard'
 import { PollCardWithFetch } from './PollCard'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
 
@@ -119,15 +120,39 @@ function extractSeoGraphSlug(url: string): string | null {
   }
 }
 
+// Recognise vegvisr-realtime recording share links so they render as an
+// inline video card instead of a bare link. Two shapes exist:
+//   api.vegvisr.org/realtime/recordings/shared?token=...   (proxy, no filename)
+//   <any founder custom domain>/recordings/<name>.<ext>     (permanent public URL)
+// Matched purely by path shape — not a domain allowlist — so any founder's
+// custom R2 domain (recordings.<founder>.no, etc.) works with no code change.
+const VIDEO_EXT_RE = /\.(mp4|webm|mov|m4v)$/i
+function extractRecordingUrl(url: string): { fileName?: string } | null {
+  try {
+    const u = new URL(url)
+    if (u.pathname === '/realtime/recordings/shared' && u.searchParams.get('token')) {
+      return {}
+    }
+    if (u.pathname.startsWith('/recordings/') && VIDEO_EXT_RE.test(u.pathname)) {
+      const fileName = decodeURIComponent(u.pathname.split('/').pop() || '')
+      return { fileName: fileName || undefined }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 // URL regex for splitting text into parts
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph'
+  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording'
   value: string
   graphId?: string
   youtubeId?: string
   slug?: string
+  recordingFileName?: string
 }
 
 function parseTextWithLinks(text: string): TextPart[] {
@@ -143,6 +168,7 @@ function parseTextWithLinks(text: string): TextPart[] {
     const graphId = extractGraphId(url)
     const youtubeId = extractYouTubeId(url)
     const seoGraphSlug = extractSeoGraphSlug(url)
+    const recording = extractRecordingUrl(url)
     if (graphId) {
       parts.push({ type: 'graph', value: url, graphId })
     } else if (youtubeId) {
@@ -151,6 +177,8 @@ function parseTextWithLinks(text: string): TextPart[] {
       parts.push({ type: 'finn', value: url })
     } else if (seoGraphSlug) {
       parts.push({ type: 'seo-graph', value: url, slug: seoGraphSlug })
+    } else if (recording) {
+      parts.push({ type: 'recording', value: url, recordingFileName: recording.fileName })
     } else {
       parts.push({ type: 'link', value: url })
     }
@@ -281,7 +309,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -303,6 +331,8 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <FinnListingCard key={`finn-${i}`} url={p.value} />
                 ) : p.type === 'seo-graph' && p.slug ? (
                   <SeoGraphCard key={`seo-${i}`} slug={p.slug} url={p.value} />
+                ) : p.type === 'recording' ? (
+                  <RecordingCard key={`rec-${i}`} url={p.value} fileName={p.recordingFileName} />
                 ) : null
               )}
             </div>
