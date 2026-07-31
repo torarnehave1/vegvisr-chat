@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 interface Props {
   url: string
@@ -11,33 +11,51 @@ interface Props {
 
 export function RecordingCard({ url, fileName }: Props) {
   const [showPlayer, setShowPlayer] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Frame 0 of a recording is frequently a black leading frame (encoder
+  // artifact), so relying on the browser's default poster looks broken.
+  // Seek 1s in once metadata loads to grab a real thumbnail frame instead.
+  const handleLoadedMetadata = () => {
+    const v = videoRef.current
+    if (v && !showPlayer) v.currentTime = Math.min(1, v.duration / 2 || 1)
+  }
 
   return (
     <div className="mt-1.5 rounded-lg border border-emerald-400/20 bg-emerald-500/10 overflow-hidden">
-      {showPlayer ? (
+      {/* The <video> element itself supplies the poster frame — there's no
+       * separate thumbnail service for arbitrary R2-hosted files like there
+       * is for YouTube, so we seek past the (often black) first frame above. */}
+      <div className="relative w-full bg-black">
         <video
-          className="w-full h-auto max-h-80 bg-black"
+          ref={videoRef}
+          className="w-full h-auto max-h-80 block"
           src={url}
-          controls
-          autoPlay
+          controls={showPlayer}
+          autoPlay={showPlayer}
+          muted={!showPlayer}
+          playsInline
           preload="metadata"
+          onLoadedMetadata={handleLoadedMetadata}
         />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowPlayer(true)}
-          className="relative w-full flex items-center justify-center bg-slate-900/40"
-          style={{ paddingBottom: '40%' }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
+        {!showPlayer && (
+          <button
+            type="button"
+            onClick={() => {
+              if (videoRef.current) videoRef.current.currentTime = 0
+              setShowPlayer(true)
+            }}
+            className="absolute inset-0 flex items-center justify-center"
+            aria-label="Play recording"
+          >
             <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
-          </div>
-        </button>
-      )}
+          </button>
+        )}
+      </div>
 
       <div className="px-3 py-2 flex flex-wrap items-center gap-2">
         <span className="text-[11px] text-slate-600 dark:text-white/70 truncate max-w-[200px]">
