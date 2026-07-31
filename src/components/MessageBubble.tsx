@@ -143,11 +143,23 @@ function extractRecordingUrl(url: string): { fileName?: string } | null {
   }
 }
 
+// Recognise a pasted (not uploaded) image URL — any domain, matched purely by
+// file extension — so it renders inline instead of as a bare blue link.
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|avif|svg)$/i
+function isImageUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return IMAGE_EXT_RE.test(u.pathname)
+  } catch {
+    return false
+  }
+}
+
 // URL regex for splitting text into parts
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording'
+  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording' | 'image'
   value: string
   graphId?: string
   youtubeId?: string
@@ -179,6 +191,8 @@ function parseTextWithLinks(text: string): TextPart[] {
       parts.push({ type: 'seo-graph', value: url, slug: seoGraphSlug })
     } else if (recording) {
       parts.push({ type: 'recording', value: url, recordingFileName: recording.fileName })
+    } else if (isImageUrl(url)) {
+      parts.push({ type: 'image', value: url })
     } else {
       parts.push({ type: 'link', value: url })
     }
@@ -309,7 +323,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -333,6 +347,14 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <SeoGraphCard key={`seo-${i}`} slug={p.slug} url={p.value} />
                 ) : p.type === 'recording' ? (
                   <RecordingCard key={`rec-${i}`} url={p.value} fileName={p.recordingFileName} />
+                ) : p.type === 'image' ? (
+                  <img
+                    key={`img-${i}`}
+                    src={p.value}
+                    alt=""
+                    className="mt-1.5 rounded-lg max-w-full max-h-60 object-cover cursor-pointer"
+                    onClick={() => window.open(p.value, '_blank')}
+                  />
                 ) : null
               )}
             </div>
