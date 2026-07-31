@@ -155,11 +155,21 @@ function isImageUrl(url: string): boolean {
   }
 }
 
+// Recognise a pasted (not uploaded) PDF URL — any domain, matched purely by
+// file extension — so it renders as a file card instead of a bare blue link.
+function isPdfUrl(url: string): boolean {
+  try {
+    return /\.pdf$/i.test(new URL(url).pathname)
+  } catch {
+    return false
+  }
+}
+
 // URL regex for splitting text into parts
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording' | 'image'
+  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording' | 'image' | 'pdf'
   value: string
   graphId?: string
   youtubeId?: string
@@ -193,6 +203,8 @@ function parseTextWithLinks(text: string): TextPart[] {
       parts.push({ type: 'recording', value: url, recordingFileName: recording.fileName })
     } else if (isImageUrl(url)) {
       parts.push({ type: 'image', value: url })
+    } else if (isPdfUrl(url)) {
+      parts.push({ type: 'pdf', value: url })
     } else {
       parts.push({ type: 'link', value: url })
     }
@@ -323,7 +335,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image' || p.type === 'pdf')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -355,6 +367,29 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                     className="mt-1.5 rounded-lg max-w-full max-h-60 object-cover cursor-pointer"
                     onClick={() => window.open(p.value, '_blank')}
                   />
+                ) : p.type === 'pdf' ? (
+                  <a
+                    key={`pdf-${i}`}
+                    href={p.value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1.5 flex items-center gap-3 rounded-lg border border-rose-400/40 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/15 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
+                  >
+                    <div className="w-10 h-12 rounded bg-rose-600 dark:bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      PDF
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                        {decodeURIComponent(p.value.split('/').pop() || 'Document.pdf')}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-white/60">Open in new tab</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 dark:text-white/50 flex-shrink-0">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
                 ) : null
               )}
             </div>
