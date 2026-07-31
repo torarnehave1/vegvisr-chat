@@ -5,6 +5,8 @@ interface GraphMeta {
   nodeCount: number
   edgeCount: number
   metaArea?: string
+  description?: string
+  ogImage?: string
 }
 
 interface Props {
@@ -13,6 +15,7 @@ interface Props {
 }
 
 const KNOWLEDGE_BASE = 'https://knowledge.vegvisr.org'
+const SEO_BASE = 'https://seo.vegvisr.org'
 
 export function KnowledgeGraphCard({ graphId, url }: Props) {
   const [meta, setMeta] = useState<GraphMeta | null>(null)
@@ -24,26 +27,47 @@ export function KnowledgeGraphCard({ graphId, url }: Props) {
     setLoading(true)
     setError(false)
 
-    fetch(`${KNOWLEDGE_BASE}/getknowgraph?id=${encodeURIComponent(graphId)}`)
+    // Prefer the SEO worker's stored metadata (has description + ogImage,
+    // if a share page was ever generated for this graph). Falls back to the
+    // raw graph endpoint (title + counts only) when no SEO page exists.
+    fetch(`${SEO_BASE}/meta-by-graph?graphId=${encodeURIComponent(graphId)}`)
       .then(res => {
-        if (!res.ok) throw new Error('Not found')
+        if (!res.ok) throw new Error('No SEO metadata')
         return res.json()
       })
-      .then(data => {
+      .then(seoData => {
         if (cancelled) return
-        const graph = data.graphData || data
-        const nodes = graph.nodes || []
-        const edges = graph.edges || []
-        const metadata = graph.metadata || data.metadata || {}
         setMeta({
-          title: metadata.title || metadata.name || graphId,
-          nodeCount: nodes.length,
-          edgeCount: edges.length,
-          metaArea: metadata.metaArea || metadata.area,
+          title: seoData.title || graphId,
+          nodeCount: 0,
+          edgeCount: 0,
+          description: seoData.description,
+          ogImage: seoData.ogImage,
         })
       })
       .catch(() => {
-        if (!cancelled) setError(true)
+        if (cancelled) return null
+        return fetch(`${KNOWLEDGE_BASE}/getknowgraph?id=${encodeURIComponent(graphId)}`)
+          .then(res => {
+            if (!res.ok) throw new Error('Not found')
+            return res.json()
+          })
+          .then(data => {
+            if (cancelled) return
+            const graph = data.graphData || data
+            const nodes = graph.nodes || []
+            const edges = graph.edges || []
+            const metadata = graph.metadata || data.metadata || {}
+            setMeta({
+              title: metadata.title || metadata.name || graphId,
+              nodeCount: nodes.length,
+              edgeCount: edges.length,
+              metaArea: metadata.metaArea || metadata.area,
+            })
+          })
+          .catch(() => {
+            if (!cancelled) setError(true)
+          })
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -73,6 +97,39 @@ export function KnowledgeGraphCard({ graphId, url }: Props) {
     )
   }
 
+  // SEO metadata available (description present) — render an image + text
+  // card, matching SeoGraphCard's layout.
+  if (meta.description !== undefined) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1.5 flex gap-3 rounded-lg border border-sky-400/40 dark:border-sky-400/20 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/15 transition-colors overflow-hidden no-underline"
+      >
+        {meta.ogImage && (
+          <img
+            src={meta.ogImage}
+            alt=""
+            className="h-20 w-20 flex-shrink-0 object-cover"
+          />
+        )}
+        <div className="min-w-0 py-2 pr-3">
+          <div className="text-sm font-semibold text-sky-900 dark:text-sky-200 line-clamp-2">
+            {meta.title}
+          </div>
+          {meta.description && (
+            <div className="mt-0.5 text-xs text-slate-500 dark:text-white/50 line-clamp-2">
+              {meta.description}
+            </div>
+          )}
+          <div className="mt-1 text-[11px] text-slate-400 dark:text-white/30">Vegvisr Knowledge Graph</div>
+        </div>
+      </a>
+    )
+  }
+
+  // No SEO page generated for this graph — fall back to title + counts.
   return (
     <a
       href={url}
