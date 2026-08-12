@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Message, MemberProfile, AuthParams } from '../types/chat'
 import { KnowledgeGraphCard } from './KnowledgeGraphCard'
 import { YouTubeCard } from './YouTubeCard'
+import { InstagramCard } from './InstagramCard'
 import { FinnListingCard } from './FinnListingCard'
 import { SeoGraphCard } from './SeoGraphCard'
 import { RecordingCard } from './RecordingCard'
@@ -62,6 +63,26 @@ function extractYouTubeId(url: string): string | null {
       if (embedMatch) return embedMatch[1]
     }
     return null
+  } catch {
+    return null
+  }
+}
+
+// Extract an Instagram post shortcode. Recognised shapes:
+//   instagram.com/p/<code>/       (feed post)
+//   instagram.com/reel/<code>/    (reel)
+//   instagram.com/reels/<code>/   (reel, plural form)
+//   instagram.com/tv/<code>/      (IGTV)
+// Rebuilding from the shortcode discards share params such as ?igsi=..., which
+// break the /embed/ route the card relies on.
+function extractInstagramPost(url: string): { shortcode: string; kind: string } | null {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host !== 'instagram.com' && host !== 'instagr.am') return null
+    const m = u.pathname.match(/^\/(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/)
+    if (!m) return null
+    return { shortcode: m[2], kind: m[1] === 'reels' ? 'reel' : m[1] }
   } catch {
     return null
   }
@@ -180,10 +201,12 @@ function isPdfUrl(url: string): boolean {
 const URL_RE = /https?:\/\/[^\s<>"]+/g
 
 interface TextPart {
-  type: 'text' | 'link' | 'graph' | 'youtube' | 'finn' | 'seo-graph' | 'recording' | 'image' | 'pdf'
+  type: 'text' | 'link' | 'graph' | 'youtube' | 'instagram' | 'finn' | 'seo-graph' | 'recording' | 'image' | 'pdf'
   value: string
   graphId?: string
   youtubeId?: string
+  instagramShortcode?: string
+  instagramKind?: string
   slug?: string
   recordingFileName?: string
 }
@@ -200,12 +223,20 @@ function parseTextWithLinks(text: string): TextPart[] {
     const url = match[0]
     const graphId = extractGraphId(url)
     const youtubeId = extractYouTubeId(url)
+    const instagram = extractInstagramPost(url)
     const seoGraphSlug = extractSeoGraphSlug(url)
     const recording = extractRecordingUrl(url)
     if (graphId) {
       parts.push({ type: 'graph', value: url, graphId })
     } else if (youtubeId) {
       parts.push({ type: 'youtube', value: url, youtubeId })
+    } else if (instagram) {
+      parts.push({
+        type: 'instagram',
+        value: url,
+        instagramShortcode: instagram.shortcode,
+        instagramKind: instagram.kind,
+      })
     } else if (isFinnUrl(url)) {
       parts.push({ type: 'finn', value: url })
     } else if (seoGraphSlug) {
@@ -346,7 +377,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image' || p.type === 'pdf')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'instagram' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image' || p.type === 'pdf')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -364,6 +395,13 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <KnowledgeGraphCard key={`g-${i}`} graphId={p.graphId} url={p.value} />
                 ) : p.type === 'youtube' && p.youtubeId ? (
                   <YouTubeCard key={`yt-${i}`} videoId={p.youtubeId} url={p.value} />
+                ) : p.type === 'instagram' && p.instagramShortcode && p.instagramKind ? (
+                  <InstagramCard
+                    key={`ig-${i}`}
+                    shortcode={p.instagramShortcode}
+                    kind={p.instagramKind}
+                    url={p.value}
+                  />
                 ) : p.type === 'finn' ? (
                   <FinnListingCard key={`finn-${i}`} url={p.value} />
                 ) : p.type === 'seo-graph' && p.slug ? (
