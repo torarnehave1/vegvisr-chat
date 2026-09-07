@@ -6,6 +6,7 @@ import { InstagramCard } from './InstagramCard'
 import { FinnListingCard } from './FinnListingCard'
 import { SeoGraphCard } from './SeoGraphCard'
 import { RecordingCard } from './RecordingCard'
+import { LinkPreviewCard } from './LinkPreviewCard'
 import { PollCardWithFetch } from './PollCard'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
 
@@ -377,7 +378,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
 
         {msgType === 'text' && message.body && (() => {
           const parts = parseTextWithLinks(message.body)
-          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'instagram' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image' || p.type === 'pdf')
+          const richCards = parts.filter(p => p.type === 'graph' || p.type === 'youtube' || p.type === 'instagram' || p.type === 'finn' || p.type === 'seo-graph' || p.type === 'recording' || p.type === 'image' || p.type === 'pdf' || p.type === 'link')
           return (
             <div>
               <p className="text-sm whitespace-pre-wrap break-words">
@@ -439,6 +440,8 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                       <line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
                   </a>
+                ) : p.type === 'link' ? (
+                  <LinkPreviewCard key={`link-${i}-${p.value}`} url={p.value} />
                 ) : null
               )}
             </div>
