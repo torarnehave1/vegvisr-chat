@@ -446,6 +446,9 @@ async function addInstagramThreadProfiles(
       profiles.set(key, {
         user_id: key,
         displayName: data.participantUsername || `ig:${String(data.participantIgsid).slice(0, 6)}`,
+        // Meta serves this from a signed CDN url that expires; the connector
+        // re-fetches it, and the bubble falls back to an initial if it 404s.
+        profileimage: data.participantAvatarUrl || undefined,
       })
     }
     // Relay failure notices are authored by this pseudo-user; without an entry
