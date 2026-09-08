@@ -19,12 +19,21 @@ export function useVoiceRecorder() {
   const start = useCallback(async (existingStream?: MediaStream) => {
     const stream = existingStream || await navigator.mediaDevices.getUserMedia({ audio: true })
 
-    // Prefer webm/opus, fall back to mp4 (Safari)
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : MediaRecorder.isTypeSupported('audio/mp4')
-        ? 'audio/mp4'
-        : ''
+    // Prefer AAC-in-MP4, then plain MP4, then webm/opus.
+    //
+    // The order matters beyond file size: Instagram DMs relayed from a chat
+    // group accept AAC/M4A/WAV/MP4 for audio and reject webm (webm is fine for
+    // video, not for audio). Chromium and Safari both record audio/mp4, so this
+    // ordering makes voice messages relayable from those browsers; Firefox has
+    // no mp4 audio recording and still yields webm, which the relay refuses with
+    // an explanation rather than letting Meta reject it opaquely.
+    const preferred = [
+      'audio/mp4;codecs=mp4a.40.2',
+      'audio/mp4',
+      'audio/webm;codecs=opus',
+      'audio/webm',
+    ]
+    const mimeType = preferred.find(t => MediaRecorder.isTypeSupported(t)) || ''
 
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
     chunksRef.current = []
