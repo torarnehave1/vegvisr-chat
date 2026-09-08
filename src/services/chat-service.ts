@@ -1,4 +1,5 @@
 import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot, Poll } from '../types/chat'
+import { readStoredUser } from '../lib/auth'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
 
@@ -414,7 +415,48 @@ export async function fetchMemberProfiles(
     }
   }
 
+  // Instagram threads: the participant authors messages as `ig:<scoped id>` but
+  // is deliberately NOT a group member (membership gates reading, not
+  // authorship), so the loops above never see them and the bubble would fall
+  // back to a truncated id like "ig:11770". Their username is known to the
+  // connector — ask it, and add the entry the rest of the UI already expects.
+  await addInstagramThreadProfiles(groupId, profiles)
+
   return profiles
+}
+
+const AGENT_API = 'https://agent.vegvisr.org'
+
+async function addInstagramThreadProfiles(
+  groupId: string,
+  profiles: Map<string, MemberProfile>,
+): Promise<void> {
+  try {
+    const token = readStoredUser()?.emailVerificationToken
+    if (!token) return
+    const res = await fetch(
+      `${AGENT_API}/instagram/thread?groupId=${encodeURIComponent(groupId)}&authToken=${encodeURIComponent(token)}`,
+    )
+    if (!res.ok) return
+    const data = await res.json()
+    if (!data?.isInstagramThread) return
+
+    if (data.participantIgsid) {
+      const key = `ig:${data.participantIgsid}`
+      profiles.set(key, {
+        user_id: key,
+        displayName: data.participantUsername || `ig:${String(data.participantIgsid).slice(0, 6)}`,
+      })
+    }
+    // Relay failure notices are authored by this pseudo-user; without an entry
+    // they render as "system:i".
+    profiles.set('system:instagram', {
+      user_id: 'system:instagram',
+      displayName: 'Instagram',
+    })
+  } catch {
+    /* non-fatal — the thread still renders, just with the raw id */
+  }
 }
 
 // ── Bots ───────────────────────────────────────────────────────
