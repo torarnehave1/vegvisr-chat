@@ -23,6 +23,39 @@ function authBody(auth: AuthParams): Record<string, string> {
   return body
 }
 
+// ── Contact requests ────────────────────────────────────────────
+
+export interface ApproveContactResult {
+  success: boolean
+  alreadyRegistered: boolean
+  user: { email: string; user_id: string | null; role: string | null }
+  mail: { sentTo: string; from: string | null; whiteLabel: boolean; expiresAt: string | null } | null
+  error: string | null
+}
+
+// Approve a contact enquiry: registers the person and sends them their branded magic-link
+// mail. Superadmin-gated server-side — the button is hidden for others, but the worker is
+// what actually enforces it.
+export async function approveContactRequest(
+  auth: AuthParams,
+  contact: { contactEmail: string; contactName?: string; contactPhone?: string; domain: string },
+): Promise<ApproveContactResult> {
+  const res = await fetch(`${BASE}/contact-requests/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...authBody(auth),
+      contact_email: contact.contactEmail,
+      contact_name: contact.contactName || '',
+      contact_phone: contact.contactPhone || '',
+      domain: contact.domain,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to approve contact request')
+  return data as ApproveContactResult
+}
+
 // ── Groups ──────────────────────────────────────────────────────
 
 export async function fetchGroups(auth: AuthParams, opts?: { includeArchived?: boolean }): Promise<Group[]> {

@@ -7,6 +7,7 @@ import { SeoGraphCard } from './SeoGraphCard'
 import { RecordingCard } from './RecordingCard'
 import { LinkPreviewCard } from './LinkPreviewCard'
 import { PollCardWithFetch } from './PollCard'
+import { ContactRequestCard } from './ContactRequestCard'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
 
 const REACTION_EMOJI: Record<string, string> = {
@@ -554,6 +555,13 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           const pollId = match[1]
           return <PollCardWithFetch pollId={pollId} auth={auth} currentUserId={currentUserId} />
         })()}
+
+        {/* Contact enquiry from a site contact-form — actionable card */}
+        {msgType === 'contact_request' && message.body && (
+          auth
+            ? <ContactRequestCard messageId={message.id} body={message.body} auth={auth} />
+            : <p className="text-sm whitespace-pre-wrap">{message.body}</p>
+        )}
 
         {/* Existing reactions display */}
         {reactions && Object.keys(reactions.counts).length > 0 && (
