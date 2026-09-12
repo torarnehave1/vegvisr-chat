@@ -628,10 +628,10 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           &#x2190;
         </button>
         <h2
-          className="text-slate-900 dark:text-white font-semibold truncate flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
+          className="text-slate-900 dark:text-white font-semibold flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
           onClick={onInfo}
         >
-          <span className="truncate">{groupName}</span>
+          <span className="break-words">{groupName}</span>
           {postingLocked && (
             <span
               title="Announcement channel — only the owner can post"
@@ -728,6 +728,9 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-3 py-3"
       >
+        {/* Content column: the window is full-width now, so cap the message
+            column and centre it — same width as the composer below. */}
+        <div className="mx-auto w-full max-w-5xl">
         {loadingOlder && (
           <div className="text-center text-slate-400 dark:text-white/40 text-sm py-2">Loading older...</div>
         )}
@@ -781,6 +784,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           })
         )}
         <div ref={bottomRef} />
+        </div>
       </div>
 
       {/* Bot description banner */}
@@ -810,7 +814,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       {/* Media preview before sending */}
       {pendingMedia && (
         <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3 py-2">
-          <div className="max-w-3xl mx-auto flex items-center gap-3">
+          <div className="max-w-5xl mx-auto flex items-center gap-3">
             {pendingMedia.file.type.startsWith('video/') ? (
               <video src={pendingMedia.previewUrl} className="h-20 rounded-lg object-cover" />
             ) : pendingMedia.file.type === 'application/pdf' || pendingMedia.file.name.toLowerCase().endsWith('.pdf') ? (
@@ -854,7 +858,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           />
         )}
         {replyTo && (
-          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2">
+          <div className="max-w-5xl mx-auto mb-2 flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2">
             <div className="flex-1 min-w-0 border-l-2 border-sky-400 pl-2">
               <div className="text-[10px] text-sky-300 font-medium">
                 {profiles.get(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
@@ -878,7 +882,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           </div>
         )}
         {showPollCreator && (
-          <div className="max-w-3xl mx-auto mb-2">
+          <div className="max-w-5xl mx-auto mb-2">
             <PollCreator
               onSubmit={handleCreatePoll}
               onCancel={() => setShowPollCreator(false)}
@@ -891,7 +895,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           if (!canPost) {
             const ownerName = (groupCreatedBy && profiles.get(groupCreatedBy)?.displayName) || 'the owner'
             return (
-              <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 py-1.5">
+              <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 py-1.5">
                 <span className="text-sm text-slate-500 dark:text-white/60">
                   Only <span className="text-amber-300">@{ownerName}</span> can post here.
                 </span>
@@ -908,7 +912,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             )
           }
           return (
-            <div className="flex gap-2 items-end max-w-3xl mx-auto">
+            <div className="flex gap-2 items-end max-w-5xl mx-auto">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"

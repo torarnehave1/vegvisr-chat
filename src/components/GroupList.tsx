@@ -305,12 +305,12 @@ export function GroupList({ auth, userRole, onSelectGroup, selectedGroupId, deep
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm truncate ${hasUnread ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-900 dark:text-white font-medium'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className={`text-sm break-words ${hasUnread ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-900 dark:text-white font-medium'}`}>
                     {g.name}
                     {isArchived && <span className="ml-1.5 text-[10px] text-amber-400/70 font-normal">(archived)</span>}
                   </span>
-                  <span className={`text-[11px] flex-shrink-0 ml-2 ${hasUnread ? 'text-sky-400' : 'text-slate-400 dark:text-white/30'}`}>
+                  <span className={`text-[11px] flex-shrink-0 ${hasUnread ? 'text-sky-400' : 'text-slate-400 dark:text-white/30'}`}>
                     {formatDate(g.updated_at)}
                   </span>
                 </div>

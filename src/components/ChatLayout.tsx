@@ -11,7 +11,7 @@ export function ChatLayout({ sidebar, main, showMain }: Props) {
     <div className="flex h-full bg-white dark:bg-slate-950">
       {/* Sidebar — always visible on desktop, hidden when chat open on mobile */}
       <div
-        className={`w-full md:w-80 md:border-r md:border-slate-200 dark:border-white/10 flex-shrink-0 ${
+        className={`w-full md:w-80 lg:w-[22rem] xl:w-[26rem] md:border-r md:border-slate-200 dark:border-white/10 flex-shrink-0 ${
           showMain ? 'hidden md:flex md:flex-col' : 'flex flex-col'
         }`}
       >
