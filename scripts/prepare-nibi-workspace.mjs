@@ -13,7 +13,7 @@ function replaceOnce(source, before, after) {
 export function prepareGraph(graph, bundle) {
   const source = graph.nodes.find(node => node.id === 'nibi-members-page')
   if (!source || source.type !== 'html-node') throw new Error('Original HTML node not found')
-  if (graph.nodes.some(node => node.id === NODE_ID)) throw new Error('Test node already exists; review before updating')
+  const existing = graph.nodes.find(node => node.id === NODE_ID)
   const scriptUrl = 'data:text/javascript;base64,' + Buffer.from(bundle).toString('base64')
   let html = replaceOnce(source.info, "  const tabs = ['chat', 'meeting', 'articles', 'common', 'personal']",
     "  const workspaceComponent = " + JSON.stringify(scriptUrl) + "\n  let workspaceHandle = null\n  const tabs = ['chat', 'meeting', 'articles', 'common', 'personal']")
@@ -48,6 +48,9 @@ export function prepareGraph(graph, bundle) {
         try {
           workspaceHandle = frame.contentWindow.VegvisrChatWorkspace.mount(root, {
             groupId: group.id,
+            kind: group.kind === 'direct' ? 'direct' : 'group',
+            sessionToken: capturedSession.token,
+            sourceGroupId: directCommunity,
             auth: { user_id: capturedSession.user.user_id, phone: capturedSession.user.phone, email: capturedSession.user.email },
             role: capturedSession.user.role,
             onBack: () => { clearChat(); activeGroup = null; renderGroups() },
@@ -62,27 +65,35 @@ export function prepareGraph(graph, bundle) {
   }
 
   function openGroup(group) {
-    if (group.kind !== 'direct') { openWorkspaceGroup(group); return }
+    openWorkspaceGroup(group); return
 `)
-  const node = structuredClone(source)
+  // Remove the obsolete renderer and its embedded bundle entirely in the test copy.
+  const legacyStart = html.indexOf('    openWorkspaceGroup(group); return')
+  const legacyEnd = html.indexOf('  async function loadGroups()', legacyStart)
+  if (legacyStart < 0 || legacyEnd < 0) throw new Error('Cannot locate legacy renderer')
+  html = html.slice(0, legacyStart) + '    openWorkspaceGroup(group)\n  }\n\n' + html.slice(legacyEnd)
+  html = html.replace(/^  const chatComponent = "data:text\/javascript;base64,[^"]+"\n/m, '')
+  const node = structuredClone(existing || source)
   node.id = NODE_ID
   node.label = 'NIBI | Min side – Chat workspace TEST'
   node.info = html
   node.bibl = ['https://test.nibi.no/']
-  node.position = { x: (source.position?.x || 0) + 600, y: source.position?.y || 0 }
+  if (!existing) node.position = { x: (source.position?.x || 0) + 600, y: source.position?.y || 0 }
   const sourceGate = source.metadata?.publishGate?.['minside.nibi.no']
   node.metadata = {
     ...node.metadata,
-    publishGate: sourceGate ? { 'test.nibi.no': structuredClone(sourceGate) } : {},
+    publishGate: existing?.metadata?.publishGate || (sourceGate ? { 'test.nibi.no': structuredClone(sourceGate) } : {}),
     chatWorkspace: {
-      package: '@vegvisr/chat-workspace', version: '0.1.0',
+      package: '@vegvisr/chat-workspace', version: '0.2.0',
       sourceNodeId: source.id, sourceGraphVersion: graph.metadata.version,
       bundleSha256: createHash('sha256').update(bundle).digest('hex'),
       targetHostname: 'test.nibi.no',
-      directMessages: 'Existing embedded component retained; no new chat data or groups.',
+      directMessages: 'Shared React renderer with participant-scoped Bearer transport; existing NIBI conversations.',
     },
   }
-  return { id: GRAPH_ID, override: false, graphData: { ...structuredClone(graph), nodes: [...structuredClone(graph.nodes), node] } }
+  return { id: GRAPH_ID, override: false, graphData: { ...structuredClone(graph), nodes: existing
+    ? structuredClone(graph.nodes).map(n => n.id === NODE_ID ? node : n)
+    : [...structuredClone(graph.nodes), node] } }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

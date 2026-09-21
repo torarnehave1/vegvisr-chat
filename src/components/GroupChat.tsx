@@ -15,8 +15,11 @@ import { PollCreator } from './PollCreator'
 import { AlertMenu } from './AlertMenu'
 import type { AuthParams, Message, MemberProfile, ChatBot, Group } from '../types/chat'
 import { GroupPickerModal } from './GroupPickerModal'
+import type { ChatTransport } from '../../packages/shared-chat/src/contract'
 
 interface Props {
+  direct?: boolean
+  messageTransport?: ChatTransport
   groupId: string
   groupName: string
   /** user_id of the group's creator. When set, messages authored by that user
@@ -56,7 +59,11 @@ function dayLabel(ts: number): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
-export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
+export function GroupChat({ direct = false, messageTransport, groupId, groupName, groupCreatedBy, currentUserRole, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
+  const readMessages = messageTransport?.fetchMessages || fetchMessages
+  const postMessage = messageTransport?.sendMessage || sendMessage
+  const [chatError, setChatError] = useState('')
+  const onPollError = useCallback((error: Error) => { setChatError(error.message); if (direct) setMessages(new Map()) }, [direct])
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -88,7 +95,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const sortedMessages = Array.from(messages.values()).sort((a, b) => a.created_at - b.created_at)
-  const lastTimestamp = sortedMessages.length > 0 ? sortedMessages[sortedMessages.length - 1].created_at : 0
+  const lastTimestamp = direct ? Math.max(0, ...sortedMessages.map(m => m.id)) : sortedMessages.length > 0 ? sortedMessages[sortedMessages.length - 1].created_at : 0
 
   // Merge new messages into map (dedup)
   const mergeMessages = useCallback((msgs: Message[]) => {
@@ -101,46 +108,53 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
 
   // Initial load
   useEffect(() => {
+    let cancelled = false
+    setChatError('')
     setMessages(new Map())
     setLoading(true)
     setHasMore(false)
     setNextBefore(null)
 
-    fetchMessages(groupId, auth, { latest: true, limit: 50 })
+    readMessages(groupId, auth, { latest: true, limit: 50 })
       .then(res => {
+        if (cancelled) return
         mergeMessages(res.messages)
         if (res.paging) {
           setHasMore(res.paging.has_more)
           setNextBefore(res.paging.next_before)
         }
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [groupId, auth, mergeMessages])
+      .catch(error => { if (!cancelled) setChatError(error.message) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [groupId, auth, mergeMessages, readMessages])
 
   // Fetch member profiles (re-fetch when profileVersion changes, e.g. after settings save)
   useEffect(() => {
+    if (direct) return
     fetchMemberProfiles(groupId, auth)
       .then(setProfiles)
       .catch(console.error)
-  }, [groupId, auth, profileVersion])
+  }, [groupId, auth, profileVersion, direct])
 
   // Fetch bots in group
   useEffect(() => {
+    if (direct) return
     fetchGroupBots(groupId, auth).then(setBots).catch(() => setBots([]))
-  }, [groupId, auth])
+  }, [groupId, auth, direct])
 
   // Poll for new messages
-  usePolling(groupId, auth, lastTimestamp, mergeMessages)
+  usePolling(loading || chatError ? null : groupId, auth, lastTimestamp, mergeMessages, messageTransport, onPollError)
 
   // Fetch reactions for visible messages
   useEffect(() => {
+    if (direct) return
     const ids = sortedMessages.map(m => m.id)
     if (ids.length === 0) return
     fetchReactions(groupId, ids, auth)
       .then(setAllReactions)
       .catch(console.error)
-  }, [groupId, auth, sortedMessages.length])
+  }, [groupId, auth, sortedMessages.length, direct])
 
   const handleReact = async (messageId: number, reaction: ReactionType) => {
     try {
@@ -185,7 +199,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
     if (el.scrollTop < 50 && hasMore && !loadingOlder && nextBefore) {
       setLoadingOlder(true)
       const prevHeight = el.scrollHeight
-      fetchMessages(groupId, auth, { before: nextBefore, limit: 50, latest: true })
+      readMessages(groupId, auth, { before: nextBefore, limit: 50, latest: true })
         .then(res => {
           mergeMessages(res.messages)
           if (res.paging) {
@@ -219,7 +233,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
 
   const handleSend = async () => {
     const text = input.trim()
-    if (!text || sending) return
+    if (!text || sending || loading || chatError) return
     setSending(true)
     setInput('')
 
@@ -232,7 +246,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       const history = [...aiHistory, userMsg]
       try {
         // Post user text as a normal message first
-        const userSent = await sendMessage(groupId, { body: text, reply_to_id: replyId }, auth)
+        const userSent = await postMessage(groupId, { body: text, reply_to_id: replyId }, auth)
         mergeMessages([userSent])
         atBottomRef.current = true
 
@@ -254,7 +268,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
       }
     } else {
       try {
-        const msg = await sendMessage(groupId, { body: text, reply_to_id: replyId }, auth)
+        const msg = await postMessage(groupId, { body: text, reply_to_id: replyId }, auth)
         mergeMessages([msg])
         atBottomRef.current = true
       } catch (err) {
@@ -618,9 +632,9 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
   return (
     <div
       className="flex flex-col h-full relative"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={direct ? undefined : handleDragOver}
+      onDragLeave={direct ? undefined : handleDragLeave}
+      onDrop={direct ? undefined : handleDrop}
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
@@ -645,7 +659,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             </span>
           )}
         </h2>
-        <button
+        {!direct && <button
           onClick={() => {
             setAiMode(prev => !prev)
             if (!aiMode) setAiHistory([])
@@ -658,7 +672,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           title={aiMode ? `AI on (${aiProvider}) — click to disable` : 'Enable AI mode'}
         >
           AI
-        </button>
+        </button>}
         {aiMode && (
           <select
             value={aiProvider}
@@ -703,7 +717,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </button>
         )}
-        <AlertMenu groupId={groupId} auth={auth} currentUserId={currentUserId} />
+        {!direct && <AlertMenu groupId={groupId} auth={auth} currentUserId={currentUserId} />}
         {onSettings && (
           <button
             onClick={onSettings}
@@ -722,6 +736,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
         </button>
       </div>
 
+      {chatError && <p role="alert" className="p-3 text-red-700">{chatError} Velg samtalen på nytt for å prøve igjen.</p>}
       {/* Messages */}
       <div
         ref={scrollRef}
@@ -756,25 +771,25 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                   message={msg}
                   isOwn={msg.user_id === currentUserId}
                   isOwner={!!groupCreatedBy && msg.user_id === groupCreatedBy && !msg.user_id?.startsWith('bot:')}
-                  profile={profiles.get(msg.user_id)}
+                  profile={direct ? { user_id: msg.user_id, displayName: msg.user_id === currentUserId ? 'Du' : groupName } : profiles.get(msg.user_id)}
                   onDelete={
-                    msg.user_id === currentUserId
+                    !direct && (msg.user_id === currentUserId
                     || currentUserId === groupCreatedBy
-                    || currentUserRole === 'Superadmin'
+                    || currentUserRole === 'Superadmin')
                       ? handleDelete
                       : undefined
                   }
-                  onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
+                  onTranscribe={!direct && msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                   auth={auth}
                   currentUserId={currentUserId}
                   reactions={allReactions[msg.id]}
-                  onReact={handleReact}
-                  onReply={(m) => { setReplyTo(m); inputRef.current?.focus() }}
+                  onReact={direct ? undefined : handleReact}
+                  onReply={direct ? undefined : (m) => { setReplyTo(m); inputRef.current?.focus() }}
                   replyToMessage={msg.reply_to_id ? messages.get(msg.reply_to_id) ?? null : null}
                   replyToProfile={msg.reply_to_id && messages.get(msg.reply_to_id) ? profiles.get(messages.get(msg.reply_to_id)!.user_id) : undefined}
-                  onForward={handleForwardOpen}
+                  onForward={direct ? undefined : handleForwardOpen}
                   onMove={
-                    currentUserId === groupCreatedBy || currentUserRole === 'Superadmin'
+                    !direct && (currentUserId === groupCreatedBy || currentUserRole === 'Superadmin')
                       ? handleMoveOpen
                       : undefined
                   }
@@ -913,20 +928,20 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
           }
           return (
             <div data-chat-composer className="flex gap-2 items-end max-w-5xl mx-auto">
-              <button
+              {!direct && <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                 title="Attach image or video"
               >
                 &#x1F4CE;
-              </button>
-              <button
+              </button>}
+              {!direct && <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
                 className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-slate-200 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
                 title="Create a poll"
               >
                 &#x1F4CA;
-              </button>
+              </button>}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -934,7 +949,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                 onChange={handleMediaSelect}
                 className="hidden"
               />
-              <VoiceRecorder onSend={handleVoiceSend} onDictate={handleDictate} />
+              {!direct && <VoiceRecorder onSend={handleVoiceSend} onDictate={handleDictate} />}
               <EmojiPicker onSelect={(emoji) => {
                 setInput(prev => prev + emoji)
                 inputRef.current?.focus()
@@ -943,7 +958,9 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
-                onPaste={handlePaste}
+                onPaste={direct ? undefined : handlePaste}
+                maxLength={direct ? 10000 : undefined}
+                disabled={loading || Boolean(chatError)}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
@@ -960,7 +977,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || sending}
+                disabled={!input.trim() || sending || loading || Boolean(chatError)}
                 className="px-4 py-2 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-sky-500 transition-colors"
               >
                 {sending ? '...' : 'Send'}

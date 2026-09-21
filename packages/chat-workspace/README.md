@@ -13,6 +13,9 @@ Load it **inside a dedicated same-origin iframe**, then call:
 ```js
 const handle = VegvisrChatWorkspace.mount(document.getElementById('workspace'), {
   groupId: selectedGroup.id,
+  kind: selectedGroup.kind === 'direct' ? 'direct' : 'group',
+  sessionToken: session.token, // only used with the participant-scoped direct API
+  sourceGroupId: communityGroupId,
   auth: { user_id: user.user_id, phone: user.phone, email: user.email },
   role: user.role,
   onBack: () => hostCloseConversation(),
@@ -33,9 +36,14 @@ keeps its original bytes and graph metadata, embeds the built package in the cop
 and points that copy's publish gate at `test.nibi.no`. No credentials are embedded.
 The script creates a payload only; it does not save or publish by itself.
 
-Existing NIBI groups/data are used. Direct conversations retain the original
-token-authenticated component; group workspaces use the new React build.
-This is deliberately not a claim that the package implements the `/direct` protocol.
+Existing NIBI groups/data are used. Both private conversations and group conversations
+use the same React renderer. The old sidebar bundle is removed from the test node.
+Private chat uses `/direct/conversations` and `/direct/{groupId}/messages` with a
+Bearer token held in memory. It never falls back to group access or Superadmin overrides.
+The deployed API's OpenAPI contract supports text only for private chats: no attachments,
+bots, polls, invitations, editing or deletion. These unsupported actions are not shown;
+the new renderer supports history, sending, emoji, and incoming private messages.
+Participant display names come from the authenticated direct-conversation list.
 
 Group polling keeps the app's `latest=1` refresh behavior (backend ignores `after`
 in this mode), pauses requests while hidden, and suppresses late results after unmount.
@@ -56,6 +64,6 @@ node scripts/test-nibi-workspace.cjs original-graph.json prepared-payload.json
 The test intercepts all external requests and never writes fixtures to NIBI.
 It covers preservation of the original graph/node, host authentication bridge,
 world-domain selection, group history/sending, mobile scrolling, private-conversation
-fallback, unmount, access denial, and logout. `WORKSPACE_CHROMIUM_PATH` optionally
+rendering/sending/polling, revoked private access, unmount, and logout. `WORKSPACE_CHROMIUM_PATH` optionally
 selects an installed Chromium binary; `WORKSPACE_CHROMIUM_ARGS` is an optional JSON array.
 Authenticated testing against real services remains the publisher's next step.

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { fetchMessages } from '../services/chat-service'
 import type { AuthParams, Message } from '../types/chat'
+import type { ChatTransport } from '../../packages/shared-chat/src/contract'
 
 const POLL_INTERVAL = 5000
 
@@ -9,6 +10,8 @@ export function usePolling(
   auth: AuthParams | null,
   lastTimestamp: number,
   onMessages: (msgs: Message[]) => void,
+  transport?: ChatTransport,
+  onError?: (error: Error) => void,
 ) {
   const lastTsRef = useRef(lastTimestamp)
   const onMsgsRef = useRef(onMessages)
@@ -26,15 +29,16 @@ export function usePolling(
       if (disposed || running || document.hidden) return
       running = true
       try {
-        const res = await fetchMessages(groupId, auth, {
+        const res = await (transport?.fetchMessages || fetchMessages)(groupId, auth, {
           after: lastTsRef.current,
-          latest: true,
+          latest: !transport,
           limit: 100,
         })
         if (!disposed && res.messages.length > 0) {
           onMsgsRef.current(res.messages)
         }
-      } catch {
+      } catch (error) {
+        if (!disposed && onError) onError(error instanceof Error ? error : new Error('Chatten kunne ikke oppdateres.'))
         // Silently retry on next poll
       } finally {
         running = false
@@ -43,5 +47,5 @@ export function usePolling(
 
     const id = setInterval(poll, POLL_INTERVAL)
     return () => { disposed = true; clearInterval(id) }
-  }, [groupId, auth])
+  }, [groupId, auth, transport, onError])
 }

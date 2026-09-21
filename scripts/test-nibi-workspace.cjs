@@ -10,11 +10,15 @@ async function main() {
   const [originalPath, payloadPath] = process.argv.slice(2)
   const original = JSON.parse(readFileSync(originalPath, 'utf8'))
   const payload = JSON.parse(readFileSync(payloadPath, 'utf8'))
-  assert.deepEqual(payload.graphData.nodes.slice(0, -1), original.nodes)
+  const testId = 'nibi-members-page-chat-workspace-test'
+  assert.deepEqual(payload.graphData.nodes.filter(n => n.id !== testId), original.nodes.filter(n => n.id !== testId))
   assert.deepEqual(payload.graphData.metadata, original.metadata)
   assert.deepEqual(payload.graphData.edges, original.edges)
   assert.equal(payload.override, false)
   const copy = payload.graphData.nodes.at(-1)
+  assert.ok(!copy.info.includes('const chatComponent ='), 'No old renderer remains in test node')
+  assert.ok(!copy.info.includes("if (group.kind !== 'direct')"))
+  assert.deepEqual(copy.metadata.publishVersionPill, original.nodes.find(n => n.id === testId)?.metadata?.publishVersionPill)
   assert.ok(copy.metadata.publishGate['test.nibi.no'])
   assert.equal(copy.metadata.publishGate['minside.nibi.no'], undefined)
   for (const script of copy.info.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
@@ -47,6 +51,9 @@ async function main() {
     let postCount = 0
     let pollCount = 0
     let denied = false
+    let deniedDirect = false
+    let privatePosts = 0
+    const directMessages = [{ id: 101, group_id: 'dm_fixture', user_id: 'peer-fixture', body: 'Privat i ny pakke', message_type: 'text', created_at: 1700000000000 }]
     await context.addInitScript(() => {
       try { localStorage.setItem('vegvisr_user', JSON.stringify({ token: 'local-fixture-only', email: 'fixture@example.invalid' })) } catch { /* about:blank */ }
     })
@@ -62,11 +69,24 @@ async function main() {
         assert.equal(request.headers()['x-api-token'], 'local-fixture-only')
         return reply({ success: true, groups: [group] })
       }
-      if (url.pathname === '/direct/conversations') return reply({ success: true, groups: [{ ...group, id: 'dm_fixture', name: 'Privat kontroll', kind: 'direct' }] })
+      if (url.pathname === '/direct/conversations') {
+        assert.equal(request.headers().authorization, 'Bearer local-fixture-only')
+        return reply({ success: true, groups: [{ id: 'dm_fixture', name: 'Privat kontroll', peer_id: 'peer-fixture', kind: 'direct', updated_at: 3 }] })
+      }
       if (url.pathname === '/direct/dm_fixture/messages') {
         assert.equal(request.headers().authorization, 'Bearer local-fixture-only')
-        return reply({ success: true, messages: [{ ...messages[0], body: 'Privat flyt beholdt' }] })
+        if (deniedDirect) return reply({ success: false, error: 'Privat tilgang avslått' }, 403)
+        if (request.method() === 'POST') {
+          assert.deepEqual(request.postDataJSON(), { body: 'Privat sendt lokalt' })
+          const message = { ...directMessages[0], id: 102, user_id: 'member-fixture', body: request.postDataJSON().body, created_at: 1700000001000 }
+          directMessages.push(message); privatePosts++
+          return reply({ success: true, message }, 201)
+        }
+        const after = Number(url.searchParams.get('after') || 0)
+        assert.ok(after < 1000, 'Private polling must use message ID, not timestamp')
+        return reply({ success: true, messages: directMessages.filter(m => !after || m.id > after), paging: { has_more: false, next_before: 101 } })
       }
+      if (url.pathname.startsWith('/groups/dm_')) throw new Error('Private chat must never use group endpoints')
       if (url.pathname === '/groups') return denied ? reply({ success: false, error: 'Ingen tilgang' }, 403) : reply({ success: true, groups: [group] })
       if (url.pathname === `/groups/${id}/messages`) {
         if (request.method() === 'POST') {
@@ -102,10 +122,22 @@ async function main() {
     const scrolling = await frame.locator('[class*="overflow-y-auto"]').evaluateAll(elements => elements.some(e => e.scrollHeight > e.clientHeight && e.clientHeight > 0))
     assert.ok(scrolling, 'Conversation must have a bounded scrolling container')
     await page.getByRole('button', { name: 'Privat kontroll', exact: false }).click()
-    await page.frameLocator('#chatHost iframe').getByText('Privat flyt beholdt', { exact: true }).waitFor()
+    frame = page.frameLocator('#chatHost iframe')
+    await frame.getByText('Privat i ny pakke', { exact: true }).waitFor()
+    assert.equal(await frame.locator('.vegvisr-chat-workspace').count(), 1)
+    await frame.getByPlaceholder('Type a message...').fill('Privat sendt lokalt')
+    await frame.getByPlaceholder('Type a message...').press('Enter')
+    await frame.getByText('Privat sendt lokalt', { exact: true }).waitFor()
+    assert.equal(privatePosts, 1)
+    directMessages.push({ ...directMessages[0], id: 103, body: 'Nytt privat svar', created_at: 1700000002000 })
     const stoppedAt = pollCount
-    await page.waitForTimeout(5500)
+    await frame.getByText('Nytt privat svar', { exact: true }).waitFor({ timeout: 10000 })
     assert.equal(pollCount, stoppedAt, 'Group polling stops after unmount')
+    await page.screenshot({ path: '/tmp/nibi-workspace-private.png', fullPage: true })
+    deniedDirect = true
+    await frame.getByRole('alert').filter({ hasText: 'Privat tilgang avslått' }).waitFor({ timeout: 10000 })
+    assert.equal(await frame.getByText('Privat i ny pakke', { exact: true }).count(), 0)
+    assert.ok(await frame.locator('textarea').isDisabled())
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: 'Til samtalene', exact: true }).click()
     await page.getByRole('button', { name: 'NIBI FELLES', exact: false }).click()
@@ -123,7 +155,7 @@ async function main() {
     assert.equal(await page.locator('#chatHost iframe').count(), 0)
     assert.deepEqual(failures, [])
     assert.deepEqual(unexpected, [])
-    console.log('PASS: original unchanged, syntax, auth bridge, NIBI config, history, send, scrolling, direct fallback, cleanup, mobile, denied access, logout; no live service writes.')
+    console.log('PASS: original unchanged, syntax, auth bridge, NIBI config, both chat types in React, private send/incoming/ID cursor, no legacy fallback, revoked private access clears messages, cleanup, mobile, denied access, logout; no live service writes.')
   } finally {
     await browser.close()
     server.close()
