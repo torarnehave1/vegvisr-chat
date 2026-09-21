@@ -4,6 +4,14 @@ An embeddable build of the existing chat application's `GroupChat` and `GroupInf
 It is built in this repository so the UI and app retain a single implementation.
 Message CRUD uses `@vegvisr/shared-chat` through the application's service layer.
 
+## Required behavior
+
+[CHAT_REQUIREMENTS.md](../../CHAT_REQUIREMENTS.md) is the binding product requirement:
+all private and group chats must work the same way, including microphone and paperclip
+attachments. The differences are participants, names, and access checks, not a reduced
+set of message tools. The current v0.2.0 implementation is incomplete against this
+requirement. Sharing a renderer alone does not establish functional parity.
+
 Build from the repository root: `npm ci && npm run build:workspace`.
 The result is `dist-workspace/vegvisr-chat-workspace.js`, a self-contained browser
 IIFE with React and compiled styles; no service worker or login screen is installed.
@@ -40,9 +48,14 @@ Existing NIBI groups/data are used. Both private conversations and group convers
 use the same React renderer. The old sidebar bundle is removed from the test node.
 Private chat uses `/direct/conversations` and `/direct/{groupId}/messages` with a
 Bearer token held in memory. It never falls back to group access or Superadmin overrides.
-The deployed API's OpenAPI contract supports text only for private chats: no attachments,
-bots, polls, invitations, editing or deletion. These unsupported actions are not shown;
-the new renderer supports history, sending, emoji, and incoming private messages.
+The currently inspected deployed API documents a text-only direct-message interface.
+The v0.2.0 renderer consequently hides microphone, attachments, and several other actions
+for private chats. This is a known defect against the explicit parity requirement,
+not the intended design. Backend support and the corresponding UI controls must be
+completed together. Do not merely reveal buttons connected to unsupported endpoints,
+and do not silently substitute less restrictive group authorization.
+Current verified private features are history, text sending, emoji, and incoming messages;
+these are an implementation status report, not an accepted reduced scope.
 Participant display names come from the authenticated direct-conversation list.
 
 Group polling keeps the app's `latest=1` refresh behavior (backend ignores `after`
@@ -67,3 +80,6 @@ world-domain selection, group history/sending, mobile scrolling, private-convers
 rendering/sending/polling, revoked private access, unmount, and logout. `WORKSPACE_CHROMIUM_PATH` optionally
 selects an installed Chromium binary; `WORKSPACE_CHROMIUM_ARGS` is an optional JSON array.
 Authenticated testing against real services remains the publisher's next step.
+The tests above cover the existing partial implementation. Full acceptance additionally
+requires the audio, attachment, other message-action, and authorization tests in
+CHAT_REQUIREMENTS.md for BOTH private and group conversations.

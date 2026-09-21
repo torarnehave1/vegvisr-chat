@@ -2,6 +2,14 @@
 
 This package is a shared compatibility layer for Vegvisr chat.
 
+## Binding conversation requirements
+
+[CHAT_REQUIREMENTS.md](../../CHAT_REQUIREMENTS.md) governs private and group chats.
+Both must provide the same message capabilities, including microphone and attachments.
+Transport differences implement authorization and routing, not a reduced private product.
+The current direct transport's missing media and message operations are implementation
+gaps to fix; they must not be treated as intentional restrictions or as completion.
+
 It is not a standalone app and it is not a live UI component that replaces the
 current chat runtime.
 
@@ -35,7 +43,7 @@ validated by the real app flow and its tests.
 
 The current rule is simple:
 
-- keep the original app behavior as the authority
+- reuse the original app behavior subject to the explicit requirements above
 - adapt to the shared contract only when it matches the real app
 - do not invent a parallel message format or transport system
 
@@ -54,3 +62,7 @@ It is a safe extraction layer for standardization, not a forced rewrite.
 Any migration must preserve the current app's behavior first. Only after the
 real app validates the shared contract should the package be treated as the
 canonical shared layer.
+
+Preserving behavior does not authorize keeping private chats text-only or removing
+tools to make an incomplete migration appear finished. Implement and verify parity
+according to CHAT_REQUIREMENTS.md before describing the migration as complete.

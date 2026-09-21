@@ -4,6 +4,7 @@ Chat app for the Vegvisr ecosystem. React 19 + TypeScript + Vite with vegvisr-ui
 
 ## Project Documentation
 
+- [CHAT_REQUIREMENTS.md](./CHAT_REQUIREMENTS.md) — Binding requirement: identical message capabilities in private and group chats, including microphone and attachments. Current gaps are defects, not product exceptions.
 - [CLAUDE.md](./CLAUDE.md) — Project-specific Claude Code instructions
 - [_project/lessons_learned.md](./_project/lessons_learned.md) — Engineering discipline & failure patterns (read first per response)
 - [_project/STATUS.md](./_project/STATUS.md) — Current state & progress log
