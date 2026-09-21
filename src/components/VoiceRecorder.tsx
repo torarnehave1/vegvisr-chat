@@ -3,8 +3,9 @@ import { useVoiceRecorder } from '../hooks/useVoiceRecorder'
 import type { VoiceRecording } from '../hooks/useVoiceRecorder'
 
 interface Props {
-  onSend: (recording: VoiceRecording) => void
-  onDictate?: (blob: Blob, mimeType: string, durationMs: number) => void
+  /** Resolve false when sending failed: the recording is kept so it can be sent again. */
+  onSend: (recording: VoiceRecording) => void | Promise<boolean | void>
+  onDictate?: (blob: Blob, mimeType: string, durationMs: number) => void | Promise<boolean | void>
 }
 
 function formatTimer(ms: number) {
@@ -186,14 +187,15 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
     setTitle('')
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!preview || !title.trim()) return
-    onSend({
+    const sent = await onSend({
       blob: preview.blob,
       durationMs: preview.durationMs,
       mimeType: preview.mimeType,
       title: title.trim(),
     })
+    if (sent === false) return
     URL.revokeObjectURL(preview.url)
     setPreview(null)
     setTitle('')
@@ -266,8 +268,9 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
           {onDictate && (
             <button
               type="button"
-              onClick={() => {
-                onDictate(preview.blob, preview.mimeType, preview.durationMs)
+              onClick={async () => {
+                const posted = await onDictate(preview.blob, preview.mimeType, preview.durationMs)
+                if (posted === false) return
                 URL.revokeObjectURL(preview.url)
                 setPreview(null)
                 setPreviewMode('choice')

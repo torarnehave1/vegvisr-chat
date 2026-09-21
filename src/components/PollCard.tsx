@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchPoll, votePoll, closePoll } from '../services/chat-service'
+import { useChatOps } from './chat-ops'
 import type { AuthParams, Poll } from '../types/chat'
 
 interface Props {
@@ -142,13 +143,15 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
   const [loading, setLoading] = useState(true)
   const [voting, setVoting] = useState(false)
   const [error, setError] = useState('')
+  // Inside a conversation, polls go through its transport (private polls use /direct).
+  const ops = useChatOps()
 
   useEffect(() => {
-    fetchPoll(pollId, auth)
+    (ops ? ops.transport.fetchPoll(ops.groupId, pollId, auth) : fetchPoll(pollId, auth))
       .then(setPoll)
       .catch(() => setError('Failed to load poll'))
       .finally(() => setLoading(false))
-  }, [pollId, auth])
+  }, [pollId, auth, ops])
 
   if (loading) {
     return <div className="text-slate-400 dark:text-white/30 text-xs py-2">Loading poll...</div>
@@ -167,7 +170,7 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
     setVoting(true)
     setError('')
     try {
-      const result = await votePoll(pollId, optionIndex, auth)
+      const result = ops ? await ops.transport.votePoll(ops.groupId, pollId, optionIndex, auth) : await votePoll(pollId, optionIndex, auth)
       setPoll(prev => prev ? {
         ...prev,
         my_vote: result.my_vote,
@@ -183,7 +186,8 @@ export function PollCardWithFetch({ pollId, auth, currentUserId }: { pollId: str
 
   const handleClose = async () => {
     try {
-      await closePoll(pollId, auth)
+      if (ops) await ops.transport.closePoll(ops.groupId, pollId, auth)
+      else await closePoll(pollId, auth)
       setPoll(prev => prev ? { ...prev, closed_at: Date.now() } : prev)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Close failed')

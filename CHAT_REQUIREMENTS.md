@@ -52,3 +52,22 @@ to complete, not permission to silently reduce the requested scope.
 
 Local intercepted-request tests do not establish deployed backend feature support.
 Report exactly which backend version was verified and which gaps remain.
+
+## Implementation status — 2026-09-21 (package 0.3.0)
+
+This section reports state; it does not change the requirement above.
+
+- **Code done:** group-chat-worker `/direct/*` carries every message tool (media, voice,
+  transcription, replies, author edit/delete, reactions, polls, forwarding) with participant
+  checks and signed participant media links; the shared transport and `GroupChat` use it with
+  no private-chat gates on tools. Branch `group-chat-direct-parity` in vegvisr-frontend
+  (commit 139a83b) and this repository's `shared-chat-compat`.
+- **Tested locally:** backend tests on real SQLite; browser parity test of the prepared test
+  node against the real worker code in-process. Neither proves the deployed backend.
+- **Backend deployed:** no — the production deploy of group-chat-worker is pending. Until it
+  is deployed, the live API is the text-only version and the new controls fail visibly.
+- **HTML node updated / website published:** tracked separately in `_project/STATUS.md`.
+- **Differences by design** (two people, no owner): no bots, no group alert menu, no owner
+  move, no owner/admin delete of the other person's messages.
+- **Open against acceptance:** live verification with real NIBI accounts after the deploy;
+  the app has no text-edit control in either conversation type (backend supports it).

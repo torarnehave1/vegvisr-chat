@@ -1,8 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMessages, sendMessage, deleteMessage, fetchMemberProfiles, fetchGroupBots, createPoll, toggleReaction, fetchReactions, forwardMessage, moveMessage, fetchGroups } from '../services/chat-service'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { groupTransport, fetchMemberProfiles, fetchGroupBots, moveMessage } from '../services/chat-service'
 import type { MessageReactions, ReactionType } from '../services/chat-service'
-import { uploadAudio, transcribeAudio, extractObjectKey } from '../services/voice-service'
-import { updateMessage } from '../services/chat-service'
 import { sendAiMessage } from '../services/ai-service'
 import type { AiProvider, AiMessage } from '../services/ai-service'
 import { usePolling } from '../hooks/usePolling'
@@ -15,10 +13,13 @@ import { PollCreator } from './PollCreator'
 import { AlertMenu } from './AlertMenu'
 import type { AuthParams, Message, MemberProfile, ChatBot, Group } from '../types/chat'
 import { GroupPickerModal } from './GroupPickerModal'
-import type { ChatTransport } from '../../packages/shared-chat/src/contract'
+import type { ChatTransport, ForwardTarget } from '../../packages/shared-chat/src/contract'
+import { ChatOpsContext } from './chat-ops'
 
 interface Props {
+  /** Private two-person conversation: same tools, participant-only access, no bots or group admin. */
   direct?: boolean
+  /** Every message operation for this conversation. Defaults to the group endpoints. */
   messageTransport?: ChatTransport
   groupId: string
   groupName: string
@@ -60,9 +61,17 @@ function dayLabel(ts: number): string {
 }
 
 export function GroupChat({ direct = false, messageTransport, groupId, groupName, groupCreatedBy, currentUserRole, postingLocked, onAskQuestion, auth, currentUserId, profileVersion, onBack, onInfo, onSettings, onWhatsNew, hasNewFeatures, onSuggestions, hasNewSuggestions }: Props) {
-  const readMessages = messageTransport?.fetchMessages || fetchMessages
-  const postMessage = messageTransport?.sendMessage || sendMessage
+  const ops = messageTransport || groupTransport
+  const readMessages = ops.fetchMessages
+  const postMessage = ops.sendMessage
+  const chatOps = useMemo(() => ({ transport: ops, groupId }), [ops, groupId])
   const [chatError, setChatError] = useState('')
+  // Failed actions (upload, voice, reaction, forward, …) are shown, not only logged.
+  const [actionError, setActionError] = useState('')
+  const reportError = useCallback((action: string, err: unknown) => {
+    console.error(`${action} failed:`, err)
+    setActionError(`${action} failed: ${err instanceof Error ? err.message : 'unknown error'}`)
+  }, [])
   const onPollError = useCallback((error: Error) => { setChatError(error.message); if (direct) setMessages(new Map()) }, [direct])
   const [messages, setMessages] = useState<Map<number, Message>>(new Map())
   const [input, setInput] = useState('')
@@ -87,12 +96,16 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   // with the user's other groups. Picking one calls the worker endpoint.
   const [forwardTarget, setForwardTarget] = useState<Message | null>(null)
   const [moveTarget, setMoveTarget] = useState<Message | null>(null)
-  const [pickerGroups, setPickerGroups] = useState<Group[] | null>(null)
+  const [pickerGroups, setPickerGroups] = useState<ForwardTarget[] | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const atBottomRef = useRef(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const profileFor = (userId: string): MemberProfile | undefined => direct
+    ? { user_id: userId, displayName: userId === currentUserId ? 'Du' : groupName }
+    : profiles.get(userId)
 
   const sortedMessages = Array.from(messages.values()).sort((a, b) => a.created_at - b.created_at)
   const lastTimestamp = direct ? Math.max(0, ...sortedMessages.map(m => m.id)) : sortedMessages.length > 0 ? sortedMessages[sortedMessages.length - 1].created_at : 0
@@ -144,27 +157,27 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   }, [groupId, auth, direct])
 
   // Poll for new messages
-  usePolling(loading || chatError ? null : groupId, auth, lastTimestamp, mergeMessages, messageTransport, onPollError)
+  // Groups poll the newest page (latest=1, timestamp-ordered); private conversations poll by message id.
+  usePolling(loading || chatError ? null : groupId, auth, lastTimestamp, mergeMessages, direct ? ops : undefined, onPollError)
 
   // Fetch reactions for visible messages
   useEffect(() => {
-    if (direct) return
     const ids = sortedMessages.map(m => m.id)
     if (ids.length === 0) return
-    fetchReactions(groupId, ids, auth)
+    ops.fetchReactions(groupId, ids, auth)
       .then(setAllReactions)
       .catch(console.error)
-  }, [groupId, auth, sortedMessages.length, direct])
+  }, [groupId, auth, sortedMessages.length, ops]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReact = async (messageId: number, reaction: ReactionType) => {
     try {
-      const result = await toggleReaction(messageId, reaction, auth)
+      const result = await ops.toggleReaction(groupId, messageId, reaction, auth)
       setAllReactions(prev => ({
         ...prev,
         [messageId]: { counts: result.reactions, mine: result.my_reactions },
       }))
     } catch (err) {
-      console.error('Reaction failed:', err)
+      reportError('Reaction', err)
     }
   }
 
@@ -222,10 +235,11 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
     if (creatingPoll) return
     setCreatingPoll(true)
     try {
-      await createPoll(groupId, question, options, auth)
+      const created = await ops.createPoll(groupId, question, options, auth)
+      if (created.message) mergeMessages([created.message])
       setShowPollCreator(false)
     } catch (err) {
-      console.error('Create poll failed:', err)
+      reportError('Create poll', err)
     } finally {
       setCreatingPoll(false)
     }
@@ -235,6 +249,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
     const text = input.trim()
     if (!text || sending || loading || chatError) return
     setSending(true)
+    setActionError('')
     setInput('')
 
     const replyId = replyTo?.id
@@ -255,7 +270,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
         setAiHistory([...history, assistantMsg])
 
         // Post AI response as a message with AI prefix
-        const aiSent = await sendMessage(
+        const aiSent = await postMessage(
           groupId,
           { body: `[AI ${aiProvider}] ${aiRes.message}` },
           auth,
@@ -263,7 +278,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
         mergeMessages([aiSent])
         atBottomRef.current = true
       } catch (err) {
-        console.error('AI send failed:', err)
+        reportError('AI message', err)
         setInput(text)
       }
     } else {
@@ -272,7 +287,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
         mergeMessages([msg])
         atBottomRef.current = true
       } catch (err) {
-        console.error('Send failed:', err)
+        reportError('Send', err)
         setInput(text)
       }
     }
@@ -287,14 +302,14 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       if (!window.confirm('Delete this message? The author won\'t be notified.')) return
     }
     try {
-      await deleteMessage(groupId, id, auth)
+      await ops.deleteMessage(groupId, id, auth)
       setMessages(prev => {
         const next = new Map(prev)
         next.delete(id)
         return next
       })
     } catch (err) {
-      console.error('Delete failed:', err)
+      reportError('Delete', err)
     }
   }
 
@@ -303,15 +318,17 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   const ensurePickerGroups = useCallback(async () => {
     if (pickerGroups) return pickerGroups
     try {
-      const list = await fetchGroups(auth)
+      // Private conversations are labelled so a forward never lands in the wrong place unnoticed.
+      const list = (await ops.listForwardTargets(auth)).map((target: ForwardTarget) =>
+        target.kind === 'direct' ? { ...target, name: `${target.name} (privat)` } : target)
       setPickerGroups(list)
       return list
     } catch (err) {
-      console.error('Failed to load groups for picker:', err)
+      reportError('Loading conversations', err)
       setPickerGroups([])
       return []
     }
-  }, [auth, pickerGroups])
+  }, [auth, pickerGroups, ops, reportError])
 
   const handleForwardOpen = async (msg: Message) => {
     await ensurePickerGroups()
@@ -341,11 +358,10 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   const handleForwardConfirm = async (target: Group) => {
     if (!forwardTarget) return
     try {
-      await forwardMessage(groupId, forwardTarget.id, target.id, resolveAuthorName(forwardTarget), auth)
+      await ops.forwardMessage(groupId, forwardTarget.id, target.id, resolveAuthorName(forwardTarget), auth)
       setForwardTarget(null)
     } catch (err) {
-      console.error('Forward failed:', err)
-      alert(`Forward failed: ${err instanceof Error ? err.message : 'unknown error'}`)
+      reportError('Forward', err)
     }
   }
 
@@ -360,37 +376,38 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       })
       setMoveTarget(null)
     } catch (err) {
-      console.error('Move failed:', err)
-      alert(`Move failed: ${err instanceof Error ? err.message : 'unknown error'}`)
+      reportError('Move', err)
     }
   }
 
-  const handleVoiceSend = async (recording: VoiceRecording) => {
+  // Returns false on failure so the recorder keeps the recording for another try.
+  const handleVoiceSend = async (recording: VoiceRecording): Promise<boolean> => {
     try {
       setSending(true)
+      setActionError('')
       const ext = recording.mimeType.includes('mp4') ? 'm4a' : 'webm'
       const fileName = `voice_${Date.now()}.${ext}`
-      const { audioUrl, objectKey } = await uploadAudio(recording.blob, fileName, groupId)
+      const upload = await ops.uploadVoice(groupId, recording.blob, fileName, auth)
 
       // Transcribe before sending (like the Flutter app does)
       let transcriptText: string | undefined
       let transcriptLang: string | undefined
       let transcriptionStatus = 'pending'
       try {
-        const tr = await transcribeAudio(objectKey)
-        transcriptText = tr.text
-        transcriptLang = tr.language
+        const tr = await ops.transcribe(groupId, { upload }, auth)
+        transcriptText = tr.text || undefined
+        transcriptLang = tr.language || undefined
         transcriptionStatus = transcriptText ? 'complete' : 'none'
       } catch {
         transcriptionStatus = 'none'
       }
 
-      const msg = await sendMessage(
+      const msg = await postMessage(
         groupId,
         {
           body: recording.title,
           message_type: 'voice',
-          audio_url: audioUrl,
+          ...upload.payload,
           audio_duration_ms: recording.durationMs,
           transcript_text: transcriptText,
           transcript_lang: transcriptLang,
@@ -400,31 +417,35 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       )
       mergeMessages([msg])
       atBottomRef.current = true
+      return true
     } catch (err) {
-      console.error('Voice send failed:', err)
+      reportError('Voice message', err)
+      return false
     } finally {
       setSending(false)
     }
   }
 
-  const handleDictate = async (blob: Blob, mimeType: string, _durationMs: number) => {
+  const handleDictate = async (blob: Blob, mimeType: string, _durationMs: number): Promise<boolean> => {
     try {
       setSending(true)
+      setActionError('')
       const ext = mimeType.includes('mp4') ? 'm4a' : 'webm'
       const fileName = `dictate_${Date.now()}.${ext}`
-      // Upload to R2 so the audio is preserved (can be referenced later)
-      const { objectKey } = await uploadAudio(blob, fileName, groupId)
-      const tr = await transcribeAudio(objectKey)
-      if (!tr.text) return
-      const msg = await sendMessage(
-        groupId,
-        { body: tr.text, message_type: 'text' },
-        auth,
-      )
+      // Upload first so the audio is preserved (can be referenced later)
+      const upload = await ops.uploadVoice(groupId, blob, fileName, auth)
+      const tr = await ops.transcribe(groupId, { upload }, auth)
+      if (!tr.text) {
+        setActionError('Dictation found no speech in the recording.')
+        return false
+      }
+      const msg = await postMessage(groupId, { body: tr.text, message_type: 'text' }, auth)
       mergeMessages([msg])
       atBottomRef.current = true
+      return true
     } catch (err) {
-      console.error('Dictate send failed:', err)
+      reportError('Dictation', err)
+      return false
     } finally {
       setSending(false)
     }
@@ -433,25 +454,11 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   // Manual transcribe for existing voice messages
   const handleTranscribe = async (message: Message) => {
     if (!message.audio_url) return
-    const objectKey = extractObjectKey(message.audio_url)
-    if (!objectKey) return
-
     try {
-      const tr = await transcribeAudio(objectKey)
-      // Update the message on the server via PATCH
-      const updated = await updateMessage(
-        groupId,
-        message.id,
-        {
-          transcript_text: tr.text,
-          transcript_lang: tr.language,
-          transcription_status: 'complete',
-        },
-        auth,
-      )
-      mergeMessages([updated])
+      const tr = await ops.transcribe(groupId, { message }, auth)
+      mergeMessages([tr.message || { ...message, transcript_text: tr.text, transcript_lang: tr.language || undefined, transcription_status: tr.text ? 'complete' : 'none' }])
     } catch (err) {
-      console.error('Transcribe failed:', err)
+      reportError('Transcription', err)
       // Update status to failed locally so UI shows retry
       mergeMessages([{ ...message, transcription_status: 'failed' }])
     }
@@ -503,20 +510,20 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
     })
   }
 
-  const handleMediaFile = async (file: File) => {
-    const { uploadMedia } = await import('../services/chat-service')
+  // Returns false on failure so the staged file stays in the preview for another try.
+  const handleMediaFile = async (file: File): Promise<boolean> => {
     try {
       setSending(true)
-      const { media_url, content_type } = await uploadMedia(groupId, file, auth)
-      const isVideo = content_type.startsWith('video/')
-      const isPdf = content_type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-      const msg = await sendMessage(
+      setActionError('')
+      const upload = await ops.uploadMedia(groupId, file, file.name, auth)
+      const contentType = upload.contentType
+      const isVideo = contentType.startsWith('video/')
+      const isPdf = contentType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      const msg = await postMessage(
         groupId,
         {
           message_type: isPdf ? 'pdf' : isVideo ? 'video' : 'image',
-          media_url,
-          media_content_type: content_type,
-          media_size: file.size,
+          ...upload.payload,
           // PDFs use the "body" field for the display filename so the receiver
           // sees the original name (browsers strip it from R2 object keys).
           ...(isPdf ? { body: file.name } : {}),
@@ -525,8 +532,10 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       )
       mergeMessages([msg])
       atBottomRef.current = true
+      return true
     } catch (err) {
-      console.error('Media upload failed:', err)
+      reportError('Attachment', err)
+      return false
     } finally {
       setSending(false)
     }
@@ -541,11 +550,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
     setPendingMedia({ file, previewUrl })
   }
 
-  const confirmMedia = () => {
-    if (!pendingMedia) return
-    handleMediaFile(pendingMedia.file)
-    URL.revokeObjectURL(pendingMedia.previewUrl)
-    setPendingMedia(null)
+  const confirmMedia = async () => {
+    if (!pendingMedia || sending) return
+    const staged = pendingMedia
+    if (!await handleMediaFile(staged.file)) return
+    URL.revokeObjectURL(staged.previewUrl)
+    setPendingMedia(current => current === staged ? null : current)
   }
 
   const cancelMedia = () => {
@@ -630,11 +640,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
   }
 
   return (
+    <ChatOpsContext.Provider value={chatOps}>
     <div
       className="flex flex-col h-full relative"
-      onDragOver={direct ? undefined : handleDragOver}
-      onDragLeave={direct ? undefined : handleDragLeave}
-      onDrop={direct ? undefined : handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
@@ -659,7 +670,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             </span>
           )}
         </h2>
-        {!direct && <button
+        <button
           onClick={() => {
             setAiMode(prev => !prev)
             if (!aiMode) setAiHistory([])
@@ -672,7 +683,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
           title={aiMode ? `AI on (${aiProvider}) — click to disable` : 'Enable AI mode'}
         >
           AI
-        </button>}
+        </button>
         {aiMode && (
           <select
             value={aiProvider}
@@ -737,6 +748,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       </div>
 
       {chatError && <p role="alert" className="p-3 text-red-700">{chatError} Velg samtalen på nytt for å prøve igjen.</p>}
+      {actionError && (
+        <div role="alert" className="flex items-start gap-2 px-4 py-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border-b border-red-200 dark:border-red-500/20">
+          <span className="flex-1 break-words">{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} className="flex-shrink-0" title="Dismiss">&#x2715;</button>
+        </div>
+      )}
       {/* Messages */}
       <div
         ref={scrollRef}
@@ -771,23 +788,23 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                   message={msg}
                   isOwn={msg.user_id === currentUserId}
                   isOwner={!!groupCreatedBy && msg.user_id === groupCreatedBy && !msg.user_id?.startsWith('bot:')}
-                  profile={direct ? { user_id: msg.user_id, displayName: msg.user_id === currentUserId ? 'Du' : groupName } : profiles.get(msg.user_id)}
+                  profile={profileFor(msg.user_id)}
                   onDelete={
-                    !direct && (msg.user_id === currentUserId
-                    || currentUserId === groupCreatedBy
-                    || currentUserRole === 'Superadmin')
+                    // Private conversations have no owner or admin override: only the author deletes.
+                    msg.user_id === currentUserId
+                    || (!direct && (currentUserId === groupCreatedBy || currentUserRole === 'Superadmin'))
                       ? handleDelete
                       : undefined
                   }
-                  onTranscribe={!direct && msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
+                  onTranscribe={msg.message_type === 'voice' && !msg.transcript_text ? handleTranscribe : undefined}
                   auth={auth}
                   currentUserId={currentUserId}
                   reactions={allReactions[msg.id]}
-                  onReact={direct ? undefined : handleReact}
-                  onReply={direct ? undefined : (m) => { setReplyTo(m); inputRef.current?.focus() }}
+                  onReact={handleReact}
+                  onReply={(m) => { setReplyTo(m); inputRef.current?.focus() }}
                   replyToMessage={msg.reply_to_id ? messages.get(msg.reply_to_id) ?? null : null}
-                  replyToProfile={msg.reply_to_id && messages.get(msg.reply_to_id) ? profiles.get(messages.get(msg.reply_to_id)!.user_id) : undefined}
-                  onForward={direct ? undefined : handleForwardOpen}
+                  replyToProfile={msg.reply_to_id && messages.get(msg.reply_to_id) ? profileFor(messages.get(msg.reply_to_id)!.user_id) : undefined}
+                  onForward={handleForwardOpen}
                   onMove={
                     !direct && (currentUserId === groupCreatedBy || currentUserRole === 'Superadmin')
                       ? handleMoveOpen
@@ -876,7 +893,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
           <div className="max-w-5xl mx-auto mb-2 flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2">
             <div className="flex-1 min-w-0 border-l-2 border-sky-400 pl-2">
               <div className="text-[10px] text-sky-300 font-medium">
-                {profiles.get(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
+                {profileFor(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
               </div>
               <div className="text-xs text-slate-500 dark:text-white/50 truncate">
                 {replyTo.message_type === 'voice' ? 'Voice message' :
@@ -928,20 +945,20 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
           }
           return (
             <div data-chat-composer className="flex gap-2 items-end max-w-5xl mx-auto">
-              {!direct && <button
+              <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
-                title="Attach image or video"
+                title="Attach image, video or PDF"
               >
                 &#x1F4CE;
-              </button>}
-              {!direct && <button
+              </button>
+              <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
                 className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-slate-200 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
                 title="Create a poll"
               >
                 &#x1F4CA;
-              </button>}
+              </button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -949,7 +966,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                 onChange={handleMediaSelect}
                 className="hidden"
               />
-              {!direct && <VoiceRecorder onSend={handleVoiceSend} onDictate={handleDictate} />}
+              <VoiceRecorder onSend={handleVoiceSend} onDictate={handleDictate} />
               <EmojiPicker onSelect={(emoji) => {
                 setInput(prev => prev + emoji)
                 inputRef.current?.focus()
@@ -958,7 +975,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
-                onPaste={direct ? undefined : handlePaste}
+                onPaste={handlePaste}
                 maxLength={direct ? 10000 : undefined}
                 disabled={loading || Boolean(chatError)}
                 onKeyDown={e => {
@@ -1008,11 +1025,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
         open={!!moveTarget}
         title="Move to…"
         ctaLabel="Move"
-        groups={pickerGroups || []}
+        groups={(pickerGroups || []).filter(group => group.kind !== 'direct')}
         excludeGroupIds={[groupId]}
         onCancel={() => setMoveTarget(null)}
         onPick={handleMoveConfirm}
       />
     </div>
+    </ChatOpsContext.Provider>
   )
 }

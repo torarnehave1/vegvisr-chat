@@ -3,7 +3,7 @@ import { Component, useState, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GroupChat } from '../../../src/components/GroupChat'
 import { GroupInfo } from '../../../src/components/GroupInfo'
-import { createChatAdapter, createChatTransport, createDirectChat } from '../../shared-chat/src/index'
+import { createChatAdapter, createChatTransport, createDirectChat, withDirectForwarding } from '../../shared-chat/src/index'
 import type { AuthParams, Group, ChatTransport } from '../../shared-chat/src/contract'
 import appCss from '../../../src/index.css?inline'
 import workspaceCss from './workspace.css?inline'
@@ -49,22 +49,28 @@ export function mount(element: HTMLElement, options: WorkspaceOptions): { unmoun
   if (!options.auth?.user_id || (!options.auth.phone && options.kind !== 'direct') || !options.groupId) {
     throw new Error('Workspace requires groupId and authenticated user_id/phone.')
   }
-  const direct = options.kind === 'direct'
-    ? createDirectChat(options.sessionToken || '', options.sourceGroupId || '') : null
+  // Private conversations use only the participant-scoped API. Groups use the group endpoints,
+  // and forward into private conversations through the same participant-checked route.
+  const directClient = options.sessionToken && options.sourceGroupId
+    ? createDirectChat(options.sessionToken, options.sourceGroupId) : null
+  if (options.kind === 'direct' && !directClient) throw new Error('Private samtaler krever innlogging og fellesskaps-ID.')
+  const direct = options.kind === 'direct' ? directClient : null
+  const groupTransport = createChatTransport()
+  const transport = direct ? direct.transport : directClient ? withDirectForwarding(groupTransport, directClient) : groupTransport
   const style = document.createElement('style')
   style.textContent = appCss + '\n' + workspaceCss
   document.head.append(style)
   element.classList.add('vegvisr-chat-workspace')
   const root = createRoot(element)
   let disposed = false
-  const adapter = createChatAdapter(createChatTransport())
+  const adapter = createChatAdapter(groupTransport)
   root.render(<p role="status">Henter samtalen …</p>)
   // Resolve server-owned group metadata, including posting restrictions, before mounting.
   void (direct ? direct.fetchConversations() : adapter.fetchGroups(options.auth)).then(groups => {
     if (disposed) return
     const group = groups.find(item => item.id === options.groupId)
     if (!group) throw new Error('Du har ikke tilgang til denne samtalen.')
-    root.render(<WorkspaceBoundary><Workspace initialGroup={group} options={options} transport={direct?.transport} /></WorkspaceBoundary>)
+    root.render(<WorkspaceBoundary><Workspace initialGroup={group} options={options} transport={transport} /></WorkspaceBoundary>)
   }).catch(error => {
     if (!disposed) root.render(<p role="alert">{error instanceof Error ? error.message : 'Kunne ikke hente samtalen.'}</p>)
   })

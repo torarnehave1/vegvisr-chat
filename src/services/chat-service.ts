@@ -1,9 +1,13 @@
 import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot, Poll } from '../types/chat'
 import { readStoredUser } from '../lib/auth'
 import { createChatTransport } from '../../packages/shared-chat/src/transport'
+import type { ReactionType, MessageReactions } from '../../packages/shared-chat/src/contract'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
 const messageTransport = createChatTransport({ baseUrl: BASE })
+
+/** Group-conversation transport: the same implementation the embeddable workspace uses. */
+export const groupTransport = messageTransport
 
 function qs(params: Record<string, string | number | undefined>): string {
   const parts: string[] = []
@@ -255,21 +259,7 @@ export async function forwardMessage(
   forwardedFromUserName: string | null,
   auth: AuthParams,
 ): Promise<Message> {
-  const res = await fetch(
-    `${BASE}/groups/${sourceGroupId}/messages/${messageId}/forward`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...authBody(auth),
-        target_group_id: targetGroupId,
-        forwarded_from_user_name: forwardedFromUserName || undefined,
-      }),
-    },
-  )
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to forward message')
-  return data.message
+  return messageTransport.forwardMessage(sourceGroupId, messageId, targetGroupId, forwardedFromUserName, auth)
 }
 
 // Re-parent a message to a different group. Owner-of-source or Superadmin only.
@@ -320,20 +310,8 @@ export async function uploadMedia(
   file: File,
   auth: AuthParams,
 ): Promise<{ media_url: string; object_key: string; content_type: string }> {
-  const res = await fetch(
-    `${BASE}/groups/${groupId}/media?${authQuery(auth)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': file.type,
-        'X-File-Name': file.name,
-      },
-      body: file,
-    },
-  )
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to upload media')
-  return { media_url: data.mediaUrl, object_key: data.objectKey, content_type: data.contentType }
+  const upload = await messageTransport.uploadMedia(groupId, file, file.name, auth)
+  return { media_url: upload.mediaUrl || '', object_key: upload.objectKey, content_type: upload.contentType }
 }
 
 // ── Member Profiles ────────────────────────────────────────────
@@ -526,14 +504,7 @@ export async function createPoll(
   options: string[],
   auth: AuthParams,
 ): Promise<Poll> {
-  const res = await fetch(`${BASE}/groups/${groupId}/polls`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...authBody(auth), question, options }),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create poll')
-  return data.poll
+  return (await messageTransport.createPoll(groupId, question, options, auth)).poll
 }
 
 export async function votePoll(
@@ -541,21 +512,11 @@ export async function votePoll(
   optionIndex: number,
   auth: AuthParams,
 ): Promise<{ my_vote: number; votes: Record<number, number>; total_votes: number }> {
-  const res = await fetch(`${BASE}/polls/${pollId}/vote`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...authBody(auth), option_index: optionIndex }),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to vote')
-  return { my_vote: data.my_vote, votes: data.votes, total_votes: data.total_votes }
+  return messageTransport.votePoll('', pollId, optionIndex, auth)
 }
 
 export async function fetchPoll(pollId: string, auth: AuthParams): Promise<Poll> {
-  const res = await fetch(`${BASE}/polls/${pollId}?${authQuery(auth)}`)
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to fetch poll')
-  return data.poll
+  return messageTransport.fetchPoll('', pollId, auth)
 }
 
 export async function fetchUnansweredPollCount(
@@ -569,37 +530,19 @@ export async function fetchUnansweredPollCount(
 }
 
 export async function closePoll(pollId: string, auth: AuthParams): Promise<void> {
-  const res = await fetch(`${BASE}/polls/${pollId}/close`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(authBody(auth)),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to close poll')
+  return messageTransport.closePoll('', pollId, auth)
 }
 
 // ── Reactions ───────────────────────────────────────────────────
 
-export type ReactionType = 'thumbs_up' | 'heart' | 'smile'
-
-export interface MessageReactions {
-  counts: Record<string, number>
-  mine: string[]
-}
+export type { ReactionType, MessageReactions } from '../../packages/shared-chat/src/contract'
 
 export async function toggleReaction(
   messageId: number,
   reaction: ReactionType,
   auth: AuthParams,
 ): Promise<{ reactions: Record<string, number>; my_reactions: string[]; added: boolean }> {
-  const res = await fetch(`${BASE}/messages/${messageId}/reactions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...authBody(auth), reaction }),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to toggle reaction')
-  return { reactions: data.reactions, my_reactions: data.my_reactions, added: data.added }
+  return messageTransport.toggleReaction('', messageId, reaction, auth)
 }
 
 export async function fetchReactions(
@@ -607,10 +550,5 @@ export async function fetchReactions(
   messageIds: number[],
   auth: AuthParams,
 ): Promise<Record<number, MessageReactions>> {
-  if (messageIds.length === 0) return {}
-  const ids = messageIds.join(',')
-  const res = await fetch(`${BASE}/groups/${groupId}/reactions?${authQuery(auth)}&message_ids=${ids}`)
-  const data = await res.json()
-  if (!res.ok || !data.success) return {}
-  return data.reactions || {}
+  return messageTransport.fetchReactions(groupId, messageIds, auth).catch(() => ({}))
 }

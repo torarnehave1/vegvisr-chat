@@ -117,10 +117,67 @@ export interface ChatBot {
   model?: string
 }
 
+export type ReactionType = 'thumbs_up' | 'heart' | 'smile'
+
+export interface MessageReactions {
+  counts: Record<string, number>
+  mine: string[]
+}
+
+export interface ReactionResult {
+  reactions: Record<string, number>
+  my_reactions: string[]
+  added: boolean
+}
+
+export interface PollVoteResult {
+  my_vote: number
+  votes: Record<number, number>
+  total_votes: number
+}
+
+/**
+ * An uploaded attachment or recording. `payload` holds the fields to merge into the
+ * sendMessage payload; its shape belongs to the transport (group: public URLs,
+ * private: an object key the server resolves), so the renderer never builds it.
+ */
+export interface UploadResult {
+  payload: Record<string, unknown>
+  objectKey: string
+  contentType: string
+  mediaUrl: string | null
+}
+
+export interface TranscriptionResult {
+  text: string
+  language: string | null
+  /** The stored message, when a sent voice message was transcribed. */
+  message?: Message
+}
+
+export interface ForwardTarget extends Group {
+  kind?: 'group' | 'direct'
+}
+
+/**
+ * Every message operation of the chat workspace. Group and private conversations
+ * implement the same set; they differ in endpoints and authorization, not in tools.
+ */
 export interface ChatTransport {
   readonly baseUrl?: string
   fetchMessages: (groupId: string, auth: AuthParams, options?: { after?: number; before?: number; limit?: number; latest?: boolean }) => Promise<MessagesResponse>
   sendMessage: (groupId: string, payload: Record<string, unknown>, auth: AuthParams) => Promise<Message>
   updateMessage: (groupId: string, messageId: number, fields: MessageUpdateFields, auth: AuthParams) => Promise<Message>
   deleteMessage: (groupId: string, messageId: number, auth: AuthParams) => Promise<void>
+  uploadMedia: (groupId: string, file: Blob, fileName: string, auth: AuthParams) => Promise<UploadResult>
+  uploadVoice: (groupId: string, audio: Blob, fileName: string, auth: AuthParams) => Promise<UploadResult>
+  transcribe: (groupId: string, source: { upload?: UploadResult; message?: Message; language?: string }, auth: AuthParams) => Promise<TranscriptionResult>
+  toggleReaction: (groupId: string, messageId: number, reaction: ReactionType, auth: AuthParams) => Promise<ReactionResult>
+  fetchReactions: (groupId: string, messageIds: number[], auth: AuthParams) => Promise<Record<number, MessageReactions>>
+  createPoll: (groupId: string, question: string, options: string[], auth: AuthParams) => Promise<{ poll: Poll; message?: Message }>
+  fetchPoll: (groupId: string, pollId: string, auth: AuthParams) => Promise<Poll>
+  votePoll: (groupId: string, pollId: string, optionIndex: number, auth: AuthParams) => Promise<PollVoteResult>
+  closePoll: (groupId: string, pollId: string, auth: AuthParams) => Promise<void>
+  forwardMessage: (sourceGroupId: string, messageId: number, targetGroupId: string, authorName: string | null, auth: AuthParams) => Promise<Message>
+  listForwardTargets: (auth: AuthParams) => Promise<ForwardTarget[]>
 }
