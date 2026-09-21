@@ -1,0 +1,10 @@
+html, body { height: 100%; min-height: 0; overflow: hidden; }
+.vegvisr-chat-workspace { height: 100%; min-height: 0; color: #202c29; background: white; }
+.vegvisr-chat-workspace > .flex { min-height: 0; }
+.vegvisr-chat-workspace .workspace-info { height: 100%; overflow-y: auto; }
+.vegvisr-chat-workspace [role="alert"], .vegvisr-chat-workspace [role="status"] { padding: 1rem; }
+@media (max-width: 520px) {
+  .vegvisr-chat-workspace [data-chat-composer] { flex-wrap: wrap; }
+  .vegvisr-chat-workspace [data-chat-composer] > textarea { order: -1; flex-basis: 100%; min-width: 0; }
+  .vegvisr-chat-workspace [data-chat-composer] > button:last-child { margin-left: auto; }
+}

@@ -19,23 +19,29 @@ export function usePolling(
 
   useEffect(() => {
     if (!groupId || !auth) return
+    let disposed = false
+    let running = false
 
     const poll = async () => {
+      if (disposed || running || document.hidden) return
+      running = true
       try {
         const res = await fetchMessages(groupId, auth, {
           after: lastTsRef.current,
           latest: true,
           limit: 100,
         })
-        if (res.messages.length > 0) {
+        if (!disposed && res.messages.length > 0) {
           onMsgsRef.current(res.messages)
         }
       } catch {
         // Silently retry on next poll
+      } finally {
+        running = false
       }
     }
 
     const id = setInterval(poll, POLL_INTERVAL)
-    return () => clearInterval(id)
+    return () => { disposed = true; clearInterval(id) }
   }, [groupId, auth])
 }

@@ -1,7 +1,9 @@
 import type { Group, Message, MessagesResponse, Member, AuthParams, MemberProfile, ChatBot, Poll } from '../types/chat'
 import { readStoredUser } from '../lib/auth'
+import { createChatTransport } from '../../packages/shared-chat/src/transport'
 
 const BASE = 'https://group-chat-worker.torarnehave.workers.dev'
+const messageTransport = createChatTransport({ baseUrl: BASE })
 
 function qs(params: Record<string, string | number | undefined>): string {
   const parts: string[] = []
@@ -216,17 +218,7 @@ export async function fetchMessages(
   auth: AuthParams,
   opts: { after?: number; before?: number; limit?: number; latest?: boolean } = {},
 ): Promise<MessagesResponse> {
-  const params = qs({
-    ...{ user_id: auth.user_id, phone: auth.phone, email: auth.email },
-    after: opts.after ?? 0,
-    limit: opts.limit ?? 50,
-    latest: opts.latest ? 1 : undefined,
-    before: opts.before,
-  })
-  const res = await fetch(`${BASE}/groups/${groupId}/messages?${params}`)
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to fetch messages')
-  return { success: true, messages: data.messages || [], paging: data.paging }
+  return messageTransport.fetchMessages(groupId, auth, opts)
 }
 
 export async function sendMessage(
@@ -249,14 +241,7 @@ export async function sendMessage(
   },
   auth: AuthParams,
 ): Promise<Message> {
-  const res = await fetch(`${BASE}/groups/${groupId}/messages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...authBody(auth), ...payload }),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to send message')
-  return data.message
+  return messageTransport.sendMessage(groupId, payload, auth)
 }
 
 // Copy a message into a different group while preserving attribution to the
@@ -316,12 +301,7 @@ export async function deleteMessage(
   messageId: number,
   auth: AuthParams,
 ): Promise<void> {
-  const res = await fetch(
-    `${BASE}/groups/${groupId}/messages/${messageId}?${authQuery(auth)}`,
-    { method: 'DELETE' },
-  )
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to delete message')
+  return messageTransport.deleteMessage(groupId, messageId, auth)
 }
 
 export async function updateMessage(
@@ -330,14 +310,7 @@ export async function updateMessage(
   fields: Record<string, string | undefined>,
   auth: AuthParams,
 ): Promise<Message> {
-  const res = await fetch(`${BASE}/groups/${groupId}/messages/${messageId}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...authBody(auth), ...fields }),
-  })
-  const data = await res.json()
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to update message')
-  return data.message
+  return messageTransport.updateMessage(groupId, messageId, fields, auth)
 }
 
 // ── Media Upload ────────────────────────────────────────────────

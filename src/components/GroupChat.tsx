@@ -912,7 +912,7 @@ export function GroupChat({ groupId, groupName, groupCreatedBy, currentUserRole,
             )
           }
           return (
-            <div className="flex gap-2 items-end max-w-5xl mx-auto">
+            <div data-chat-composer className="flex gap-2 items-end max-w-5xl mx-auto">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"

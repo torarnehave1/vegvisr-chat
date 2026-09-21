@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:workspace": "tsc -p tsconfig.workspace.json && vite build --config vite.workspace.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
