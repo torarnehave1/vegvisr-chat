@@ -10,12 +10,26 @@ function replaceOnce(source, before, after) {
   return source.replace(before, () => after)
 }
 
+// The community id comes from /world-chat-groups (main_chat_group_id), never from the page. Older
+// source nodes have it written in; newer ones (templates/nibi-members.js) already read it.
+function communityFromRegistry(html) {
+  const written = "  const directCommunity = worldDomain === 'nibi.no' ? 'b1e906b9-8fab-45a0-8cb9-df5c7624b030' : null"
+  const decide = "      directAvailable = Boolean(directCommunity && data.groups.some(group => group.id === directCommunity))"
+  const read = "      directCommunity = typeof data.main_chat_group_id === 'string' && data.main_chat_group_id ? data.main_chat_group_id : null\n"
+  if (!html.includes(written)) {
+    if (!html.includes(read + decide)) throw new Error('Source HTML changed: community id handling not found')
+    return html
+  }
+  html = replaceOnce(html, written, "  // The World's community (world_founders.main_chat_group_id), read from /world-chat-groups.\n  let directCommunity = null")
+  return replaceOnce(html, decide, read + decide)
+}
+
 export function prepareGraph(graph, bundle) {
   const source = graph.nodes.find(node => node.id === 'nibi-members-page')
   if (!source || source.type !== 'html-node') throw new Error('Original HTML node not found')
   const existing = graph.nodes.find(node => node.id === NODE_ID)
   const scriptUrl = 'data:text/javascript;base64,' + Buffer.from(bundle).toString('base64')
-  let html = replaceOnce(source.info, "  const tabs = ['chat', 'meeting', 'articles', 'common', 'personal']",
+  let html = replaceOnce(communityFromRegistry(source.info), "  const tabs = ['chat', 'meeting', 'articles', 'common', 'personal']",
     "  const workspaceComponent = " + JSON.stringify(scriptUrl) + "\n  let workspaceHandle = null\n  const tabs = ['chat', 'meeting', 'articles', 'common', 'personal']")
   html = replaceOnce(html, "  function clearChat() {\n    element('chatHost').replaceChildren()",
     "  function clearChat() {\n    if (workspaceHandle) { workspaceHandle.unmount(); workspaceHandle = null }\n    element('chatHost').replaceChildren()")
