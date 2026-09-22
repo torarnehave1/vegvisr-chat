@@ -40,15 +40,23 @@ The package verifies group access via the current `/groups` API before mounting.
 All chat services use the existing Vegvisr endpoints; this version does not support
 arbitrary backend overrides. UI is the app's existing English UI inside the Norwegian host.
 
-## NIBI test node
+## Releasing and installing
 
-`scripts/prepare-nibi-workspace.mjs` copies `nibi-members-page` in the existing graph,
-keeps its original bytes and graph metadata, embeds the built package in the copy,
-and points that copy's publish gate at `test.nibi.no`. No credentials are embedded.
-The script creates a payload only; it does not save or publish by itself.
+The package has one source of truth:
 
-Existing NIBI groups/data are used. Both private conversations and group conversations
-use the same React renderer. The old sidebar bundle is removed from the test node.
+- **Code:** this repository, `main`, tagged `chat-workspace-v<version>`.
+- **Release:** the Component Registry entry `chat-workspace` (graph 4072b898, delivery `embedded`)
+  names the current version, bundle SHA-256 and source tag, and points to the release graph
+  8b340071-616a-4c5d-8cda-a305db19e594, which keeps one node per version (rollback).
+
+Release a tagged version with `node scripts/release-chat-workspace.mjs --write` (dry run without
+`--write`). It refuses when the package sources changed since the tag.
+
+A World member page carries its own copy of the bundle (`const workspaceComponent = "data:…"`).
+Install or update it with Agent-Builder's `setup_chat_workspace(graphId, nodeId[, version])`: it
+uses the registered release, checks the hash, stamps the page's `metadata.chatWorkspace`, and does
+not publish. The page reads the World's groups and community from group-chat-worker's
+`/world-chat-groups` (registry and group owner, never names).
 
 ### Private conversations
 
@@ -91,30 +99,6 @@ Do not publish the original node or change its `minside.nibi.no` gate.
 ## Verification
 
 `npm run build` and `npm run build:workspace` typecheck and build both consumers.
-With Playwright installed in the test environment, run:
-
-```sh
-node scripts/test-nibi-workspace.cjs original-graph.json prepared-payload.json
-```
-
-The test intercepts all external requests and never writes fixtures to NIBI.
-It covers preservation of the original graph/node, host authentication bridge,
-world-domain selection, group history/sending, mobile scrolling, private-conversation
-rendering/sending/polling, revoked private access, unmount, and logout. `WORKSPACE_CHROMIUM_PATH` optionally
-selects an installed Chromium binary; `WORKSPACE_CHROMIUM_ARGS` is an optional JSON array.
-
-The parity test runs the prepared node against the real group-chat-worker code
-(`index.js` + `direct-chat.js`) in-process on SQLite and an in-memory R2 bucket, with a
-fake microphone:
-
-```sh
-node scripts/test-nibi-parity.mjs prepared-payload.json /Volumes/T7/vegvisr-frontend/group-chat-worker
-```
-
-It drives, in a group and in a private conversation: text, reply, image, PDF, voice with
-transcription, dictation, reactions, poll and vote, author-only delete, forwarding both
-ways (private bytes copied), a failed upload shown with the file kept, mobile tool layout,
-no private traffic on group or public media routes, and revocation clearing content and
-links. Backend authorization is covered by `group-chat-worker/test-direct-chat-parity.mjs`.
-Neither test proves the deployed backend: after a deploy, verify on the live service with
-real NIBI accounts (CHAT_REQUIREMENTS.md acceptance criteria).
+`scripts/test-nibi-parity.mjs graph.json [group-chat-worker dir]` runs the member page node against
+the real group-chat-worker code in-process (SQLite, in-memory R2, fake microphone), for group and
+private conversations. It does not prove the deployed backend; the published page does.

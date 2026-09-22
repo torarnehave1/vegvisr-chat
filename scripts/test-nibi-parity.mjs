@@ -6,7 +6,8 @@
 // voice (fake microphone) with transcription, dictation, reactions, polls, delete, forwarding,
 // visible failures, revocation and the mobile layout.
 //
-//   node scripts/test-nibi-parity.mjs prepared-payload.json [path/to/group-chat-worker]
+//   node scripts/test-nibi-parity.mjs graph.json [path/to/group-chat-worker]
+//   graph.json: getknowgraph output for graph 6e1f12f1-53b8-4d5f-8c9c-9a88135ad0ad (the member page node).
 //
 // Needs `playwright` (or playwright-core) resolvable and a Chromium (WORKSPACE_CHROMIUM_PATH).
 import assert from 'node:assert/strict'
@@ -17,7 +18,7 @@ import { pathToFileURL } from 'node:url'
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
-const [payloadPath, workerDir = '/Volumes/T7/vegvisr-frontend/group-chat-worker'] = process.argv.slice(2)
+const [graphPath, workerDir = '/Volumes/T7/vegvisr-frontend/group-chat-worker'] = process.argv.slice(2)
 const shots = process.env.PARITY_SCREENSHOTS || '/tmp/nibi-parity'
 mkdirSync(shots, { recursive: true })
 
@@ -32,8 +33,8 @@ const dm = (await (await call('inger', 'POST', '/direct/conversations', { source
 await call('inger', 'POST', `/direct/${dm}/messages`, { body: 'Hei Tor, dette er privat' })
 const rows = sql => chat.db.prepare(sql).all()
 
-const payload = JSON.parse(readFileSync(payloadPath, 'utf8'))
-const node = payload.graphData.nodes.find(n => n.id === 'nibi-members-page-chat-workspace-test')
+const graphFile = JSON.parse(readFileSync(graphPath, 'utf8'))
+const node = (graphFile.graphData?.nodes || graphFile.nodes).find(n => n.id === (process.env.PARITY_NODE_ID || 'nibi-members-page-chat-workspace-test'))
 const server = createServer((_req, res) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(node.info) })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const origin = `http://127.0.0.1:${server.address().port}`
