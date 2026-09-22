@@ -2,6 +2,19 @@ import type { ChatTransport, ForwardTarget, Group, Message, MessageReactions, Po
 
 export interface DirectConversation extends Group { kind: 'direct'; peer_id: string }
 
+/** The other participant's card. phone/email are null unless they chose to share them. */
+export interface DirectPeer {
+  user_id: string
+  name: string
+  avatar_url: string | null
+  phone: string | null
+  email: string | null
+  shares: { phone: boolean; email: boolean }
+}
+
+/** What I share with members of this community (opt-in, default false). */
+export interface ContactSharing { phone: boolean; email: boolean; has_phone: boolean; has_email: boolean }
+
 export interface DirectChatOptions {
   baseUrl?: string
   fetch?: typeof globalThis.fetch
@@ -127,6 +140,15 @@ export function createDirectChat(token: string, sourceGroupId: string, options: 
     transport,
     forwardMessage,
     listForwardTargets,
+    async fetchPeer(groupId: string): Promise<DirectPeer> {
+      return await call(conversation(groupId, '/peer')) as unknown as DirectPeer
+    },
+    async getContactSharing(): Promise<ContactSharing> {
+      return await call('/direct/contact-sharing?source_group_id=' + encodeURIComponent(sourceGroupId)) as unknown as ContactSharing
+    },
+    async setContactSharing(next: { phone?: boolean; email?: boolean }): Promise<ContactSharing> {
+      return await call('/direct/contact-sharing', { method: 'PUT', json: { source_group_id: sourceGroupId, ...next } }) as unknown as ContactSharing
+    },
     async fetchConversations(): Promise<DirectConversation[]> {
       const data = await call('/direct/conversations?source_group_id=' + encodeURIComponent(sourceGroupId))
       return (data.groups || []) as DirectConversation[]

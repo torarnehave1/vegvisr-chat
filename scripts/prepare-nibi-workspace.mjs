@@ -98,7 +98,7 @@ export function prepareGraph(graph, bundle) {
     ...node.metadata,
     publishGate: existing?.metadata?.publishGate || (sourceGate ? { 'test.nibi.no': structuredClone(sourceGate) } : {}),
     chatWorkspace: {
-      package: '@vegvisr/chat-workspace', version: '0.3.0',
+      package: '@vegvisr/chat-workspace', version: JSON.parse(readFileSync(new URL('../packages/chat-workspace/package.json', import.meta.url), 'utf8')).version,
       sourceNodeId: source.id, sourceGraphVersion: graph.metadata.version,
       bundleSha256: createHash('sha256').update(bundle).digest('hex'),
       targetHostname: 'test.nibi.no',
