@@ -250,6 +250,7 @@ function parseTextWithLinks(text: string): TextPart[] {
 export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe, auth, currentUserId, reactions, onReact, onReply, replyToMessage, replyToProfile, isOwner, onForward, onMove }: Props) {
   const msgType = message.message_type || 'text'
   const [transcribing, setTranscribing] = useState(false)
+  const [copied, setCopied] = useState(false)
   const isBot = message.user_id?.startsWith('bot:')
   const displayName = profile?.displayName || message.email || message.phone || message.user_id?.slice(0, 8) || '?'
   const avatarUrl = profile?.profileimage
@@ -262,6 +263,24 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
     } finally {
       setTranscribing(false)
     }
+  }
+
+  const handleCopy = async () => {
+    if (!message.body) return
+    try {
+      await navigator.clipboard.writeText(message.body)
+    } catch {
+      const el = document.createElement('textarea')
+      el.value = message.body
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   return (
@@ -615,6 +634,25 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             </div>
           )}
           <span className="text-[10px] opacity-50">{formatTime(message.created_at)}</span>
+          {msgType === 'text' && message.body && (
+            <button
+              onClick={handleCopy}
+              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              title={copied ? 'Copied' : 'Copy text'}
+              aria-label="Copy message text"
+            >
+              {copied ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              )}
+            </button>
+          )}
           {onForward && (
             <button
               onClick={() => onForward(message)}
