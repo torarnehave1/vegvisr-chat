@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup, setMyAlerts, fetchAlertSenders } from '../services/chat-service'
-import type { AlertSender } from '../services/chat-service'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup, setMyAlerts } from '../services/chat-service'
 import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
@@ -18,11 +17,6 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [removeError, setRemoveError] = useState<string | null>(null)
   const [myAlerts, setMyAlertsState] = useState(false)
   const [savingAlerts, setSavingAlerts] = useState(false)
-  const [senders, setSenders] = useState<AlertSender[]>([])
-  const [senderEmail, setSenderEmail] = useState(group.alert_sender_email || '')
-  const [sendersLoading, setSendersLoading] = useState(false)
-  const [sendersError, setSendersError] = useState<string | null>(null)
-  const [savingSender, setSavingSender] = useState(false)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteLoading, setInviteLoading] = useState(false)
   // "Members can post" toggle. The truthy axis is inverted vs the DB column
@@ -74,19 +68,6 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
     return () => { mounted = false }
   }, [group.id, auth])
 
-  // Owner-only: load the selectable alert sender addresses.
-  useEffect(() => {
-    if (!isOwner) return
-    let mounted = true
-    setSendersLoading(true)
-    setSendersError(null)
-    fetchAlertSenders(group.id, auth)
-      .then(s => { if (mounted) setSenders(s) })
-      .catch(err => { if (mounted) setSendersError(err instanceof Error ? err.message : 'Failed to load senders') })
-      .finally(() => { if (mounted) setSendersLoading(false) })
-    return () => { mounted = false }
-  }, [group.id, auth, isOwner])
-
   const handleTogglePostingLock = async () => {
     if (savingPostingLock) return
     const next = !membersCanPost
@@ -100,22 +81,6 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
       setMembersCanPost(!next)  // revert
     } finally {
       setSavingPostingLock(false)
-    }
-  }
-
-  const handleSelectSender = async (value: string) => {
-    if (savingSender) return
-    const prev = senderEmail
-    setSenderEmail(value)  // optimistic
-    setSavingSender(true)
-    try {
-      const updated = await updateGroup(group.id, { alert_sender_email: value }, auth)
-      onGroupUpdated?.(updated)
-    } catch (err) {
-      console.error('Save alert sender failed:', err)
-      setSenderEmail(prev)  // revert
-    } finally {
-      setSavingSender(false)
     }
   }
 
@@ -435,31 +400,6 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
               />
             </span>
           </button>
-
-          {/* Owner-only: pick which address alerts are sent from */}
-          {isOwner && (
-            <div className="mt-3">
-              <div className="text-[11px] text-slate-400 dark:text-white/40 mb-1">Send alerts from</div>
-              <select
-                value={senderEmail}
-                onChange={e => handleSelectSender(e.target.value)}
-                disabled={sendersLoading || savingSender || senders.length === 0}
-                className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50 disabled:opacity-50"
-              >
-                <option value="">Default sender</option>
-                {senders.map(s => (
-                  <option key={s.email} value={s.email}>
-                    {s.name ? `${s.name} <${s.email}>` : s.email}{s.isDefault ? ' (default)' : ''}
-                  </option>
-                ))}
-              </select>
-              {sendersLoading && <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">Loading senders...</p>}
-              {sendersError && <p className="mt-1 text-[11px] text-rose-300">{sendersError}</p>}
-              {!sendersLoading && !sendersError && senders.length === 0 && (
-                <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">No sender accounts configured.</p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Owner-only: lock posting for a broadcast / announcement channel */}
