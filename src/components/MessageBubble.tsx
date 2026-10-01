@@ -296,7 +296,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             />
           ) : (
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
-              isBot ? 'bg-violet-200 text-violet-900 dark:bg-violet-500/30 dark:text-violet-300' : 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/60'
+              isBot ? 'bg-agent-soft text-agent' : 'bg-surface-sunk text-ink-soft'
             } ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}>
               {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
             </div>
@@ -306,15 +306,15 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
       <div
         className={`max-w-[75%] rounded-2xl px-3.5 py-2 ${
           isOwn
-            ? 'bg-sky-100 text-slate-900 dark:bg-sky-600 dark:text-white rounded-br-md'
-            : 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md'
+            ? 'bg-mine text-mine-ink rounded-br-md'
+            : 'bg-surface-sunk text-ink rounded-bl-md'
         }`}
       >
         {!isOwn && (
           <div className="text-[11px] mb-0.5 flex items-center gap-1.5">
-            <span className={isBot ? 'text-slate-900 dark:text-white/80 font-semibold' : 'text-slate-700 dark:text-white/50'}>{displayName}</span>
-            {isBot && <span className="text-[9px] bg-violet-200 text-violet-900 dark:bg-violet-500/30 dark:text-violet-300 px-1 py-px rounded font-medium">BOT</span>}
-            {isOwner && !isBot && <span className="text-[9px] bg-amber-200 text-amber-900 dark:bg-amber-500/30 dark:text-amber-300 px-1 py-px rounded font-medium">OWNER</span>}
+            <span className={isBot ? 'text-agent font-semibold' : 'text-ink-soft'}>{displayName}</span>
+            {isBot && <span className="text-[9px] bg-agent-soft text-agent px-1 py-px rounded font-medium">BOT</span>}
+            {isOwner && !isBot && <span className="text-[9px] bg-notice-soft text-notice px-1 py-px rounded font-medium">OWNER</span>}
           </div>
         )}
 
@@ -322,7 +322,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {replyToMessage && (
           <div
             className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-2 cursor-pointer ${
-              isOwn ? 'bg-sky-700/40 border-sky-300/50' : 'bg-slate-100 dark:bg-white/5 border-sky-400/50'
+              isOwn ? 'bg-brand/20 border-brand/60' : 'bg-surface-sunk border-brand'
             }`}
             onClick={() => {
               const el = document.getElementById(`msg-${replyToMessage.id}`)
@@ -333,10 +333,10 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               }
             }}
           >
-            <div className="text-[10px] text-sky-700 dark:text-sky-300/80 font-medium">
+            <div className="text-[10px] text-brand/80 font-medium">
               {replyToProfile?.displayName || replyToMessage.user_id?.slice(0, 8)}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-white/50 truncate max-w-[200px]">
+            <div className="text-[11px] text-ink-soft truncate max-w-[200px]">
               {replyToMessage.message_type === 'voice' ? (replyToMessage.body || 'Voice message') :
                replyToMessage.message_type === 'image' ? 'Photo' :
                replyToMessage.message_type === 'video' ? 'Video' :
@@ -352,7 +352,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             the worker side (forwarded_from_user_name) so we don't have to
             cross-resolve a profile that may not be a member of this group. */}
         {message.forwarded_from_message_id != null && (
-          <div className="flex items-center gap-1 text-[10px] italic text-slate-500 dark:text-white/50 mb-1">
+          <div className="flex items-center gap-1 text-[10px] italic text-ink-soft mb-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 17 20 12 15 7" />
               <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
@@ -365,7 +365,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {/* Bot 'thinking' placeholder — the worker inserts this before firing
             bot-respond and updates the row in place when the real reply lands. */}
         {msgType === 'bot_thinking' && (
-          <div className="flex items-center gap-2 text-sm italic text-slate-500 dark:text-white/60">
+          <div className="flex items-center gap-2 text-sm italic text-ink-soft">
             <span>{message.body || 'Thinking…'}</span>
             <span className="inline-flex gap-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -378,7 +378,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
         {/* Bot error — when bot-respond failed or timed out and the placeholder
             got finalized as an error instead of a real reply. */}
         {msgType === 'bot_error' && (
-          <p className="text-sm text-rose-300/90 italic">
+          <p className="text-sm text-danger/90 italic">
             {message.body || 'Bot couldn’t reply — please try again.'}
           </p>
         )}
@@ -392,7 +392,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                 {parts.map((part, i) => {
                   if (part.type === 'text') return <span key={i}>{part.value}</span>
                   return (
-                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-sky-700 dark:text-sky-300 underline break-all hover:text-sky-900 dark:hover:text-sky-200">
+                    <a key={i} href={part.value} target="_blank" rel="noopener noreferrer" className="text-brand underline break-all hover:text-brand-strong">
                       {part.value}
                     </a>
                   )
@@ -428,18 +428,18 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                     href={p.value}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1.5 flex items-center gap-3 rounded-lg border border-rose-400/40 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/15 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
+                    className="mt-1.5 flex items-center gap-3 rounded-lg border border-danger/40 bg-danger-soft hover:opacity-90 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
                   >
-                    <div className="w-10 h-12 rounded bg-rose-600 dark:bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-12 rounded bg-danger text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                       PDF
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                      <p className="text-sm font-semibold text-ink truncate">
                         {decodeURIComponent(p.value.split('/').pop() || 'Document.pdf')}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-white/60">Open in new tab</p>
+                      <p className="text-[11px] text-ink-soft">Open in new tab</p>
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 dark:text-white/50 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-soft flex-shrink-0">
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                       <polyline points="15 3 21 3 21 9" />
                       <line x1="10" y1="14" x2="21" y2="3" />
@@ -458,7 +458,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           <div>
             {/* Voice title / subject */}
             {message.body && (
-              <p className="text-sm font-semibold mb-1.5 text-sky-700 dark:text-sky-300/90">
+              <p className="text-sm font-semibold mb-1.5 text-brand/90">
                 {message.body}
               </p>
             )}
@@ -485,12 +485,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <span className="text-[11px] opacity-50 italic">Transcribing...</span>
                 ) : message.transcription_status === 'failed' ? (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-rose-300/70">Transcription failed</span>
+                    <span className="text-[11px] text-danger/70">Transcription failed</span>
                     {onTranscribe && (
                       <button
                         onClick={handleTranscribe}
                         disabled={transcribing}
-                        className="text-[11px] text-sky-700 dark:text-sky-300/80 hover:text-sky-200 underline"
+                        className="text-[11px] text-brand/80 hover:text-sky-200 underline"
                       >
                         Retry
                       </button>
@@ -500,7 +500,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <button
                     onClick={handleTranscribe}
                     disabled={transcribing}
-                    className="text-[11px] text-sky-700 dark:text-sky-300/70 hover:text-sky-200 underline transition-colors"
+                    className="text-[11px] text-brand/70 hover:text-sky-200 underline transition-colors"
                   >
                     {transcribing ? 'Transcribing...' : 'Transcribe'}
                   </button>
@@ -523,7 +523,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           </div>
         )}
 
-        {/* PDF — MVP: file card with filename + size + "Open" button that
+        {/* PDF — MVP: file card with filename + size +"Open" button that
             hands off to the browser's built-in PDF viewer in a new tab. The
             original filename is stored in message.body at upload time. */}
         {msgType === 'pdf' && message.media_url && (
@@ -532,20 +532,20 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               href={message.media_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg border border-rose-400/40 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/15 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
+              className="flex items-center gap-3 rounded-lg border border-danger/40 bg-danger-soft hover:opacity-90 transition-colors px-3 py-2.5 no-underline max-w-[320px]"
             >
-              <div className="w-10 h-12 rounded bg-rose-600 dark:bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-12 rounded bg-danger text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                 PDF
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                <p className="text-sm font-semibold text-ink truncate">
                   {message.body || 'Document.pdf'}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-white/60">
+                <p className="text-[11px] text-ink-soft">
                   {message.media_size ? `${(message.media_size / 1024).toFixed(0)} KB · ` : ''}Open in new tab
                 </p>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 dark:text-white/50 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-soft flex-shrink-0">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
@@ -594,12 +594,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   onClick={() => onReact?.(message.id, r as ReactionType)}
                   className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
                     isMine
-                      ? 'bg-sky-500/20 border border-sky-400/30'
-                      : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10'
+                      ? 'bg-brand-soft border border-brand/40'
+                      : 'bg-surface-sunk border border-line hover:bg-surface-sunk'
                   }`}
                 >
                   <span>{REACTION_EMOJI[r]}</span>
-                  <span className="text-[10px] text-slate-500 dark:text-white/60">{count}</span>
+                  <span className="text-[10px] text-ink-soft">{count}</span>
                 </button>
               )
             })}
@@ -637,7 +637,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {msgType === 'text' && message.body && (
             <button
               onClick={handleCopy}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-brand-strong/20 hover:text-brand transition-all"
               title={copied ? 'Copied' : 'Copy text'}
               aria-label="Copy message text"
             >
@@ -656,7 +656,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onForward && (
             <button
               onClick={() => onForward(message)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-brand-strong/20 hover:text-brand transition-all"
               title="Forward to another group"
               aria-label="Forward message"
             >
@@ -669,7 +669,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onMove && (
             <button
               onClick={() => onMove(message)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:opacity-90 hover:text-notice transition-all"
               title="Move to another group (owner / Superadmin)"
               aria-label="Move message"
             >
@@ -683,7 +683,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className={`p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-rose-500/20 hover:text-rose-300 transition-all ${isOwn ? '' : 'hover:bg-amber-500/20 hover:text-amber-300'}`}
+              className={`p-1 rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-rose-500/20 hover:text-danger transition-all ${isOwn ? '' : 'hover:opacity-90 hover:text-notice'}`}
               title={isOwn ? 'Delete message' : 'Delete (owner)'}
               aria-label={isOwn ? 'Delete message' : 'Delete message (owner)'}
             >

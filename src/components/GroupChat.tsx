@@ -664,19 +664,19 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
-        <button onClick={onBack} aria-label="Back to conversations" className="md:hidden flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-surface flex-shrink-0">
+        <button onClick={onBack} aria-label="Back to conversations" className="md:hidden flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg text-ink-soft hover:bg-surface-sunk hover:text-ink/60">
           &#x2190;
         </button>
         <h2
-          className="text-slate-900 dark:text-white font-semibold flex-1 cursor-pointer hover:text-sky-300 transition-colors flex items-center gap-2 min-w-0"
+          className="text-ink font-semibold flex-1 cursor-pointer hover:text-brand transition-colors flex items-center gap-2 min-w-0"
           onClick={onInfo}
         >
           <span className="break-words">{groupName}</span>
           {postingLocked && (
             <span
               title="Announcement channel — only the owner can post"
-              className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-semibold px-2 py-0.5 flex-shrink-0 normal-case tracking-normal"
+              className="inline-flex items-center gap-1 rounded-full bg-notice-soft text-notice text-[10px] font-semibold px-2 py-0.5 flex-shrink-0 normal-case tracking-normal"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 11l18-5v12L3 14v-3z" />
@@ -693,8 +693,8 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
           }}
           className={`text-sm px-2.5 py-1 rounded-lg transition-colors ${
             aiMode
-              ? 'bg-violet-500/20 text-violet-300 border border-violet-400/30'
-              : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'
+              ? 'bg-agent-soft text-agent border border-agent/40'
+              : 'text-ink-soft hover:text-ink hover:bg-surface-sunk'
           }`}
           title={aiMode ? `AI on (${aiProvider}) — click to disable` : 'Enable AI mode'}
         >
@@ -705,7 +705,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             value={aiProvider}
             onChange={e => setAiProvider(e.target.value as AiProvider)}
             title="AI provider"
-            className="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 rounded px-1.5 py-0.5"
+            className="text-xs bg-surface-sunk border border-line text-ink-soft rounded px-1.5 py-0.5"
           >
             <option value="grok">Grok</option>
             <option value="openai">OpenAI</option>
@@ -726,27 +726,27 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             title="More"
             className={`relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
               menuOpen
-                ? 'bg-slate-200 text-slate-900 dark:bg-white/10 dark:text-white'
-                : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'
+                ? 'bg-surface-sunk text-ink'
+                : 'text-ink-soft hover:text-ink hover:bg-surface-sunk'
             }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" />
             </svg>
             {(hasNewFeatures || hasNewSuggestions) && !menuOpen && (
-              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-sky-400" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-brand" />
             )}
           </button>
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900"
+              className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface-raised shadow-xl"
             >
               <button
                 type="button"
                 role="menuitem"
                 onClick={() => { setMenuOpen(false); onInfo() }}
-                className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-white/80 dark:hover:bg-white/5"
+                className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-ink-soft hover:bg-surface-sunk text-ink"
               >
                 <span className="w-5 text-center">&#x2139;</span>Group info
               </button>
@@ -755,7 +755,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                   type="button"
                   role="menuitem"
                   onClick={() => { setMenuOpen(false); onAskQuestion() }}
-                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-white/80 dark:hover:bg-white/5"
+                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-ink-soft hover:bg-surface-sunk text-ink"
                 >
                   <span className="w-5 text-center">&#x2753;</span>Questions
                 </button>
@@ -765,7 +765,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                   type="button"
                   role="menuitem"
                   onClick={() => { setMenuOpen(false); onSuggestions() }}
-                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-white/80 dark:hover:bg-white/5"
+                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-ink-soft hover:bg-surface-sunk text-ink"
                 >
                   <span className="w-5 text-center">&#x1F4A1;</span>
                   <span className="flex-1">Suggestions</span>
@@ -777,11 +777,11 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                   type="button"
                   role="menuitem"
                   onClick={() => { setMenuOpen(false); onWhatsNew() }}
-                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-white/80 dark:hover:bg-white/5"
+                  className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-ink-soft hover:bg-surface-sunk text-ink"
                 >
                   <span className="w-5 text-center">&#x1F514;</span>
                   <span className="flex-1">What&apos;s New</span>
-                  {hasNewFeatures && <span className="h-2 w-2 rounded-full bg-sky-400" />}
+                  {hasNewFeatures && <span className="h-2 w-2 rounded-full bg-brand" />}
                 </button>
               )}
               {onSettings && (
@@ -789,7 +789,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                   type="button"
                   role="menuitem"
                   onClick={() => { setMenuOpen(false); onSettings() }}
-                  className="flex min-h-11 w-full items-center gap-3 border-t border-slate-200 px-4 text-left text-sm text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:text-white/80 dark:hover:bg-white/5"
+                  className="flex min-h-11 w-full items-center gap-3 border-t border-line px-4 text-left text-sm text-ink-soft hover:bg-surface-sunk"
                 >
                   <span className="w-5 text-center">&#x2699;</span>Profile &amp; theme
                 </button>
@@ -801,7 +801,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
 
       {chatError && <p role="alert" className="p-3 text-red-700">{chatError} Velg samtalen på nytt for å prøve igjen.</p>}
       {actionError && (
-        <div role="alert" className="flex items-start gap-2 px-4 py-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border-b border-red-200 dark:border-red-500/20">
+        <div role="alert" className="flex items-start gap-2 px-4 py-2 text-sm text-danger bg-danger-soft border-b border-danger/30">
           <span className="flex-1 break-words">{actionError}</span>
           <button type="button" onClick={() => setActionError('')} className="flex-shrink-0" title="Dismiss">&#x2715;</button>
         </div>
@@ -816,12 +816,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             column and centre it — same width as the composer below. */}
         <div className="mx-auto w-full max-w-5xl">
         {loadingOlder && (
-          <div className="text-center text-slate-400 dark:text-white/40 text-sm py-2">Loading older...</div>
+          <div className="text-center text-ink-faint text-sm py-2">Loading older...</div>
         )}
         {loading ? (
-          <div className="text-center text-slate-400 dark:text-white/40 py-8">Loading messages...</div>
+          <div className="text-center text-ink-faint py-8">Loading messages...</div>
         ) : sortedMessages.length === 0 ? (
-          <div className="text-center text-slate-400 dark:text-white/30 py-8">No messages yet. Say hello!</div>
+          <div className="text-center text-ink-faint py-8">No messages yet. Say hello!</div>
         ) : (
           sortedMessages.map((msg, i) => {
             const prev = i > 0 ? sortedMessages[i - 1] : null
@@ -832,7 +832,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             return (
               <div key={msg.id}>
                 {showDay && (
-                  <div className="text-center text-slate-400 dark:text-white/30 text-xs py-2 my-1">
+                  <div className="text-center text-ink-faint text-xs py-2 my-1">
                     {dayLabel(msg.created_at)}
                   </div>
                 )}
@@ -873,56 +873,56 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
 
       {/* Bot description banner */}
       {activeBotBanner && (
-        <div className="flex-shrink-0 border-t border-violet-400/20 bg-violet-500/10 px-4 py-2 flex items-center gap-3">
+        <div className="flex-shrink-0 border-t border-agent/30 bg-agent-soft px-4 py-2 flex items-center gap-3">
           {activeBotBanner.avatar_url ? (
             <img src={activeBotBanner.avatar_url} alt={activeBotBanner.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-violet-500/30 text-violet-300 flex items-center justify-center text-xs font-medium flex-shrink-0">B</div>
+            <div className="w-8 h-8 rounded-full bg-agent-soft text-agent flex items-center justify-center text-xs font-medium flex-shrink-0">B</div>
           )}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-violet-200">{activeBotBanner.name}</span>
-              <span className="text-[10px] text-violet-300 bg-violet-500/20 px-1.5 py-px rounded">@{activeBotBanner.username}</span>
+              <span className="text-sm font-medium text-agent">{activeBotBanner.name}</span>
+              <span className="text-[10px] text-agent bg-agent-soft px-1.5 py-px rounded">@{activeBotBanner.username}</span>
             </div>
             {activeBotBanner.system_prompt && (
-              <p className="text-xs text-slate-400 dark:text-white/40 truncate mt-0.5">{activeBotBanner.system_prompt}</p>
+              <p className="text-xs text-ink-faint truncate mt-0.5">{activeBotBanner.system_prompt}</p>
             )}
           </div>
           <button
             onClick={() => setActiveBotBanner(null)}
-            className="text-slate-400 dark:text-white/30 hover:text-slate-500 dark:hover:text-white/60 text-sm flex-shrink-0"
+            className="text-ink-faint hover:text-ink text-sm flex-shrink-0"
           >&#x2715;</button>
         </div>
       )}
 
       {/* Media preview before sending */}
       {pendingMedia && (
-        <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3 py-2">
+        <div className="flex-shrink-0 border-t border-line bg-surface px-3 py-2">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
             {pendingMedia.file.type.startsWith('video/') ? (
               <video src={pendingMedia.previewUrl} className="h-20 rounded-lg object-cover" />
             ) : pendingMedia.file.type === 'application/pdf' || pendingMedia.file.name.toLowerCase().endsWith('.pdf') ? (
-              <div className="h-20 w-16 rounded-lg bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center text-rose-700 dark:text-rose-300 text-xs font-bold">
+              <div className="h-20 w-16 rounded-lg bg-danger-soft flex items-center justify-center text-danger text-xs font-bold">
                 PDF
               </div>
             ) : (
               <img src={pendingMedia.previewUrl} alt="Preview" className="h-20 rounded-lg object-cover" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-slate-600 dark:text-white/70 truncate">{pendingMedia.file.name}</p>
-              <p className="text-[11px] text-slate-400 dark:text-white/40">{(pendingMedia.file.size / 1024).toFixed(0)} KB</p>
+              <p className="text-sm text-ink-soft truncate">{pendingMedia.file.name}</p>
+              <p className="text-[11px] text-ink-faint">{(pendingMedia.file.size / 1024).toFixed(0)} KB</p>
             </div>
             <button
               onClick={confirmMedia}
               disabled={sending}
-              className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-sky-500 transition-colors"
+              className="px-4 py-2 bg-brand text-brand-ink rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-brand-strong transition-colors"
             >
               {sending ? '...' : 'Send'}
             </button>
             <button
               onClick={cancelMedia}
               disabled={sending}
-              className="px-3 py-2 text-slate-500 dark:text-white/50 hover:text-rose-400 rounded-xl text-sm transition-colors"
+              className="px-3 py-2 text-ink-soft hover:text-rose-400 rounded-xl text-sm transition-colors"
               title="Cancel"
             >
               &#x2715;
@@ -932,7 +932,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 px-3 py-2 relative">
+      <div className="flex-shrink-0 border-t border-line bg-surface px-3 py-2 relative">
         {/* @mention dropdown */}
         {mentionFilter !== null && bots.length > 0 && (
           <BotMentionDropdown
@@ -942,12 +942,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
           />
         )}
         {replyTo && (
-          <div className="max-w-5xl mx-auto mb-2 flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2">
-            <div className="flex-1 min-w-0 border-l-2 border-sky-400 pl-2">
-              <div className="text-[10px] text-sky-300 font-medium">
+          <div className="max-w-5xl mx-auto mb-2 flex items-center gap-2 bg-surface-sunk border border-line rounded-xl px-3 py-2">
+            <div className="flex-1 min-w-0 border-l-2 border-brand pl-2">
+              <div className="text-[10px] text-brand font-medium">
                 {profileFor(replyTo.user_id)?.displayName || replyTo.user_id?.slice(0, 8)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-white/50 truncate">
+              <div className="text-xs text-ink-soft truncate">
                 {replyTo.message_type === 'voice' ? 'Voice message' :
                  replyTo.message_type === 'image' ? 'Photo' :
                  replyTo.message_type === 'video' ? 'Video' :
@@ -958,7 +958,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              className="text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/70 text-sm flex-shrink-0"
+              className="text-ink-faint hover:text-ink text-sm flex-shrink-0"
               title="Cancel reply"
             >
               &#x2715;
@@ -980,14 +980,14 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             const ownerName = (groupCreatedBy && profiles.get(groupCreatedBy)?.displayName) || 'the owner'
             return (
               <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 py-1.5">
-                <span className="text-sm text-slate-500 dark:text-white/60">
-                  Only <span className="text-amber-300">@{ownerName}</span> can post here.
+                <span className="text-sm text-ink-soft">
+                  Only <span className="text-notice">@{ownerName}</span> can post here.
                 </span>
                 {onAskQuestion && (
                   <button
                     type="button"
                     onClick={onAskQuestion}
-                    className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 transition-colors"
+                    className="rounded-lg border border-notice/30 bg-notice-soft px-3 py-1.5 text-xs font-semibold text-notice hover:opacity-90 transition-colors"
                   >
                     Ask a Question &rarr;
                   </button>
@@ -999,14 +999,14 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             <div data-chat-composer className="flex gap-2 items-end max-w-5xl mx-auto">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-ink-soft hover:text-ink hover:bg-surface-sunk transition-colors"
                 title="Attach image, video or PDF"
               >
                 &#x1F4CE;
               </button>
               <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
-                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${showPollCreator ? 'text-sky-700 bg-slate-200 dark:text-sky-300 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${showPollCreator ? 'text-brand bg-surface-sunk' : 'text-ink-soft hover:text-ink hover:bg-surface-sunk'}`}
                 title="Create a poll"
               >
                 &#x1F4CA;
@@ -1042,12 +1042,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                 }}
                 placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
                 rows={1}
-                className="min-h-11 flex-1 resize-none overflow-y-auto rounded-xl border border-slate-200 bg-slate-100 px-3 py-3 text-sm text-slate-900 max-h-32 focus:border-sky-400/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
+                className="min-h-11 flex-1 resize-none overflow-y-auto rounded-xl border border-line bg-surface-sunk px-3 py-3 text-sm text-ink max-h-32 focus:border-brand focus:outline-none"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending || loading || Boolean(chatError)}
-                className="flex h-11 flex-shrink-0 items-center rounded-xl bg-sky-600 px-5 text-sm font-bold text-white transition-colors hover:bg-sky-500 disabled:opacity-70"
+                className="flex h-11 flex-shrink-0 items-center rounded-xl bg-brand px-5 text-sm font-bold text-white transition-colors hover:bg-brand-strong disabled:opacity-70"
               >
                 {sending ? '...' : 'Send'}
               </button>
@@ -1058,9 +1058,9 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
 
       {/* Drag overlay */}
       {dragOver && (
-        <div className="absolute inset-0 bg-sky-600/20 border-2 border-dashed border-sky-400 rounded-xl flex flex-col items-center justify-center z-50 pointer-events-none">
-          <span className="text-sky-200 text-lg font-medium bg-white/80 dark:bg-slate-900/80 px-6 py-3 rounded-xl">Drop image or video here</span>
-          <span className="text-sky-200/50 text-xs mt-2 bg-white/80 dark:bg-slate-900/80 px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
+        <div className="absolute inset-0 bg-brand/20 border-2 border-dashed border-brand rounded-xl flex flex-col items-center justify-center z-50 pointer-events-none">
+          <span className="text-sky-200 text-lg font-medium bg-surface px-6 py-3 rounded-xl">Drop image or video here</span>
+          <span className="text-sky-200/50 text-xs mt-2 bg-surface px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
       )}
 
