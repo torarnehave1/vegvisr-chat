@@ -7,6 +7,7 @@ import { LanguageContext } from './lib/LanguageContext';
 import { readStoredUser, type AuthUser } from './lib/auth';
 import { getStoredLanguage, setStoredLanguage } from './lib/storage';
 import { useTranslation } from './lib/useTranslation';
+import { getThemePref, setThemePref, type ThemePref } from './services/theme-service';
 import { ChatLayout } from './components/ChatLayout';
 import { GroupList, markGroupRead, INVITE_STORAGE_KEY } from './components/GroupList';
 import { GroupChat } from './components/GroupChat';
@@ -49,7 +50,13 @@ function App() {
   const [language, setLanguageState] = useState(getStoredLanguage());
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authStatus, setAuthStatus] = useState<'checking' | 'authed' | 'anonymous'>('checking');
-  const [loginOpen, setLoginOpen] = useState(false);
+  // Sign-in disclosure. Opens by default for a signed-out visitor: this screen has
+  // exactly one purpose, and hiding the form behind a header chip cost a click and
+  // left a "click Sign in" notice sitting below the form that replaced it.
+  const [loginOpen, setLoginOpen] = useState(true);
+  // Theme preference, mirrored into the header control. theme-service owns the
+  // class toggle on <html>; this state only drives the button's own label/icon.
+  const [themePref, setThemePrefState] = useState<ThemePref>(() => getThemePref());
   const [loginEmail, setLoginEmail] = useState('');
   const [loginStatus, setLoginStatus] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -279,6 +286,17 @@ function App() {
     };
   }, []);
 
+  const isSuperadmin = authUser?.role === 'Superadmin';
+  const THEME_LABEL: Record<ThemePref, string> = { light: 'Light', dark: 'Dark', system: 'System' };
+  const THEME_NEXT: Record<ThemePref, ThemePref> = { light: 'dark', dark: 'system', system: 'light' };
+  const themeLabel = THEME_LABEL[themePref];
+  const nextThemeLabel = THEME_LABEL[THEME_NEXT[themePref]];
+  const cycleTheme = () => {
+    const next = THEME_NEXT[themePref];
+    setThemePrefState(next);
+    setThemePref(next);
+  };
+
   return (
     <LanguageContext.Provider value={contextValue}>
       <div className="h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
@@ -290,38 +308,69 @@ function App() {
               alt={t('app.title')}
               className="h-12 w-auto"
             />
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Auto-bumping build marker. Value comes from __BUILD_ID__
                   defined in vite.config.ts — first 7 chars of git SHA at
                   build time. Lets you eyeball which deploy is actually
-                  running without opening DevTools. */}
-              <span
-                aria-label={`Build ${__BUILD_ID__}`}
-                title={`Build ${__BUILD_ID__} — visual confirmation of the live deploy`}
-                className="inline-flex items-center justify-center rounded-full bg-green-500 text-slate-900 dark:text-white text-[10px] font-bold tracking-wider px-2 py-1 font-mono"
+                  running without opening DevTools.
+                  Superadmin-only since 2026-10-01: it was the highest-saturation
+                  element on the page for every visitor, outranking the one control
+                  a new person has to find. */}
+              {isSuperadmin && (
+                <span
+                  aria-label={`Build ${__BUILD_ID__}`}
+                  title={`Build ${__BUILD_ID__} — visual confirmation of the live deploy`}
+                  className="inline-flex items-center justify-center rounded-full bg-green-500 text-slate-900 text-[10px] font-bold tracking-wider px-2 py-1 font-mono"
+                >
+                  {__BUILD_ID__}
+                </span>
+              )}
+              {isSuperadmin && <ScreenRecorder streamApiUrl="https://videostream.vegvisr.org" />}
+              {/* Theme — one control, cycling Light → Dark → System. Previously
+                  reachable only through the unlabelled cog, two screens deep. */}
+              <button
+                type="button"
+                onClick={cycleTheme}
+                title={`Theme: ${themeLabel}. Click for ${nextThemeLabel}.`}
+                aria-label={`Theme: ${themeLabel}. Switch to ${nextThemeLabel}.`}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
               >
-                {__BUILD_ID__}
-              </span>
-              <ScreenRecorder streamApiUrl="https://videostream.vegvisr.org" />
+                {themePref === 'light' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                  </svg>
+                ) : themePref === 'dark' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="13" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                  </svg>
+                )}
+              </button>
               {authStatus === 'authed' && (
                 <button
                   type="button"
                   onClick={() => { setPrevView(view); setView({ screen: 'settings' }) }}
-                  title="Settings (theme, profile, etc.)"
-                  aria-label="Open settings"
-                  className="rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 p-2 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20"
+                  title="Profile — display name, photo, account"
+                  aria-label="Open profile settings"
+                  className="flex h-11 items-center gap-2 rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-3 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
+                  <span className="hidden text-[11px] font-semibold uppercase tracking-[0.2em] sm:inline">Profile</span>
                 </button>
               )}
               {authStatus === 'authed' ? (
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20"
+                  className="flex h-11 items-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
                 >
                   Log out
                 </button>
@@ -329,7 +378,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setLoginOpen((prev) => !prev)}
-                  className="rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20"
+                  className="flex h-11 items-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
                 >
                   Sign in
                 </button>
@@ -368,13 +417,13 @@ function App() {
                   value={loginEmail}
                   onChange={(event) => setLoginEmail(event.target.value)}
                   placeholder="you@email.com"
-                  className="flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                  className="h-12 flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
                 />
                 <button
                   type="button"
                   onClick={sendMagicLink}
                   disabled={loginLoading}
-                  className="rounded-2xl bg-gradient-to-r from-sky-500 to-violet-500 px-6 py-3 text-sm font-semibold text-slate-900 dark:text-white shadow-lg shadow-sky-500/30"
+                  className="flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-600 to-violet-600 px-6 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 hover:from-sky-500 hover:to-violet-500 transition-colors disabled:opacity-60"
                 >
                   {loginLoading ? 'Sending...' : 'Send link'}
                 </button>
@@ -399,9 +448,9 @@ function App() {
             </div>
           )}
 
-          {authStatus === 'anonymous' && view.screen !== 'whatsnew' && (
-            <div className="mt-10 rounded-2xl border border-rose-400/30 bg-rose-100 dark:bg-rose-500/10 px-6 py-4 text-sm text-rose-900 dark:text-rose-100">
-              You are not signed in. Click “Sign in” to continue.
+          {authStatus === 'anonymous' && !loginOpen && view.screen !== 'whatsnew' && (
+            <div className="mt-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-700 dark:text-white/70">
+              Sign in to see your conversations.
             </div>
           )}
 
