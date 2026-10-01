@@ -74,21 +74,21 @@ export function AlertMenu({ groupId, auth, currentUserId }: Props) {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="relative text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10"
+        className="relative text-ink-soft hover:text-ink transition-colors p-1.5 rounded-lg hover:bg-surface-sunk"
         title="Send email alert"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 max-h-96 overflow-y-auto bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 p-2">
-          <div className="px-2 py-1.5 text-xs uppercase tracking-wider text-slate-400 dark:text-white/40">Email alerts</div>
+        <div className="absolute right-0 top-full mt-2 w-72 max-h-96 overflow-y-auto bg-surface-raised border border-line rounded-xl shadow-xl z-50 p-2">
+          <div className="px-2 py-1.5 text-xs uppercase tracking-wider text-ink-faint">Email alerts</div>
           {loading ? (
-            <div className="px-2 py-3 text-sm text-slate-400 dark:text-white/40">Loading...</div>
+            <div className="px-2 py-3 text-sm text-ink-faint">Loading...</div>
           ) : !isOwner ? (
-            <div className="px-2 py-3 text-sm text-slate-400 dark:text-white/40">Only the group owner can send email alerts.</div>
+            <div className="px-2 py-3 text-sm text-ink-faint">Only the group owner can send email alerts.</div>
           ) : alertable.length === 0 ? (
-            <div className="px-2 py-3 text-sm text-slate-400 dark:text-white/40">No members have enabled email alerts yet.</div>
+            <div className="px-2 py-3 text-sm text-ink-faint">No members have enabled email alerts yet.</div>
           ) : (
             <div className="space-y-1">
               {alertable.map(m => {
@@ -97,8 +97,8 @@ export function AlertMenu({ groupId, auth, currentUserId }: Props) {
                 const initial = displayName.charAt(0).toUpperCase()
                 const state = sendState[m.user_id] || 'idle'
                 return (
-                  <div key={m.user_id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5">
-                    <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 text-xs overflow-hidden flex-shrink-0">
+                  <div key={m.user_id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-surface-sunk">
+                    <div className="w-7 h-7 rounded-full bg-surface-sunk flex items-center justify-center text-ink-soft text-xs overflow-hidden flex-shrink-0">
                       {profile?.profileimage ? (
                         <img src={profile.profileimage} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -106,9 +106,9 @@ export function AlertMenu({ groupId, auth, currentUserId }: Props) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-slate-900 dark:text-white text-sm truncate">{displayName}</div>
+                      <div className="text-ink text-sm truncate">{displayName}</div>
                       {state === 'error' && errors[m.user_id] && (
-                        <div className="text-[11px] text-rose-300 truncate">{errors[m.user_id]}</div>
+                        <div className="text-[11px] text-danger truncate">{errors[m.user_id]}</div>
                       )}
                     </div>
                     <button
@@ -116,12 +116,12 @@ export function AlertMenu({ groupId, auth, currentUserId }: Props) {
                       onClick={() => handleSend(m.user_id)}
                       disabled={state === 'sending' || state === 'sent'}
                       className={`text-[11px] px-2.5 py-1 rounded-lg flex-shrink-0 transition-colors disabled:opacity-60 ${
-                        state === 'sent'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : state === 'error'
-                            ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
-                            : 'bg-sky-600/20 text-sky-300 hover:bg-sky-600/30'
-                      }`}
+ state === 'sent'
+ ? 'bg-success-soft text-success'
+ : state === 'error'
+ ? 'bg-danger-soft text-danger hover:opacity-90'
+ : 'bg-brand/20 text-brand hover:bg-brand/30'
+ }`}
                     >
                       {state === 'sending' ? '...' : state === 'sent' ? 'Sent' : state === 'error' ? 'Retry' : 'Send alert'}
                     </button>

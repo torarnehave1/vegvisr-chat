@@ -26,13 +26,13 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
   }
 
   return (
-    <div className="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl p-4 mx-auto max-w-lg">
+    <div className="bg-surface-sunk/80 border border-line rounded-xl p-4 mx-auto max-w-lg">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Create a Poll</h3>
+        <h3 className="text-ink font-semibold text-sm">Create a Poll</h3>
         <button
           type="button"
           onClick={onCancel}
-          className="text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70 text-xs"
+          className="text-ink-faint hover:text-ink text-xs"
         >
           Cancel
         </button>
@@ -43,7 +43,7 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
         value={question}
         onChange={e => setQuestion(e.target.value)}
         placeholder="Ask a question..."
-        className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50 mb-3"
+        className="w-full bg-surface-sunk border border-line rounded-lg px-3 py-2 text-ink text-sm focus:outline-none focus:border-brand mb-3"
         autoFocus
       />
 
@@ -51,18 +51,18 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
       <div className="space-y-2 mb-3">
         {options.map((opt, i) => (
           <div key={i} className="flex gap-2 items-center">
-            <span className="text-slate-400 dark:text-white/30 text-xs w-5 text-right flex-shrink-0">{i + 1}.</span>
+            <span className="text-ink-faint text-xs w-5 text-right flex-shrink-0">{i + 1}.</span>
             <input
               value={opt}
               onChange={e => updateOption(i, e.target.value)}
               placeholder={i === 0 ? 'Yes' : i === 1 ? 'No' : `Option ${i + 1}`}
-              className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
+              className="flex-1 bg-surface-sunk border border-line rounded-lg px-3 py-1.5 text-ink text-sm focus:outline-none focus:border-brand"
             />
             {options.length > 2 && (
               <button
                 type="button"
                 onClick={() => removeOption(i)}
-                className="text-slate-300 dark:text-white/20 hover:text-rose-400 text-xs px-1"
+                className="text-ink-faint hover:text-danger text-xs px-1"
                 title="Remove option"
               >
                 x
@@ -78,7 +78,7 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
           <button
             type="button"
             onClick={addOption}
-            className="text-sky-400 hover:text-sky-300 text-xs font-medium"
+            className="text-brand hover:text-brand text-xs font-medium"
           >
             + Add option
           </button>
@@ -90,7 +90,7 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
             if (canSubmit) onSubmit(question.trim(), validOptions)
           }}
           disabled={!canSubmit || disabled}
-          className="px-4 py-1.5 bg-sky-600 text-white rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+          className="px-4 py-1.5 bg-brand text-brand-ink rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-brand-strong transition-colors"
         >
           {disabled ? 'Creating...' : 'Create Poll'}
         </button>

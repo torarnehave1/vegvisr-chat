@@ -61,7 +61,7 @@ export function LinkPreviewCard({ url }: Props) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-1.5 flex gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors overflow-hidden no-underline"
+      className="mt-1.5 flex gap-3 rounded-lg border border-line bg-surface-sunk hover:bg-surface-sunk transition-colors overflow-hidden no-underline"
     >
       {preview.image && !imageFailed && (
         <img
@@ -72,16 +72,16 @@ export function LinkPreviewCard({ url }: Props) {
         />
       )}
       <div className="min-w-0 py-2 pr-3">
-        <div className="text-sm font-semibold text-slate-900 dark:text-white/90 line-clamp-2">
+        <div className="text-sm font-semibold text-ink/90 line-clamp-2">
           {preview.title || host}
         </div>
         {preview.description && (
-          <div className="mt-0.5 text-xs text-slate-500 dark:text-white/50 line-clamp-2">
+          <div className="mt-0.5 text-xs text-ink-soft line-clamp-2">
             {preview.description}
           </div>
         )}
         {host && (
-          <div className="mt-1 text-[11px] text-slate-400 dark:text-white/30">{host}</div>
+          <div className="mt-1 text-[11px] text-ink-faint">{host}</div>
         )}
       </div>
     </a>

@@ -26,11 +26,11 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_STYLES: Record<string, string> = {
-  feature: 'bg-sky-500/20 text-sky-300',
-  bug: 'bg-rose-500/20 text-rose-300',
-  ux: 'bg-violet-500/20 text-violet-300',
-  integration: 'bg-emerald-500/20 text-emerald-300',
-  other: 'bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/50',
+  feature: 'bg-brand-soft text-brand',
+  bug: 'bg-danger-soft text-danger',
+  ux: 'bg-agent-soft text-agent',
+  integration: 'bg-success-soft text-success',
+  other: 'bg-surface-sunk text-ink-soft',
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -427,26 +427,26 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
         <button
           onClick={onBack}
-          className="rounded-lg p-1.5 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+          className="rounded-lg p-1.5 text-ink-soft hover:text-ink hover:bg-surface-sunk transition-colors"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-white/70 flex-1 truncate">
-          Suggestions <span className="text-slate-400 dark:text-white/30 normal-case tracking-normal">— {groupName}</span>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-ink-soft flex-1 truncate">
+          Suggestions <span className="text-ink-faint normal-case tracking-normal">— {groupName}</span>
         </h2>
         {auth && (
           <button
             onClick={() => setShowForm(!showForm)}
             className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              showForm
-                ? 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70'
-                : 'bg-gradient-to-r from-sky-500 to-violet-500 text-slate-900 dark:text-white shadow-lg shadow-sky-500/20'
-            }`}
+ showForm
+ ? 'bg-surface-sunk text-ink-soft'
+ : 'bg-gradient-to-r from-brand to-agent text-ink shadow-lg shadow-sky-500/20'
+ }`}
           >
             {showForm ? 'Cancel' : '+ Suggest'}
           </button>
@@ -455,27 +455,27 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
 
       {/* Submit form */}
       {showForm && auth && (
-        <div className="border-b border-slate-200 dark:border-white/10 bg-white/[0.03] px-4 py-4 space-y-3">
+        <div className="border-b border-line bg-white/[0.03] px-4 py-4 space-y-3">
           <input
             type="text"
             value={formTitle}
             onChange={e => setFormTitle(e.target.value)}
             placeholder="Suggestion title"
             maxLength={120}
-            className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-400/50"
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand"
           />
           <textarea
             value={formDescription}
             onChange={e => setFormDescription(e.target.value)}
             placeholder="Describe your suggestion..."
             rows={3}
-            className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 resize-none focus:outline-none focus:border-sky-400/50"
+            className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-faint resize-none focus:outline-none focus:border-brand"
           />
           <div className="flex items-center gap-3">
             <select
               value={formCategory}
               onChange={e => setFormCategory(e.target.value)}
-              className="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 rounded-lg px-2 py-1.5"
+              className="text-xs bg-surface-raised border border-line text-ink-soft rounded-lg px-2 py-1.5"
             >
               {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
@@ -485,7 +485,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
             <button
               onClick={handleSubmit}
               disabled={!formTitle.trim() || !formDescription.trim() || submitting}
-              className="px-4 py-1.5 bg-sky-600 text-white text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-sky-500 transition-colors"
+              className="px-4 py-1.5 bg-brand text-brand-ink text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-brand-strong transition-colors"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -494,16 +494,16 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-1 px-4 py-2 border-b border-slate-200 dark:border-white/10">
+      <div className="flex gap-1 px-4 py-2 border-b border-line">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
             className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-              filter === tab.key
-                ? 'bg-white/15 text-slate-900 dark:text-white'
-                : 'text-slate-400 dark:text-white/40 hover:text-slate-500 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5'
-            }`}
+ filter === tab.key
+ ? 'bg-white/15 text-ink'
+ : 'text-ink-faint hover:text-ink hover:bg-surface-sunk'
+ }`}
           >
             {tab.label}
           </button>
@@ -513,15 +513,15 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {loading && (
-          <div className="text-sm text-slate-500 dark:text-white/50 text-center py-8">Loading...</div>
+          <div className="text-sm text-ink-soft text-center py-8">Loading...</div>
         )}
 
         {error && (
-          <div className="text-sm text-rose-300/80 text-center py-8">{error}</div>
+          <div className="text-sm text-danger/80 text-center py-8">{error}</div>
         )}
 
         {!loading && !error && filtered.length === 0 && (
-          <div className="text-sm text-slate-500 dark:text-white/50 text-center py-8">
+          <div className="text-sm text-ink-soft text-center py-8">
             {filter === 'all' ? 'No suggestions yet. Be the first!' : `No ${filter} suggestions.`}
           </div>
         )}
@@ -538,7 +538,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
           return (
             <div
               key={suggestion.id}
-              className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-4 py-3"
+              className="rounded-xl border border-line bg-surface-sunk px-4 py-3"
             >
               <div className="flex items-start gap-2">
                 <span
@@ -548,7 +548,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-semibold text-slate-800 dark:text-white/90">{suggestion.label}</h3>
+                    <h3 className="text-sm font-semibold text-ink">{suggestion.label}</h3>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${CATEGORY_STYLES[category] || CATEGORY_STYLES.other}`}>
                       {CATEGORY_LABELS[category] || category}
                     </span>
@@ -564,7 +564,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                       {statusMenuId === suggestion.id && (
                         <div
                           ref={statusMenuRef}
-                          className="absolute z-50 top-6 left-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg shadow-xl py-1 min-w-[120px]"
+                          className="absolute z-50 top-6 left-0 bg-surface-raised border border-line rounded-lg shadow-xl py-1 min-w-[120px]"
                         >
                           {Object.entries(STATUS_LABELS).map(([key, label]) => (
                             <button
@@ -572,8 +572,8 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                               type="button"
                               onClick={() => handleStatusChange(suggestion, key)}
                               className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors ${
-                                key === status ? 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                              }`}
+ key === status ? 'bg-surface-sunk text-ink' : 'text-ink-soft hover:bg-surface-sunk hover:text-ink'
+ }`}
                             >
                               <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLORS[key] }} />
                               {label}
@@ -583,7 +583,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                       )}
                     </span>
                   </div>
-                  <div className="mt-1 text-xs text-slate-500 dark:text-white/60 leading-relaxed whitespace-pre-line">
+                  <div className="mt-1 text-xs text-ink-soft leading-relaxed whitespace-pre-line">
                     {renderInfo(suggestion.info)}
                   </div>
                   <div className="mt-2 flex items-center gap-3">
@@ -592,10 +592,10 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                         onClick={() => handleVote(suggestion)}
                         disabled={hasVoted}
                         className={`flex items-center gap-1 text-xs transition-colors ${
-                          hasVoted
-                            ? 'text-amber-400 cursor-default'
-                            : 'text-slate-400 dark:text-white/30 hover:text-amber-400'
-                        }`}
+ hasVoted
+ ? 'text-notice cursor-default'
+ : 'text-ink-faint hover:text-notice'
+ }`}
                         title={hasVoted ? 'You voted' : 'Upvote'}
                       >
                         <svg className="h-3.5 w-3.5" fill={hasVoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -604,11 +604,11 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
                         {votes > 0 && <span>{votes}</span>}
                       </button>
                     )}
-                    <span className="text-[10px] text-slate-400 dark:text-white/25">
+                    <span className="text-[10px] text-ink-faint">
                       {isOwn ? 'You' : meta.submittedByEmail?.split('@')[0] || 'Anonymous'}
                     </span>
                     {meta.createdAt && (
-                      <span className="text-[10px] text-slate-300 dark:text-white/20">
+                      <span className="text-[10px] text-ink-faint">
                         {new Date(meta.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
                     )}

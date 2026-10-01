@@ -769,7 +769,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                 >
                   <span className="w-5 text-center">&#x1F4A1;</span>
                   <span className="flex-1">Suggestions</span>
-                  {hasNewSuggestions && <span className="h-2 w-2 rounded-full bg-amber-400" />}
+                  {hasNewSuggestions && <span className="h-2 w-2 rounded-full bg-notice" />}
                 </button>
               )}
               {onWhatsNew && (
@@ -799,7 +799,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
         </div>
       </div>
 
-      {chatError && <p role="alert" className="p-3 text-red-700">{chatError} Velg samtalen på nytt for å prøve igjen.</p>}
+      {chatError && <p role="alert" className="p-3 text-danger">{chatError} Velg samtalen på nytt for å prøve igjen.</p>}
       {actionError && (
         <div role="alert" className="flex items-start gap-2 px-4 py-2 text-sm text-danger bg-danger-soft border-b border-danger/30">
           <span className="flex-1 break-words">{actionError}</span>
@@ -922,7 +922,7 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             <button
               onClick={cancelMedia}
               disabled={sending}
-              className="px-3 py-2 text-ink-soft hover:text-rose-400 rounded-xl text-sm transition-colors"
+              className="px-3 py-2 text-ink-soft hover:text-danger rounded-xl text-sm transition-colors"
               title="Cancel"
             >
               &#x2715;
@@ -1059,8 +1059,8 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
       {/* Drag overlay */}
       {dragOver && (
         <div className="absolute inset-0 bg-brand/20 border-2 border-dashed border-brand rounded-xl flex flex-col items-center justify-center z-50 pointer-events-none">
-          <span className="text-sky-200 text-lg font-medium bg-surface px-6 py-3 rounded-xl">Drop image or video here</span>
-          <span className="text-sky-200/50 text-xs mt-2 bg-surface px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
+          <span className="text-brand text-lg font-medium bg-surface px-6 py-3 rounded-xl">Drop image or video here</span>
+          <span className="text-brand/50 text-xs mt-2 bg-surface px-4 py-1 rounded-lg">From desktop, file picker, or another app</span>
         </div>
       )}
 

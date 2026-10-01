@@ -22,7 +22,7 @@ export function RecordingCard({ url, fileName }: Props) {
   }
 
   return (
-    <div className="mt-1.5 rounded-lg border border-emerald-400/20 bg-emerald-500/10 overflow-hidden">
+    <div className="mt-1.5 rounded-lg border border-success/30 bg-success/10 overflow-hidden">
       {/* The <video> element itself supplies the poster frame — there's no
        * separate thumbnail service for arbitrary R2-hosted files like there
        * is for YouTube, so we seek past the (often black) first frame above. */}
@@ -48,7 +48,7 @@ export function RecordingCard({ url, fileName }: Props) {
             className="absolute inset-0 flex items-center justify-center"
             aria-label="Play recording"
           >
-            <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-14 h-14 bg-success rounded-full flex items-center justify-center shadow-lg">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -58,13 +58,13 @@ export function RecordingCard({ url, fileName }: Props) {
       </div>
 
       <div className="px-3 py-2 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] text-slate-600 dark:text-white/70 truncate max-w-[200px]">
+        <span className="text-[11px] text-ink-soft truncate max-w-[200px]">
           {fileName || 'Shared recording'}
         </span>
         <button
           type="button"
           onClick={() => setShowPlayer(prev => !prev)}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors"
         >
           {showPlayer ? 'Hide player' : 'Play here'}
         </button>
@@ -72,7 +72,7 @@ export function RecordingCard({ url, fileName }: Props) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors no-underline"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors no-underline"
         >
           Open in new tab
         </a>

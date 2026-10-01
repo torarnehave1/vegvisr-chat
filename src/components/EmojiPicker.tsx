@@ -56,26 +56,26 @@ export function EmojiPicker({ onSelect }: Props) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg text-ink-soft hover:text-ink hover:bg-surface-sunk transition-colors"
         title="Emoji"
       >
         😊
       </button>
 
       {open && (
-        <div className="absolute bottom-12 left-0 w-72 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute bottom-12 left-0 w-72 bg-surface-raised border border-line rounded-xl shadow-2xl z-50 overflow-hidden">
           {/* Category tabs */}
-          <div className="flex gap-0.5 px-1 py-1.5 border-b border-slate-200 dark:border-white/10 overflow-x-auto">
+          <div className="flex gap-0.5 px-1 py-1.5 border-b border-line overflow-x-auto">
             {EMOJI_CATEGORIES.map((cat, i) => (
               <button
                 key={cat.label}
                 type="button"
                 onClick={() => setActiveCategory(i)}
                 className={`px-2 py-1 rounded-lg text-[11px] whitespace-nowrap transition-colors ${
-                  activeCategory === i
-                    ? 'bg-sky-600/30 text-sky-300'
-                    : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5'
-                }`}
+ activeCategory === i
+ ? 'bg-brand/30 text-brand'
+ : 'text-ink-faint hover:text-ink hover:bg-surface-sunk'
+ }`}
               >
                 {cat.label}
               </button>
@@ -93,7 +93,7 @@ export function EmojiPicker({ onSelect }: Props) {
                     onSelect(emoji)
                     setOpen(false)
                   }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-lg"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-sunk transition-colors text-lg"
                 >
                   {emoji}
                 </button>

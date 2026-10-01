@@ -247,9 +247,9 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
-        <button onClick={onBack} className="text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white text-lg">&#x2190;</button>
-        <h2 className="text-slate-900 dark:text-white font-semibold">Group Info</h2>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-line flex-shrink-0">
+        <button onClick={onBack} className="text-ink-soft hover:text-ink text-lg">&#x2190;</button>
+        <h2 className="text-ink font-semibold">Group Info</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
@@ -262,9 +262,9 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
           >
-            <div className={`w-20 h-20 rounded-full bg-sky-600/30 flex items-center justify-center text-sky-300 text-2xl font-semibold overflow-hidden transition-all ${
-              dragOver ? 'ring-2 ring-sky-400 ring-offset-2 ring-offset-slate-900 scale-110' : ''
-            }`}>
+            <div className={`w-20 h-20 rounded-full bg-brand/30 flex items-center justify-center text-brand text-2xl font-semibold overflow-hidden transition-all ${
+ dragOver ? 'ring-2 ring-brand ring-offset-2 ring-offset-slate-900 scale-110' : ''
+ }`}>
               {imageUrl ? (
                 <img src={imageUrl} alt={group.name} className="w-full h-full object-cover" />
               ) : (
@@ -272,12 +272,12 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
               )}
               {uploadingImage && (
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                  <span className="text-slate-900 dark:text-white text-xs">...</span>
+                  <span className="text-ink text-xs">...</span>
                 </div>
               )}
               {dragOver && !uploadingImage && (
-                <div className="absolute inset-0 bg-sky-500/30 rounded-full flex items-center justify-center">
-                  <span className="text-slate-900 dark:text-white text-xs font-medium">Drop</span>
+                <div className="absolute inset-0 bg-brand/30 rounded-full flex items-center justify-center">
+                  <span className="text-ink text-xs font-medium">Drop</span>
                 </div>
               )}
             </div>
@@ -286,7 +286,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={uploadingImage}
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-xs hover:bg-brand-strong transition-colors border-2 border-line"
                 title="Change group photo"
               >
                 &#x1F4F7;
@@ -303,13 +303,13 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           />
           {isOwner && (
             <div className="flex flex-col items-center">
-              <span className="text-[10px] text-slate-400 dark:text-white/30 mt-1.5">Drop or paste an image</span>
+              <span className="text-[10px] text-ink-faint mt-1.5">Drop or paste an image</span>
               {imageUrl && (
                 <button
                   type="button"
                   onClick={handleRemoveImage}
                   disabled={uploadingImage}
-                  className="text-[11px] text-rose-400/70 hover:text-rose-400 mt-1 transition-colors"
+                  className="text-[11px] text-danger/70 hover:text-danger mt-1 transition-colors"
                 >
                   Remove photo
                 </button>
@@ -320,26 +320,26 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Group name */}
         <div>
-          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Name</label>
+          <label className="text-ink-faint text-xs uppercase tracking-wider">Name</label>
           {editing ? (
             <div className="flex gap-2 mt-1">
               <input
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
+                className="flex-1 bg-surface-sunk border border-line rounded-lg px-3 py-1.5 text-ink text-sm focus:outline-none focus:border-brand"
               />
-              <button onClick={handleSaveName} disabled={saving} className="text-sky-400 text-sm">
+              <button onClick={handleSaveName} disabled={saving} className="text-brand text-sm">
                 {saving ? '...' : 'Save'}
               </button>
-              <button onClick={() => { setEditing(false); setName(group.name) }} className="text-slate-400 dark:text-white/40 text-sm">
+              <button onClick={() => { setEditing(false); setName(group.name) }} className="text-ink-faint text-sm">
                 Cancel
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-slate-900 dark:text-white text-lg">{name}</span>
+              <span className="text-ink text-lg">{name}</span>
               {isOwner && (
-                <button onClick={() => setEditing(true)} className="text-slate-400 dark:text-white/30 hover:text-slate-900 dark:hover:text-white text-sm">
+                <button onClick={() => setEditing(true)} className="text-ink-faint hover:text-ink text-sm">
                   &#x270E;
                 </button>
               )}
@@ -349,15 +349,15 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Invite */}
         <div>
-          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Invite Link</label>
+          <label className="text-ink-faint text-xs uppercase tracking-wider">Invite Link</label>
           {inviteUrl ? (
             <div className="mt-1 flex items-center gap-2">
-              <code className="text-sky-300 text-sm bg-slate-100 dark:bg-white/5 px-2 py-1 rounded flex-1 truncate">
+              <code className="text-brand text-sm bg-surface-sunk px-2 py-1 rounded flex-1 truncate">
                 {inviteUrl}
               </code>
               <button
                 onClick={() => navigator.clipboard.writeText(inviteUrl)}
-                className="text-sky-400 text-sm hover:text-sky-300"
+                className="text-brand text-sm hover:text-brand"
               >
                 Copy
               </button>
@@ -366,7 +366,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
             <button
               onClick={handleInvite}
               disabled={inviteLoading}
-              className="mt-1 px-4 py-2 bg-sky-600/20 text-sky-300 rounded-lg text-sm hover:bg-sky-600/30 transition-colors"
+              className="mt-1 px-4 py-2 bg-brand/20 text-brand rounded-lg text-sm hover:bg-brand/30 transition-colors"
             >
               {inviteLoading ? 'Creating...' : 'Create Invite Link'}
             </button>
@@ -375,28 +375,28 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Email alerts opt-in (per-user, per-group) */}
         <div>
-          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Email Alerts</label>
+          <label className="text-ink-faint text-xs uppercase tracking-wider">Email Alerts</label>
           <button
             type="button"
             onClick={handleToggleAlerts}
             disabled={savingAlerts}
-            className="mt-2 w-full flex items-center justify-between gap-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+            className="mt-2 w-full flex items-center justify-between gap-3 bg-surface-sunk border border-line rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
           >
             <span className="min-w-0">
-              <span className="block text-sm text-slate-700 dark:text-white/80">Receive email alerts</span>
-              <span className="block text-[11px] text-slate-400 dark:text-white/40">
+              <span className="block text-sm text-ink-soft">Receive email alerts</span>
+              <span className="block text-[11px] text-ink-faint">
                 Let the group owner email you when there's new activity here.
               </span>
             </span>
             <span
               className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
-                myAlerts ? 'bg-sky-600' : 'bg-white/15'
-              }`}
+ myAlerts ? 'bg-brand' : 'bg-white/15'
+ }`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                  myAlerts ? 'translate-x-5' : 'translate-x-0'
-                }`}
+ myAlerts ? 'translate-x-5' : 'translate-x-0'
+ }`}
               />
             </span>
           </button>
@@ -405,28 +405,28 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
         {/* Owner-only: lock posting for a broadcast / announcement channel */}
         {isOwner && (
           <div>
-            <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">Posting</label>
+            <label className="text-ink-faint text-xs uppercase tracking-wider">Posting</label>
             <button
               type="button"
               onClick={handleTogglePostingLock}
               disabled={savingPostingLock}
-              className="mt-2 w-full flex items-center justify-between gap-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
+              className="mt-2 w-full flex items-center justify-between gap-3 bg-surface-sunk border border-line rounded-xl px-4 py-3 text-left hover:bg-white/[0.07] transition-colors disabled:opacity-50"
             >
               <span className="min-w-0">
-                <span className="block text-sm text-slate-700 dark:text-white/80">Members can post</span>
-                <span className="block text-[11px] text-slate-400 dark:text-white/40">
+                <span className="block text-sm text-ink-soft">Members can post</span>
+                <span className="block text-[11px] text-ink-faint">
                   Turn off to make this an announcement channel — only you can send messages. Members still react and can submit questions.
                 </span>
               </span>
               <span
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
-                  membersCanPost ? 'bg-sky-600' : 'bg-amber-600'
-                }`}
+ membersCanPost ? 'bg-brand' : 'bg-notice'
+ }`}
               >
                 <span
                   className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    membersCanPost ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+ membersCanPost ? 'translate-x-5' : 'translate-x-0'
+ }`}
                 />
               </span>
             </button>
@@ -435,14 +435,14 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
 
         {/* Members */}
         <div>
-          <label className="text-slate-400 dark:text-white/40 text-xs uppercase tracking-wider">
+          <label className="text-ink-faint text-xs uppercase tracking-wider">
             Members ({members.length})
           </label>
           {removeError && (
-            <p className="text-xs text-rose-300 mt-1">{removeError}</p>
+            <p className="text-xs text-danger mt-1">{removeError}</p>
           )}
           {loading ? (
-            <p className="text-slate-400 dark:text-white/30 text-sm mt-2">Loading...</p>
+            <p className="text-ink-faint text-sm mt-2">Loading...</p>
           ) : (
             <div className="mt-2 space-y-2">
               {members.map(m => {
@@ -456,7 +456,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                   m.role !== 'owner'
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 py-1.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-white/50 text-sm overflow-hidden flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-surface-sunk flex items-center justify-center text-ink-soft text-sm overflow-hidden flex-shrink-0">
                       {profile?.profileimage ? (
                         <img src={profile.profileimage} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -464,20 +464,20 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-slate-900 dark:text-white text-sm truncate">
+                      <div className="text-ink text-sm truncate">
                         {displayName}
                         {subtitle && subtitle !== displayName && (
-                          <span className="text-slate-400 dark:text-white/40 text-xs ml-2">{subtitle}</span>
+                          <span className="text-ink-faint text-xs ml-2">{subtitle}</span>
                         )}
                       </div>
-                      <div className="text-slate-400 dark:text-white/30 text-xs">{m.role}</div>
+                      <div className="text-ink-faint text-xs">{m.role}</div>
                     </div>
                     {canRemove && (
                       <button
                         type="button"
                         onClick={() => handleRemoveMember(m.user_id, displayName)}
                         disabled={removing === m.user_id}
-                        className="text-[10px] px-2 py-1 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors flex-shrink-0 disabled:opacity-50"
+                        className="text-[10px] px-2 py-1 rounded bg-danger-soft text-danger hover:opacity-90 transition-colors flex-shrink-0 disabled:opacity-50"
                         title={`Remove ${displayName}`}
                       >
                         {removing === m.user_id ? '...' : 'Remove'}

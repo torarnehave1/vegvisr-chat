@@ -299,7 +299,7 @@ function App() {
 
   return (
     <LanguageContext.Provider value={contextValue}>
-      <div className="h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
+      <div className="h-screen bg-surface text-ink overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(139,92,246,0.25),_transparent_55%)]" />
         <div className="relative mx-auto flex h-full w-full flex-col pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
           <header className="flex flex-wrap items-center justify-between gap-4">
@@ -320,7 +320,7 @@ function App() {
                 <span
                   aria-label={`Build ${__BUILD_ID__}`}
                   title={`Build ${__BUILD_ID__} — visual confirmation of the live deploy`}
-                  className="inline-flex items-center justify-center rounded-full bg-green-500 text-slate-900 text-[10px] font-bold tracking-wider px-2 py-1 font-mono"
+                  className="inline-flex items-center justify-center rounded-full bg-success text-ink text-[10px] font-bold tracking-wider px-2 py-1 font-mono"
                 >
                   {__BUILD_ID__}
                 </span>
@@ -333,7 +333,7 @@ function App() {
                 onClick={cycleTheme}
                 title={`Theme: ${themeLabel}. Click for ${nextThemeLabel}.`}
                 aria-label={`Theme: ${themeLabel}. Switch to ${nextThemeLabel}.`}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-sunk text-ink-soft hover:bg-surface-sunk transition-colors"
               >
                 {themePref === 'light' ? (
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -357,7 +357,7 @@ function App() {
                   onClick={() => { setPrevView(view); setView({ screen: 'settings' }) }}
                   title="Profile — display name, photo, account"
                   aria-label="Open profile settings"
-                  className="flex h-11 items-center gap-2 rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-3 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                  className="flex h-11 items-center gap-2 rounded-full border border-line bg-surface-sunk px-3 text-ink-soft hover:bg-surface-sunk transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
@@ -370,7 +370,7 @@ function App() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="flex h-11 items-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                  className="flex h-11 items-center rounded-full border border-line bg-surface-sunk px-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-ink-soft hover:bg-surface-sunk transition-colors"
                 >
                   Log out
                 </button>
@@ -378,7 +378,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setLoginOpen((prev) => !prev)}
-                  className="flex h-11 items-center rounded-full border border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/10 px-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors"
+                  className="flex h-11 items-center rounded-full border border-line bg-surface-sunk px-4 text-xs font-semibold uppercase tracking-[0.3em] text-ink-soft hover:bg-surface-sunk transition-colors"
                 >
                   Sign in
                 </button>
@@ -389,11 +389,11 @@ function App() {
           <div className="mt-2 flex flex-col items-center text-center">
             <div className="flex items-center gap-3">
               <img src={appLogo} alt="Hallo Vegvisr" className="h-10 w-auto" />
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-wide bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-wide bg-gradient-to-r from-brand to-agent bg-clip-text text-transparent">
                 HALLO VEGVISR
               </h1>
             </div>
-            <p className="mt-2 text-sm text-slate-500 dark:text-white/50 tracking-wide">
+            <p className="mt-2 text-sm text-ink-soft tracking-wide">
               Open words. Clear intentions. Communication without walls.
             </p>
           </div>
@@ -407,8 +407,8 @@ function App() {
           )}
 
           {authStatus === 'anonymous' && loginOpen && (
-            <div className="mt-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-700 dark:text-white/80">
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-white/60">
+            <div className="mt-6 rounded-2xl border border-line bg-surface-sunk px-6 py-4 text-sm text-ink-soft">
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-ink-soft">
                 Magic Link Sign In
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -417,45 +417,45 @@ function App() {
                   value={loginEmail}
                   onChange={(event) => setLoginEmail(event.target.value)}
                   placeholder="you@email.com"
-                  className="h-12 flex-1 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                  className="h-12 flex-1 rounded-2xl border border-line bg-surface px-4 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/60"
                 />
                 <button
                   type="button"
                   onClick={sendMagicLink}
                   disabled={loginLoading}
-                  className="flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-600 to-violet-600 px-6 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 hover:from-sky-500 hover:to-violet-500 transition-colors disabled:opacity-60"
+                  className="flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-brand to-agent px-6 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 hover:opacity-90 transition-colors disabled:opacity-60"
                 >
                   {loginLoading ? 'Sending...' : 'Send link'}
                 </button>
               </div>
-              {loginStatus && <p className="mt-3 text-xs text-emerald-300">{loginStatus}</p>}
-              {loginError && <p className="mt-3 text-xs text-rose-300">{loginError}</p>}
-              <p className="mt-3 text-xs text-slate-500 dark:text-white/50">
+              {loginStatus && <p className="mt-3 text-xs text-success">{loginStatus}</p>}
+              {loginError && <p className="mt-3 text-xs text-danger">{loginError}</p>}
+              <p className="mt-3 text-xs text-ink-soft">
                 We will send a secure link that logs you into this app.
               </p>
             </div>
           )}
 
           {view.screen === 'whatsnew' && authStatus !== 'authed' && (
-            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 overflow-hidden">
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-line bg-surface overflow-hidden">
               <WhatsNew onBack={() => { markFeaturesSeen(); setView(prevView); }} />
             </main>
           )}
 
           {authStatus === 'checking' && view.screen !== 'whatsnew' && (
-            <div className="mt-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-600 dark:text-white/70">
+            <div className="mt-10 rounded-2xl border border-line bg-surface-sunk px-6 py-4 text-sm text-ink-soft">
               Checking session...
             </div>
           )}
 
           {authStatus === 'anonymous' && !loginOpen && view.screen !== 'whatsnew' && (
-            <div className="mt-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-6 py-4 text-sm text-slate-700 dark:text-white/70">
+            <div className="mt-10 rounded-2xl border border-line bg-surface-sunk px-6 py-4 text-sm text-ink-soft">
               Sign in to see your conversations.
             </div>
           )}
 
           {authStatus === 'authed' && authUser && phone && (
-            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 overflow-hidden">
+            <main className="mt-4 flex-1 min-h-0 rounded-2xl border border-line bg-surface overflow-hidden">
               {(() => {
                 const auth: AuthParams = {
                   user_id: authUser.userId,
@@ -537,9 +537,9 @@ function App() {
           )}
 
           {authStatus === 'authed' && authUser && !phone && (
-            <div className="mt-10 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-6 py-4 text-sm text-amber-100">
+            <div className="mt-10 rounded-2xl border border-notice/30 bg-notice-soft px-6 py-4 text-sm text-notice">
               Your account does not have a phone number linked. Please contact support or update your profile at{' '}
-              <a href="https://dashboard.vegvisr.org" className="underline text-sky-300 hover:text-sky-200">dashboard.vegvisr.org</a>.
+              <a href="https://dashboard.vegvisr.org" className="underline text-brand hover:text-brand">dashboard.vegvisr.org</a>.
             </div>
           )}
         </div>

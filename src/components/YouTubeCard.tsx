@@ -41,7 +41,7 @@ export function YouTubeCard({ videoId, url }: Props) {
   }
 
   return (
-    <div className="mt-1.5 rounded-lg border border-rose-400/20 bg-rose-500/10 overflow-hidden">
+    <div className="mt-1.5 rounded-lg border border-danger/30 bg-danger-soft overflow-hidden">
       {/* Thumbnail or embedded player */}
       {showPlayer ? (
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
@@ -66,7 +66,7 @@ export function YouTubeCard({ videoId, url }: Props) {
           />
           {/* Play button overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-14 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-14 h-10 bg-danger rounded-xl flex items-center justify-center shadow-lg">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -80,7 +80,7 @@ export function YouTubeCard({ videoId, url }: Props) {
         <button
           type="button"
           onClick={() => setShowPlayer(prev => !prev)}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors"
         >
           {showPlayer ? 'Hide player' : 'Play here'}
         </button>
@@ -88,7 +88,7 @@ export function YouTubeCard({ videoId, url }: Props) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors no-underline"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors no-underline"
         >
           Open on YouTube
         </a>
@@ -96,7 +96,7 @@ export function YouTubeCard({ videoId, url }: Props) {
           type="button"
           onClick={handleTranscribe}
           disabled={transcribing || !!transcript}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors disabled:opacity-40"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors disabled:opacity-40"
         >
           {transcribing ? 'Transcribing...' : transcript ? 'Transcribed' : 'Transcribe'}
         </button>
@@ -105,14 +105,14 @@ export function YouTubeCard({ videoId, url }: Props) {
       {/* Transcript display */}
       {transcript && (
         <div className="px-3 pb-2">
-          <p className="text-xs text-slate-500 dark:text-white/60 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+          <p className="text-xs text-ink-soft leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
             {transcript}
           </p>
         </div>
       )}
       {transcriptError && (
         <div className="px-3 pb-2">
-          <p className="text-xs text-rose-300/70">{transcriptError}</p>
+          <p className="text-xs text-danger/70">{transcriptError}</p>
         </div>
       )}
     </div>

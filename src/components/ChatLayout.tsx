@@ -8,12 +8,12 @@ interface Props {
 
 export function ChatLayout({ sidebar, main, showMain }: Props) {
   return (
-    <div className="flex h-full bg-white dark:bg-slate-950">
+    <div className="flex h-full bg-surface">
       {/* Sidebar — always visible on desktop, hidden when chat open on mobile */}
       <div
-        className={`w-full md:w-80 lg:w-[22rem] xl:w-[26rem] md:border-r md:border-slate-200 dark:border-white/10 flex-shrink-0 ${
-          showMain ? 'hidden md:flex md:flex-col' : 'flex flex-col'
-        }`}
+        className={`w-full md:w-80 lg:w-[22rem] xl:w-[26rem] md:border-r md:border-line flex-shrink-0 ${
+ showMain ? 'hidden md:flex md:flex-col' : 'flex flex-col'
+ }`}
       >
         {sidebar}
       </div>
@@ -21,11 +21,11 @@ export function ChatLayout({ sidebar, main, showMain }: Props) {
       {/* Main area — always visible on desktop, hidden when no chat on mobile */}
       <div
         className={`flex-1 min-w-0 ${
-          showMain ? 'flex flex-col' : 'hidden md:flex md:flex-col'
-        }`}
+ showMain ? 'flex flex-col' : 'hidden md:flex md:flex-col'
+ }`}
       >
         {main || (
-          <div className="flex-1 flex items-center justify-center text-slate-300 dark:text-white/20">
+          <div className="flex-1 flex items-center justify-center text-ink-faint">
             <p>Select a group to start chatting</p>
           </div>
         )}

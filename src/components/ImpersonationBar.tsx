@@ -92,13 +92,13 @@ export default function ImpersonationBar() {
   // Impersonating → prominent banner with one-click return.
   if (impersonating) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-400/40 bg-amber-500/20 px-4 py-2 text-sm text-amber-100">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-notice/40 bg-notice-soft px-4 py-2 text-sm text-notice">
         <span className="truncate">
           👁 Viewing as <b>{stored?.email}</b>
           {stored?.role ? ` (${stored.role})` : ''} — impersonated by System Owner
         </span>
         <button
-          className="shrink-0 rounded-xl bg-amber-700 hover:bg-amber-800 px-3 py-1 text-xs font-semibold whitespace-nowrap"
+          className="shrink-0 rounded-xl bg-notice hover:bg-notice px-3 py-1 text-xs font-semibold whitespace-nowrap"
           onClick={stop}
         >
           ↩ Return to my account
@@ -111,15 +111,15 @@ export default function ImpersonationBar() {
   if (!users || users.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-4 py-2 text-sm">
-      <label htmlFor="impersonate-user" className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/60 whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-surface-sunk px-4 py-2 text-sm">
+      <label htmlFor="impersonate-user" className="text-xs uppercase tracking-[0.2em] text-ink-soft whitespace-nowrap">
         🔑 Login as
       </label>
       <select
         id="impersonate-user"
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
-        className="flex-1 min-w-0 max-w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+        className="flex-1 min-w-0 max-w-full sm:max-w-xs rounded-xl border border-line bg-surface px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-brand/60"
       >
         <option value="">Select a user…</option>
         {users
@@ -132,13 +132,13 @@ export default function ImpersonationBar() {
           ))}
       </select>
       <button
-        className="rounded-xl bg-gradient-to-r from-sky-500 to-violet-500 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white disabled:opacity-40"
+        className="rounded-xl bg-gradient-to-r from-brand to-agent px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-40"
         disabled={!selected || busy}
         onClick={impersonate}
       >
         {busy ? 'Switching…' : 'Go'}
       </button>
-      {error && <span className="text-xs text-rose-300">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   );
 }

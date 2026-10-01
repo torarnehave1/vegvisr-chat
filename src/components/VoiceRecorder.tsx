@@ -63,7 +63,7 @@ function LiveWaveform({ analyser }: { analyser: AnalyserNode | null }) {
       ref={canvasRef}
       width={160}
       height={32}
-      className="rounded bg-slate-100 dark:bg-white/5"
+      className="rounded bg-surface-sunk"
     />
   )
 }
@@ -109,7 +109,7 @@ function StaticWaveform({ audioUrl }: { audioUrl: string }) {
       ref={canvasRef}
       width={200}
       height={32}
-      className="rounded bg-slate-100 dark:bg-white/5"
+      className="rounded bg-surface-sunk"
     />
   )
 }
@@ -209,7 +209,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <div className="flex flex-col gap-2 w-full">
           <div className="flex items-center gap-2">
             <StaticWaveform audioUrl={preview.url} />
-            <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTimer(preview.durationMs)}</span>
+            <span className="text-[11px] text-ink-soft">{formatTimer(preview.durationMs)}</span>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -219,12 +219,12 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
               onKeyDown={(e) => { if (e.key === 'Enter' && title.trim()) handleSend() }}
               placeholder="Subject (required)"
               autoFocus
-              className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 px-3 py-1.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-sky-500/60"
+              className="flex-1 rounded-xl border border-line bg-surface px-3 py-1.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-1 focus:ring-brand/60"
             />
             <button
               type="button"
               onClick={() => setPreviewMode('choice')}
-              className="rounded-full p-1.5 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+              className="rounded-full p-1.5 text-ink-soft hover:text-ink hover:bg-surface-sunk"
               title="Back"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
               type="button"
               onClick={handleSend}
               disabled={!title.trim()}
-              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-slate-900 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-success text-ink hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Send voice message"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
@@ -252,11 +252,11 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
       <div className="flex flex-col gap-2 w-full">
         <div className="flex items-center gap-2">
           <StaticWaveform audioUrl={preview.url} />
-          <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTimer(preview.durationMs)}</span>
+          <span className="text-[11px] text-ink-soft">{formatTimer(preview.durationMs)}</span>
           <button
             type="button"
             onClick={handleCancel}
-            className="ml-auto rounded-full p-1.5 text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+            className="ml-auto rounded-full p-1.5 text-ink-faint hover:text-ink hover:bg-surface-sunk"
             title="Discard"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
                 setPreview(null)
                 setPreviewMode('choice')
               }}
-              className="flex-1 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold py-2 transition-colors"
+              className="flex-1 rounded-xl bg-brand hover:bg-brand-strong text-white text-xs font-semibold py-2 transition-colors"
             >
               Post as text
             </button>
@@ -283,7 +283,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
           <button
             type="button"
             onClick={() => setPreviewMode('voice')}
-            className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-semibold py-2 transition-colors"
+            className="flex-1 rounded-xl bg-success hover:opacity-90 text-ink text-xs font-semibold py-2 transition-colors"
           >
             Send as voice
           </button>
@@ -296,15 +296,15 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
   if (recording) {
     return (
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-rose-400 text-sm">
-          <span className="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+        <div className="flex items-center gap-2 text-danger text-sm">
+          <span className="inline-block h-2 w-2 rounded-full bg-danger animate-pulse" />
           {formatTimer(elapsed)}
         </div>
         <LiveWaveform analyser={analyser} />
         <button
           type="button"
           onClick={handleCancel}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-soft hover:text-ink hover:bg-surface-sunk"
           title="Cancel"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +314,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <button
           type="button"
           onClick={handleStop}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-slate-900 hover:bg-emerald-400"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-success text-ink hover:opacity-90"
           title="Stop recording"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -331,14 +331,14 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
       <button
         type="button"
         onClick={handleStart}
-        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-ink-soft hover:text-ink hover:bg-surface-sunk"
         title="Record voice message"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0M12 19v2m-3-2h6M12 3a3 3 0 00-3 3v4a3 3 0 006 0V6a3 3 0 00-3-3z" />
         </svg>
       </button>
-      {error && <span className="text-xs text-rose-400">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   )
 }

@@ -72,7 +72,7 @@ export function ContactRequestCard({
   }
 
   return (
-    <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 text-sm max-w-sm">
+    <div className="rounded-lg border border-gray-300 p-3 text-sm max-w-sm">
       <div className="font-semibold mb-2">
         📩 Ny henvendelse{parsed.host ? ` — ${parsed.host}` : ''}
       </div>
@@ -88,7 +88,7 @@ export function ContactRequestCard({
       {parsed.message && <p className="whitespace-pre-wrap mb-3 opacity-90">{parsed.message}</p>}
 
       {done ? (
-        <p className="text-green-700 dark:text-green-400">✓ {done}</p>
+        <p className="text-success">✓ {done}</p>
       ) : isSuperadmin ? (
         <>
           <button
@@ -99,7 +99,7 @@ export function ContactRequestCard({
           >
             {busy ? 'Godkjenner…' : 'Godkjenn og send tilgang'}
           </button>
-          {error && <p className="text-red-600 dark:text-red-400 mt-2">{error}</p>}
+          {error && <p className="text-danger mt-2">{error}</p>}
         </>
       ) : (
         <p className="opacity-60">Bare Superadmin kan godkjenne.</p>

@@ -53,10 +53,10 @@ export function InstagramCard({ shortcode, kind, url }: Props) {
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-sm text-slate-700 dark:text-white/80 leading-tight">
+            <p className="text-sm text-ink-soft leading-tight">
               {kind === 'p' ? 'Instagram post' : kind === 'tv' ? 'Instagram video' : 'Instagram reel'}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-white/50 truncate">
+            <p className="text-[11px] text-ink-soft truncate">
               Show post
             </p>
           </div>
@@ -67,7 +67,7 @@ export function InstagramCard({ shortcode, kind, url }: Props) {
         <button
           type="button"
           onClick={() => setShowPost(prev => !prev)}
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors"
         >
           {showPost ? 'Hide post' : 'Show post'}
         </button>
@@ -75,7 +75,7 @@ export function InstagramCard({ shortcode, kind, url }: Props) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white hover:bg-white/15 transition-colors no-underline"
+          className="text-[11px] px-2.5 py-1 rounded-lg bg-surface-sunk text-ink-soft hover:text-ink hover:bg-white/15 transition-colors no-underline"
         >
           Open on Instagram
         </a>

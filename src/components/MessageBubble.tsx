@@ -292,12 +292,12 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
             <img
               src={avatarUrl}
               alt={displayName}
-              className={`w-7 h-7 rounded-full object-cover ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}
+              className={`w-7 h-7 rounded-full object-cover ${isOwner ? 'ring-2 ring-notice/60' : ''}`}
             />
           ) : (
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium ${
               isBot ? 'bg-agent-soft text-agent' : 'bg-surface-sunk text-ink-soft'
-            } ${isOwner ? 'ring-2 ring-amber-400/60' : ''}`}>
+            } ${isOwner ? 'ring-2 ring-notice/60' : ''}`}>
               {isBot ? 'B' : displayName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -328,8 +328,8 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
               const el = document.getElementById(`msg-${replyToMessage.id}`)
               if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                el.classList.add('ring-2', 'ring-sky-400/50', 'rounded-2xl')
-                setTimeout(() => el.classList.remove('ring-2', 'ring-sky-400/50', 'rounded-2xl'), 2000)
+                el.classList.add('ring-2', 'ring-brand/50', 'rounded-2xl')
+                setTimeout(() => el.classList.remove('ring-2', 'ring-brand/50', 'rounded-2xl'), 2000)
               }
             }}
           >
@@ -490,7 +490,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                       <button
                         onClick={handleTranscribe}
                         disabled={transcribing}
-                        className="text-[11px] text-brand/80 hover:text-sky-200 underline"
+                        className="text-[11px] text-brand/80 hover:text-brand underline"
                       >
                         Retry
                       </button>
@@ -500,7 +500,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
                   <button
                     onClick={handleTranscribe}
                     disabled={transcribing}
-                    className="text-[11px] text-brand/70 hover:text-sky-200 underline transition-colors"
+                    className="text-[11px] text-brand/70 hover:text-brand underline transition-colors"
                   >
                     {transcribing ? 'Transcribing...' : 'Transcribe'}
                   </button>
@@ -683,7 +683,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onDelete && (
             <button
               onClick={() => onDelete(message.id)}
-              className={`p-1 rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-rose-500/20 hover:text-danger transition-all ${isOwn ? '' : 'hover:opacity-90 hover:text-notice'}`}
+              className={`p-1 rounded-md text-ink-soft opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-danger-soft hover:text-danger transition-all ${isOwn ? '' : 'hover:opacity-90 hover:text-notice'}`}
               title={isOwn ? 'Delete message' : 'Delete (owner)'}
               aria-label={isOwn ? 'Delete message' : 'Delete message (owner)'}
             >

@@ -147,17 +147,17 @@ export function ProfileSettings({ auth, onBack }: Props) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 flex-shrink-0">
-        <button type="button" onClick={onBack} className="text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white text-lg">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-surface flex-shrink-0">
+        <button type="button" onClick={onBack} className="text-ink-soft hover:text-ink text-lg">
           &#x2190;
         </button>
-        <h2 className="text-slate-900 dark:text-white font-semibold">Profile Settings</h2>
+        <h2 className="text-ink font-semibold">Profile Settings</h2>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {loading ? (
-          <div className="text-center text-slate-400 dark:text-white/40 py-8">Loading profile...</div>
+          <div className="text-center text-ink-faint py-8">Loading profile...</div>
         ) : (
           <div className="max-w-sm mx-auto space-y-8">
             {/* Avatar */}
@@ -167,10 +167,10 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   <img
                     src={profile.profile_image_url}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-2 border-slate-300 dark:border-white/20"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-line"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-sky-600/30 border-2 border-slate-300 dark:border-white/20 flex items-center justify-center text-3xl font-bold text-sky-300">
+                  <div className="w-24 h-24 rounded-full bg-brand/30 border-2 border-line flex items-center justify-center text-3xl font-bold text-brand">
                     {initials}
                   </div>
                 )}
@@ -178,7 +178,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-600 border-2 border-slate-900 flex items-center justify-center text-white hover:bg-sky-500 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand border-2 border-line flex items-center justify-center text-white hover:bg-brand-strong transition-colors"
                   title="Change profile image"
                 >
                   {uploading ? (
@@ -195,12 +195,12 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   className="hidden"
                 />
               </div>
-              <p className="mt-2 text-xs text-slate-400 dark:text-white/40">Tap the camera to change your photo</p>
+              <p className="mt-2 text-xs text-ink-faint">Tap the camera to change your photo</p>
             </div>
 
             {/* Display Name (local only — same as Flutter) */}
             <div>
-              <label className="block text-xs text-slate-500 dark:text-white/50 mb-1.5 uppercase tracking-wider">Display Name</label>
+              <label className="block text-xs text-ink-soft mb-1.5 uppercase tracking-wider">Display Name</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -208,37 +208,37 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   onChange={e => setDisplayName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveName() }}
                   placeholder="Your display name"
-                  className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-sky-400/50"
+                  className="flex-1 bg-surface-sunk border border-line rounded-xl px-3 py-2.5 text-ink text-sm focus:outline-none focus:border-brand"
                 />
                 <button
                   type="button"
                   onClick={handleSaveName}
                   disabled={saving || !displayName.trim()}
-                  className="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+                  className="px-4 py-2.5 bg-brand text-brand-ink rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-brand-strong transition-colors"
                 >
                   {saving ? '...' : 'Save'}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-slate-400 dark:text-white/30">Visible to other group members</p>
+              <p className="mt-1 text-[11px] text-ink-faint">Visible to other group members</p>
             </div>
 
             {/* Account Info */}
             <div className="space-y-3">
-              <label className="block text-xs text-slate-500 dark:text-white/50 uppercase tracking-wider">Account Info</label>
+              <label className="block text-xs text-ink-soft uppercase tracking-wider">Account Info</label>
 
-              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-400 dark:text-white/40">Email</div>
-                <div className="text-sm text-slate-700 dark:text-white/80">{profile?.email || auth.email || '-'}</div>
+              <div className="bg-surface-sunk border border-line rounded-xl px-4 py-3">
+                <div className="text-[11px] text-ink-faint">Email</div>
+                <div className="text-sm text-ink-soft">{profile?.email || auth.email || '-'}</div>
               </div>
 
-              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-400 dark:text-white/40">Phone</div>
-                <div className="text-sm text-slate-700 dark:text-white/80">{profile?.phone || auth.phone || '-'}</div>
+              <div className="bg-surface-sunk border border-line rounded-xl px-4 py-3">
+                <div className="text-[11px] text-ink-faint">Phone</div>
+                <div className="text-sm text-ink-soft">{profile?.phone || auth.phone || '-'}</div>
               </div>
 
-              <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-400 dark:text-white/40">User ID</div>
-                <div className="text-sm text-slate-500 dark:text-white/50 font-mono text-xs">{auth.user_id}</div>
+              <div className="bg-surface-sunk border border-line rounded-xl px-4 py-3">
+                <div className="text-[11px] text-ink-faint">User ID</div>
+                <div className="text-sm text-ink-soft font-mono text-xs">{auth.user_id}</div>
               </div>
             </div>
 
@@ -246,7 +246,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                 class toggle happens in theme-service.setThemePref; this
                 section is just the UI shell. */}
             <div className="space-y-2">
-              <label className="block text-xs text-slate-500 dark:text-white/50 uppercase tracking-wider">Appearance</label>
+              <label className="block text-xs text-ink-soft uppercase tracking-wider">Appearance</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['light', 'dark', 'system'] as const).map(opt => {
                   const active = theme === opt
@@ -257,26 +257,26 @@ export function ProfileSettings({ auth, onBack }: Props) {
                       type="button"
                       onClick={() => handleThemeChange(opt)}
                       className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
-                        active
-                          ? 'bg-sky-600 text-white border-sky-500'
-                          : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10'
-                      }`}
+ active
+ ? 'bg-brand text-brand-ink border-brand'
+ : 'bg-surface-sunk border-line text-ink-soft hover:bg-surface-sunk'
+ }`}
                     >
                       {label}
                     </button>
                   )
                 })}
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-white/30">System follows your OS preference.</p>
+              <p className="text-[11px] text-ink-faint">System follows your OS preference.</p>
             </div>
 
             {/* Status message */}
             {message && (
               <div className={`text-sm px-4 py-2.5 rounded-xl ${
-                message.type === 'ok'
-                  ? 'bg-emerald-500/10 border border-emerald-400/20 text-emerald-300'
-                  : 'bg-rose-500/10 border border-rose-400/20 text-rose-300'
-              }`}>
+ message.type === 'ok'
+ ? 'bg-success-soft border border-success/30 text-success'
+ : 'bg-danger-soft border border-danger/30 text-danger'
+ }`}>
                 {message.text}
               </div>
             )}
