@@ -999,14 +999,14 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
             <div data-chat-composer className="flex gap-2 items-end max-w-5xl mx-auto">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                 title="Attach image, video or PDF"
               >
                 &#x1F4CE;
               </button>
               <button
                 onClick={() => setShowPollCreator(!showPollCreator)}
-                className={`px-2.5 py-2 rounded-xl transition-colors ${showPollCreator ? 'text-sky-400 bg-slate-200 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${showPollCreator ? 'text-sky-700 bg-slate-200 dark:text-sky-300 dark:bg-white/10' : 'text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10'}`}
                 title="Create a poll"
               >
                 &#x1F4CA;
@@ -1042,12 +1042,12 @@ export function GroupChat({ direct = false, messageTransport, groupId, groupName
                 }}
                 placeholder={bots.length > 0 ? 'Type @ to mention a bot...' : 'Type a message...'}
                 rows={1}
-                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-sm resize-none max-h-32 overflow-y-auto focus:outline-none focus:border-sky-400/50"
+                className="min-h-11 flex-1 resize-none overflow-y-auto rounded-xl border border-slate-200 bg-slate-100 px-3 py-3 text-sm text-slate-900 max-h-32 focus:border-sky-400/50 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending || loading || Boolean(chatError)}
-                className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold disabled:opacity-70 hover:bg-sky-500 transition-colors"
+                className="flex h-11 flex-shrink-0 items-center rounded-xl bg-sky-600 px-5 text-sm font-bold text-white transition-colors hover:bg-sky-500 disabled:opacity-70"
               >
                 {sending ? '...' : 'Send'}
               </button>

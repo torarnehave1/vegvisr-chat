@@ -235,7 +235,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
               type="button"
               onClick={handleSend}
               disabled={!title.trim()}
-              className="rounded-full bg-emerald-500 p-1.5 text-slate-900 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-slate-900 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed"
               title="Send voice message"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
@@ -304,7 +304,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <button
           type="button"
           onClick={handleCancel}
-          className="rounded-full p-2 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
           title="Cancel"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +314,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
         <button
           type="button"
           onClick={handleStop}
-          className="rounded-full bg-emerald-500 p-2 text-slate-900 hover:bg-emerald-400"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500 text-slate-900 hover:bg-emerald-400"
           title="Stop recording"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -331,7 +331,7 @@ export function VoiceRecorder({ onSend, onDictate }: Props) {
       <button
         type="button"
         onClick={handleStart}
-        className="rounded-full p-2 text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-slate-500 dark:text-white/50 hover:text-slate-700 dark:hover:text-white/80 hover:bg-slate-200 dark:hover:bg-white/10"
         title="Record voice message"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

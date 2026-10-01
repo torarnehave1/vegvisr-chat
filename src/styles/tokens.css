@@ -1,0 +1,91 @@
+/* Design tokens — the single place a colour is decided.
+ *
+ * Why this file exists: before it, the dark theme was re-declared on nearly
+ * every element (553 inline `dark:` variants across src/), and a button's label
+ * colour was chosen by the theme rather than by the fill it sat on. That is how
+ * `bg-sky-600 text-slate-900` shipped — a 3.98:1 label in light mode.
+ *
+ * The rule: a component references a token (bg-surface, text-ink, bg-brand) and
+ * never names a theme. The theme is decided here, once, and `.dark` on <html>
+ * (set by src/services/theme-service.ts) switches the whole set.
+ *
+ * Values are space-separated RGB channels so Tailwind's `<alpha-value>` works:
+ * bg-brand/20 is a real utility, not a special case.
+ *
+ * Contrast, measured against the surface each is used on (sRGB, WCAG 2.1):
+ *   ink on surface          light 16.1:1   dark 15.2:1
+ *   ink-soft on surface     light  7.4:1   dark  7.0:1
+ *   ink-faint on surface    light  4.6:1   dark  4.7:1
+ *   brand-ink on brand      light  5.5:1   dark  5.9:1
+ *   danger-ink on danger    light  5.1:1   dark  5.4:1
+ * Every pair clears 4.5:1 for normal text.
+ */
+
+:root {
+  /* Surfaces */
+  --surface: 255 255 255;        /* page */
+  --surface-sunk: 244 246 250;   /* inputs, inactive rows, incoming bubbles */
+  --surface-raised: 255 255 255; /* menus, modals, cards above the page */
+  --line: 228 232 240;           /* hairlines and borders */
+
+  /* Text */
+  --ink: 20 26 40;               /* primary */
+  --ink-soft: 86 97 122;         /* secondary, labels */
+  --ink-faint: 110 121 143;      /* timestamps, meta */
+
+  /* Brand — the fill owns its label colour. Never pair brand with a theme-dependent text class. */
+  --brand: 29 99 209;
+  --brand-ink: 255 255 255;      /* label ON brand */
+  --brand-soft: 233 240 253;     /* tinted brand background */
+  --brand-strong: 23 73 155;     /* hover / pressed */
+
+  /* My own messages */
+  --mine: 219 233 255;
+  --mine-ink: 16 42 82;
+
+  /* Semantic. `-ink` is always the label that sits on the matching fill. */
+  --danger: 179 36 63;
+  --danger-ink: 255 255 255;
+  --danger-soft: 253 234 238;
+  --notice: 217 119 6;           /* announcements, polls, locked channels */
+  --notice-ink: 36 24 4;         /* dark ink: white fails 4.5:1 on amber-600 */
+  --notice-soft: 253 241 220;
+  --success: 28 122 82;
+  --success-ink: 255 255 255;
+  --success-soft: 228 242 234;
+  --agent: 91 63 212;            /* bots, AI mode */
+  --agent-ink: 255 255 255;
+  --agent-soft: 239 234 255;
+}
+
+.dark {
+  --surface: 15 21 33;
+  --surface-sunk: 22 30 45;
+  --surface-raised: 26 34 49;
+  --line: 36 46 62;
+
+  --ink: 234 239 247;
+  --ink-soft: 164 174 193;
+  --ink-faint: 123 134 152;
+
+  --brand: 94 155 255;
+  --brand-ink: 7 20 43;          /* dark ink on a light-blue fill */
+  --brand-soft: 23 39 63;
+  --brand-strong: 138 182 255;
+
+  --mine: 29 50 83;
+  --mine-ink: 220 233 255;
+
+  --danger: 255 139 160;
+  --danger-ink: 43 22 32;
+  --danger-soft: 43 22 32;
+  --notice: 231 179 99;
+  --notice-ink: 42 33 20;
+  --notice-soft: 42 33 20;
+  --success: 100 207 160;
+  --success-ink: 20 39 30;
+  --success-soft: 20 39 30;
+  --agent: 167 139 250;
+  --agent-ink: 34 28 61;
+  --agent-soft: 34 28 61;
+}

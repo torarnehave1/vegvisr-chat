@@ -637,7 +637,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {msgType === 'text' && message.body && (
             <button
               onClick={handleCopy}
-              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
               title={copied ? 'Copied' : 'Copy text'}
               aria-label="Copy message text"
             >
@@ -656,7 +656,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onForward && (
             <button
               onClick={() => onForward(message)}
-              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-sky-500/20 hover:text-sky-300 transition-all"
               title="Forward to another group"
               aria-label="Forward message"
             >
@@ -669,7 +669,7 @@ export function MessageBubble({ message, isOwn, profile, onDelete, onTranscribe,
           {onMove && (
             <button
               onClick={() => onMove(message)}
-              className="p-1 rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 dark:text-white/60 opacity-60 group-hover:opacity-100 hover:!opacity-100 dark:opacity-0 dark:group-hover:opacity-70 hover:bg-amber-500/20 hover:text-amber-300 transition-all"
               title="Move to another group (owner / Superadmin)"
               aria-label="Move message"
             >

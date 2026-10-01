@@ -56,7 +56,7 @@ export function EmojiPicker({ onSelect }: Props) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="px-2.5 py-2 rounded-xl text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-lg"
+        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
         title="Emoji"
       >
         😊
