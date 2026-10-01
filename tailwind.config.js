@@ -55,7 +55,7 @@ export default {
           soft: 'rgb(var(--agent-soft) / <alpha-value>)',
         },
       },
-      minHeight: { 11: '2.75rem' },
+      minHeight: { 11: '2.75rem', 12: '3rem' },
       minWidth: { 11: '2.75rem' },
       fontFamily: {
         // Inter for crisp rendering across platforms; falls back to system stack

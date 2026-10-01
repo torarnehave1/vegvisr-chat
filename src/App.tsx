@@ -417,7 +417,7 @@ function App() {
                   value={loginEmail}
                   onChange={(event) => setLoginEmail(event.target.value)}
                   placeholder="you@email.com"
-                  className="h-12 flex-1 rounded-2xl border border-line bg-surface px-4 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/60"
+                  className="min-h-12 flex-1 rounded-2xl border border-line bg-surface px-4 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand/60"
                 />
                 <button
                   type="button"
