@@ -56,7 +56,7 @@ export function UpdateBanner({ onWhatsNew, hasNewFeatures, newFeatureCount, onMa
         <button
           type="button"
           onClick={reload}
-          className="rounded-lg bg-sky-500 px-3 py-1 text-xs font-semibold text-slate-900 dark:text-white hover:bg-sky-400 transition-colors"
+          className="rounded-lg bg-sky-500 px-3 py-1 text-xs font-semibold text-slate-900 hover:bg-sky-400 transition-colors"
         >
           Refresh
         </button>

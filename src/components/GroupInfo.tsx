@@ -286,7 +286,7 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={uploadingImage}
-                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-slate-900 dark:text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-sky-600 flex items-center justify-center text-white text-xs hover:bg-sky-500 transition-colors border-2 border-slate-900"
                 title="Change group photo"
               >
                 &#x1F4F7;

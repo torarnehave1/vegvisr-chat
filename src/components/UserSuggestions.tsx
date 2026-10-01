@@ -485,7 +485,7 @@ export function UserSuggestions({ groupId, groupName, isOwner, onBack, auth }: P
             <button
               onClick={handleSubmit}
               disabled={!formTitle.trim() || !formDescription.trim() || submitting}
-              className="px-4 py-1.5 bg-sky-600 text-slate-900 dark:text-white text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-sky-500 transition-colors"
+              className="px-4 py-1.5 bg-sky-600 text-white text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-sky-500 transition-colors"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>

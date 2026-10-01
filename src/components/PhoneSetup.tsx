@@ -42,7 +42,7 @@ export function PhoneSetup({ onSave }: Props) {
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <button
           onClick={handleSave}
-          className="w-full py-3 bg-sky-600 text-slate-900 dark:text-white rounded-xl font-medium hover:bg-sky-500 transition-colors"
+          className="w-full py-3 bg-sky-600 text-white rounded-xl font-medium hover:bg-sky-500 transition-colors"
         >
           Continue
         </button>

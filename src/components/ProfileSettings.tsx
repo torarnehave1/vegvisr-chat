@@ -178,7 +178,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-600 border-2 border-slate-900 flex items-center justify-center text-slate-900 dark:text-white hover:bg-sky-500 transition-colors"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-600 border-2 border-slate-900 flex items-center justify-center text-white hover:bg-sky-500 transition-colors"
                   title="Change profile image"
                 >
                   {uploading ? (
@@ -214,7 +214,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                   type="button"
                   onClick={handleSaveName}
                   disabled={saving || !displayName.trim()}
-                  className="px-4 py-2.5 bg-sky-600 text-slate-900 dark:text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+                  className="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
                 >
                   {saving ? '...' : 'Save'}
                 </button>
@@ -258,7 +258,7 @@ export function ProfileSettings({ auth, onBack }: Props) {
                       onClick={() => handleThemeChange(opt)}
                       className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
                         active
-                          ? 'bg-sky-600 text-slate-900 dark:text-white border-sky-500'
+                          ? 'bg-sky-600 text-white border-sky-500'
                           : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10'
                       }`}
                     >

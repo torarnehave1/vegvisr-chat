@@ -90,7 +90,7 @@ export function PollCreator({ onSubmit, onCancel, disabled }: Props) {
             if (canSubmit) onSubmit(question.trim(), validOptions)
           }}
           disabled={!canSubmit || disabled}
-          className="px-4 py-1.5 bg-sky-600 text-slate-900 dark:text-white rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
+          className="px-4 py-1.5 bg-sky-600 text-white rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-sky-500 transition-colors"
         >
           {disabled ? 'Creating...' : 'Create Poll'}
         </button>

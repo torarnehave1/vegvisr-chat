@@ -388,7 +388,7 @@ export function GroupQuestions({ groupId, groupName, isOwner, onBack, auth }: Pr
             <button
               onClick={handleSubmit}
               disabled={!formTitle.trim() || !formDescription.trim() || submitting}
-              className="px-4 py-1.5 bg-amber-600 text-slate-900 dark:text-white text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-amber-500 transition-colors"
+              className="px-4 py-1.5 bg-amber-600 text-slate-900 text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-amber-500 transition-colors"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -496,7 +496,7 @@ export function GroupQuestions({ groupId, groupName, isOwner, onBack, auth }: Pr
                         <button
                           onClick={() => saveAnswer(question)}
                           disabled={!answerText.trim() || savingAnswer}
-                          className="px-3 py-1 bg-emerald-600 text-slate-900 dark:text-white text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-emerald-500 transition-colors"
+                          className="px-3 py-1 bg-emerald-600 text-slate-900 text-xs font-semibold rounded-lg disabled:opacity-40 hover:bg-emerald-500 transition-colors"
                         >
                           {savingAnswer ? 'Saving...' : 'Save answer'}
                         </button>
