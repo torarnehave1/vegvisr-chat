@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup, setMyAlerts } from '../services/chat-service'
+import { fetchMembers, fetchMemberProfiles, createInvite, updateGroup, uploadMedia, removeMember, removeBotFromGroup, setMyAlerts, setMemberRole } from '../services/chat-service'
 import type { AuthParams, Member, MemberProfile, Group } from '../types/chat'
 
 interface Props {
@@ -14,7 +14,9 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   const [profiles, setProfiles] = useState<Map<string, MemberProfile>>(new Map())
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
-  const [removeError, setRemoveError] = useState<string | null>(null)
+  const [changingRole, setChangingRole] = useState<string | null>(null)
+  // Shared by both member actions — they write to the same line above the list.
+  const [memberError, setMemberError] = useState<string | null>(null)
   const [myAlerts, setMyAlertsState] = useState(false)
   const [savingAlerts, setSavingAlerts] = useState(false)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
@@ -97,10 +99,10 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
   }
 
   const handleRemoveMember = async (targetUserId: string, displayName: string) => {
-    if (removing) return
+    if (removing || changingRole) return
     if (!window.confirm(`Remove ${displayName} from this group?`)) return
     setRemoving(targetUserId)
-    setRemoveError(null)
+    setMemberError(null)
     try {
       if (targetUserId.startsWith('bot:')) {
         // Bots live in two tables — group_members (for listing) and
@@ -118,9 +120,35 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
         return next
       })
     } catch (err) {
-      setRemoveError(err instanceof Error ? err.message : 'Failed to remove member')
+      setMemberError(err instanceof Error ? err.message : 'Failed to remove member')
     } finally {
       setRemoving(null)
+    }
+  }
+
+  /**
+   * Promote a member to admin, or put them back. Owner only — the worker checks that too, and is
+   * the thing actually enforcing it; this component only decides what to render.
+   *
+   * An admin can add and remove members, which is the whole point: a group whose owner cannot
+   * conveniently sign in (a World's main group owned by the World's mailbox address, say) can
+   * delegate the day-to-day roster to somebody who can.
+   */
+  const handleSetRole = async (targetUserId: string, nextRole: 'member' | 'admin', displayName: string) => {
+    if (changingRole || removing) return
+    const question = nextRole === 'admin'
+      ? `Make ${displayName} an admin? They will be able to add and remove members.`
+      : `Remove ${displayName}'s admin rights? They stay in the group as a member.`
+    if (!window.confirm(question)) return
+    setChangingRole(targetUserId)
+    setMemberError(null)
+    try {
+      const { role } = await setMemberRole(group.id, targetUserId, nextRole, auth)
+      setMembers(prev => prev.map(m => (m.user_id === targetUserId ? { ...m, role } : m)))
+    } catch (err) {
+      setMemberError(err instanceof Error ? err.message : 'Failed to change role')
+    } finally {
+      setChangingRole(null)
     }
   }
 
@@ -438,8 +466,8 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
           <label className="text-ink-faint text-xs uppercase tracking-wider">
             Members ({members.length})
           </label>
-          {removeError && (
-            <p className="text-xs text-danger mt-1">{removeError}</p>
+          {memberError && (
+            <p className="text-xs text-danger mt-1">{memberError}</p>
           )}
           {loading ? (
             <p className="text-ink-faint text-sm mt-2">Loading...</p>
@@ -450,10 +478,16 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                 const displayName = profile?.displayName || m.email || m.phone || m.user_id.slice(0, 8)
                 const subtitle = profile?.email || m.email || profile?.phone || m.phone || ''
                 const initial = displayName.charAt(0).toUpperCase()
+                const isBot = m.user_id.startsWith('bot:')
                 const canRemove =
                   isOwner &&
                   m.user_id !== auth.user_id &&
                   m.role !== 'owner'
+                // Same gate as removal, minus bots: a bot has a row in group_members and the
+                // endpoint would accept the change, but "admin" means a person who manages the
+                // roster and a bot does not manage anything.
+                const canSetRole = canRemove && !isBot && (m.role === 'member' || m.role === 'admin')
+                const nextRole: 'member' | 'admin' = m.role === 'admin' ? 'member' : 'admin'
                 return (
                   <div key={m.user_id} className="flex items-center gap-3 py-1.5">
                     <div className="w-8 h-8 rounded-full bg-surface-sunk flex items-center justify-center text-ink-soft text-sm overflow-hidden flex-shrink-0">
@@ -472,6 +506,21 @@ export function GroupInfo({ group, auth, onBack, onGroupUpdated }: Props) {
                       </div>
                       <div className="text-ink-faint text-xs">{m.role}</div>
                     </div>
+                    {canSetRole && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetRole(m.user_id, nextRole, displayName)}
+                        disabled={changingRole === m.user_id || removing === m.user_id}
+                        className="text-[10px] px-2 py-1 rounded bg-surface-sunk text-ink-soft hover:bg-white/[0.07] transition-colors flex-shrink-0 disabled:opacity-50"
+                        title={nextRole === 'admin'
+                          ? `Let ${displayName} add and remove members`
+                          : `${displayName} keeps their place, loses the rights`}
+                      >
+                        {changingRole === m.user_id
+                          ? '...'
+                          : nextRole === 'admin' ? 'Make admin' : 'Make member'}
+                      </button>
+                    )}
                     {canRemove && (
                       <button
                         type="button"

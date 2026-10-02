@@ -141,6 +141,36 @@ export async function removeMember(
 }
 
 /**
+ * Change a member's role — owner only, 'member' <-> 'admin'.
+ *
+ * An admin can add and remove members; it cannot make further admins. The worker refuses 'owner'
+ * (handing over a group is a transfer, not a role change), refuses the owner changing their own
+ * role, and 404s a target who is not already a member — this changes a role, it does not add
+ * anybody. Use addMemberToGroup for that.
+ *
+ * Note the method: /join takes a role but is INSERT OR IGNORE, so re-adding an existing member as
+ * admin does nothing at all. PATCH is the only thing that moves an existing row.
+ */
+export async function setMemberRole(
+  groupId: string,
+  userId: string,
+  role: 'member' | 'admin',
+  auth: AuthParams,
+): Promise<{ role: string; previous_role: string }> {
+  const res = await fetch(
+    `${BASE}/groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(userId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...authBody(auth), role }),
+    },
+  )
+  const data = await res.json()
+  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to change role')
+  return { role: data.role, previous_role: data.previous_role }
+}
+
+/**
  * Set the current user's email-alert opt-in for a group. When enabled, the
  * group owner can send this user an email alert from the chat header menu.
  */
